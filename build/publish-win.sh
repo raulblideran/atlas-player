@@ -19,9 +19,17 @@ ZIP="Paramaja-$VERSION-portable-win-x64.zip"
 # keeps settings.json and the Screenshots folder.
 STAGE="$ROOT/dist/Paramaja"
 rm -rf "$STAGE" && mkdir -p "$STAGE"
+echo "Publishing with .NET SDK $(dotnet --version)"
 dotnet publish "$ROOT/src/Paramaja.App" -c Release -r win-x64 --self-contained true \
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=false \
   -p:DebugType=none -p:GenerateDocumentationFile=false -p:SourceRevisionId="$COMMIT" -o "$STAGE"
+
+# A zip without these doesn't play anything (beta.2 and beta.3 shipped without them).
+for f in Paramaja.exe libmpv-2.dll paramaja_torrent.dll libvlc/libvlc.dll libvlc/libvlccore.dll \
+         libvlc/plugins/access/libdvdnav_plugin.dll ffmpeg.exe ffprobe.exe yt-dlp.exe qjs.exe \
+         flac.exe libFLAC.dll libdvdread-8.dll libdvdcss-2.dll; do
+  [ -f "$STAGE/$f" ] || { echo "::error::$f is missing from the published folder" >&2; exit 1; }
+done
 
 cp "$ROOT/README.md" "$STAGE/README.txt" 2>/dev/null || true
 cp "$ROOT/CHANGELOG.md" "$STAGE/CHANGELOG.txt"

@@ -3,12 +3,19 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## 2.0.0-beta.3 — 2026-11-24
+## 2.0.0-beta.4 — 2026-11-24
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
 Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
 
-- **New in beta.3: security updates.** Every library Paramaja bundles was checked against the
+- **New in beta.4: the Windows zip works again.** The beta.2 and beta.3 zips were missing
+  everything Paramaja plays with (libmpv, libVLC, FFmpeg, yt-dlp, the torrent engine): GitHub's
+  build machine moved to the .NET 11 SDK, which leaves those files out of a single-file build
+  where older SDKs put them beside it. They opened to an error and played nothing. The build now
+  says where they go, and refuses to publish a zip without them.
+- **Also fixed:** the subtitle colour choices and the seek bar's colours are made so any thread
+  can use them (a test running off the UI thread failed with .NET 10).
+- **Before that, beta.3: security updates.** Every library Paramaja bundles was checked against the
   published vulnerabilities (CVEs), and the ones with fixes were updated (below).
 - **.NET 10** (runtime 10.0.15): .NET 8 stopped getting security fixes on 10 November 2026. Both
   downloads carry their own .NET, now pinned to the newest patch, so the Flatpak no longer takes
@@ -88,16 +95,21 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   used the same CPU as 1.12.0 (9.1 to 9.3% of a core on the same 720p video, in any theme). MEGA
   app links weren't tried this time; their code didn't change.
 
+## 2.0.0-beta.3 — 2026-11-24
+
+- Security updates. Its Windows zip was missing its libraries and played nothing; its
+  changes are all in 2.0.0-beta.4 above, with a complete zip.
+
 ## 2.0.0-beta.2 — 2026-11-24
 
 - The Linux Flatpak attached again: 2.0.0-beta.1's build failed on GitHub before it built
-  anything (updating the build container's own runtimes). Its changes are all in 2.0.0-beta.3
+  anything (updating the build container's own runtimes). Its changes are all in 2.0.0-beta.4
   above, which adds security updates.
 
 ## 2.0.0-beta.1 — 2026-11-24
 
 - Windows zip only: the Flatpak build failed on GitHub's side. Its changes are all in
-  2.0.0-beta.3 above.
+  2.0.0-beta.4 above.
 
 ## 1.12.0 — 2026-11-08
 

@@ -12,7 +12,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>2.0.0-beta.3</Version>
+    <Version>2.0.0-beta.4</Version>
     <Product>Paramaja</Product>
     <Description>Modern portable video player with HDR tonemapping and magnet streaming</Description>
     <Company>Raul Blideran</Company>
@@ -48,9 +48,16 @@
     <ParamajaNativeRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</ParamajaNativeRid>
     <ParamajaNativeRid Condition="'$(ParamajaNativeRid)' == '' And $([MSBuild]::IsOSPlatform('Windows'))">win-x64</ParamajaNativeRid>
     <ParamajaNativeRid Condition="'$(ParamajaNativeRid)' == ''">linux-x64</ParamajaNativeRid>
+    <!-- A single-file bundle that would leave files out fails the build instead of warning. -->
+    <WarningsAsErrors>$(WarningsAsErrors);NETSDK1236</WarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\libs\$(ParamajaNativeRid)\**\*" CopyToOutputDirectory="PreserveNewest" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Published beside Paramaja.exe, never offered to the single-file bundle. The .NET 11 SDK
+         drops native files the bundle refuses (NETSDK1236) where older SDKs copied them beside
+         it, so the beta.2 and beta.3 zips shipped without libmpv, libVLC or FFmpeg. -->
+    <None Include="..\..\libs\$(ParamajaNativeRid)\**\*" CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true"
+          Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
