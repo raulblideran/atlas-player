@@ -290,8 +290,9 @@
     <Setter Property="ClipToBounds" Value="True" />
   </Style>
 
+  <!-- More than any theme's large corner radius (18 at most), so text never crowds a curve. -->
   <Style Selector="c|SettingRow">
-    <Setter Property="Padding" Value="16,12" />
+    <Setter Property="Padding" Value="22,14" />
     <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
     <Setter Property="HorizontalContentAlignment" Value="Right" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -338,14 +339,14 @@
     <Setter Property="Padding" Value="0" />
   </Style>
   <Style Selector="TabControl.nav /template/ ItemsPresenter#PART_ItemsPresenter">
-    <Setter Property="Width" Value="220" />
+    <Setter Property="Width" Value="244" />
     <Setter Property="Margin" Value="12,16,12,12" />
   </Style>
   <Style Selector="TabControl.nav > TabItem">
     <Setter Property="FontSize" Value="14" />
     <Setter Property="FontWeight" Value="Normal" />
-    <Setter Property="MinHeight" Value="38" />
-    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="Padding" Value="16,0" />
     <Setter Property="Margin" Value="0,1" />
     <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusControl}" />
     <Setter Property="HeaderTemplate">
@@ -366,8 +367,9 @@
   <Style Selector="TabControl.nav > TabItem:selected /template/ Border#PART_LayoutRoot">
     <Setter Property="Background" Value="{DynamicResource ThemeNavSelected}" />
   </Style>
+  <!-- The selected page's highlight is the mark; Fluent's stripe sat on its icon or a round theme's curve. -->
   <Style Selector="TabControl.nav > TabItem /template/ Border#PART_SelectedPipe">
-    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+    <Setter Property="IsVisible" Value="False" />
   </Style>
 
   <!-- The theme picker's tiles -->

@@ -26,7 +26,7 @@
         <TextBlock Classes="group" Text="Drives" Margin="2,6,0,4" />
         <Button Grid.Column="1" Classes="ghost" Content="Refresh" Click="OnRefresh" ToolTip.Tip="After putting a disc in" Padding="10,5" />
       </Grid>
-      <Border Classes="rows" Padding="14,8">
+      <Border Classes="rows" Padding="20,10">
         <StackPanel>
           <ItemsControl x:Name="DriveList">
             <ItemsControl.ItemTemplate>

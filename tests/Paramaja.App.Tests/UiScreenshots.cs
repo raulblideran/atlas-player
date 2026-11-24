@@ -82,7 +82,8 @@ public class UiScreenshots
                 var tabs = settings.GetLogicalDescendants().OfType<TabControl>().Single();
                 foreach (var tab in tabs.Items.OfType<TabItem>())
                 {
-                    if (id != ThemeRegistry.Default.Id && tab.Name is not ("InterfaceTab" or "VideoTab" or "SubtitlesTab")) continue;
+                    if (id != ThemeRegistry.Default.Id && Environment.GetEnvironmentVariable("PARAMAJA_SCREENSHOT_ALLTABS") != "1"
+                        && tab.Name is not ("InterfaceTab" or "VideoTab" or "SubtitlesTab")) continue;
                     tabs.SelectedItem = tab;
                     Save(settings, folder, $"{id}-settings-{tab.Name}");
                 }
