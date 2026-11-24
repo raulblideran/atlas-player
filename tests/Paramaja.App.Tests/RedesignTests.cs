@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
+using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Paramaja.App.Views;
 using Paramaja.Core.Playback;
@@ -243,6 +244,27 @@ public class RedesignTests
         Assert.False(button.Flyout?.IsOpen == true);
         bar.Close();
         main.Close();
+    }
+
+    /// <summary>
+    /// Fitted to the screen, a bar's menu used X11's one work area for the whole desktop: with
+    /// several monitors (Xwayland under KWin) it ended far above a lower monitor's bottom, and the
+    /// menu floated hundreds of pixels above its button. The bars' menus open unadjusted.
+    /// </summary>
+    [AvaloniaFact]
+    public void The_bars_menus_open_against_their_buttons_unadjusted()
+    {
+        using var r = new Rig();
+        Playing(r);
+        foreach (var bar in new OverlayWindow[] { new ControlsBar { DataContext = r.Vm, Width = 1280 }, new TopBar { DataContext = r.Vm, Width = 1280 } })
+        {
+            bar.Show();
+            Dispatcher.UIThread.RunJobs();
+            foreach (var button in bar.GetLogicalDescendants().OfType<Button>().Where(b => b.Flyout is not null))
+                Assert.Equal(Avalonia.Controls.Primitives.PopupPositioning.PopupPositionerConstraintAdjustment.None,
+                    ((Avalonia.Controls.Primitives.PopupFlyoutBase)button.Flyout!).PlacementConstraintAdjustment);
+            bar.Close();
+        }
     }
 
     [AvaloniaFact]

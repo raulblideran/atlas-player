@@ -75,6 +75,11 @@ public class OverlayWindow : Window
         foreach (var button in this.GetLogicalDescendants().OfType<Button>())
         {
             if (button.Flyout is not { } flyout) continue;
+            // A bar's menu opens straight above its button, unadjusted. Fitting it to the screen used
+            // X11's single work area, which on a desktop of several monitors (Xwayland under KWin)
+            // ends hundreds of pixels above the bottom of a lower one, so the menu floated far above
+            // the bar. The bar is on screen and the picture above it has room for any of its menus.
+            if (flyout is PopupFlyoutBase popup) popup.PlacementConstraintAdjustment = Avalonia.Controls.Primitives.PopupPositioning.PopupPositionerConstraintAdjustment.None;
             _menus.Add(flyout);
             flyout.Opened += (_, _) => MenuOpened(flyout);
             flyout.Closed += (_, _) => MenuClosed(flyout);
