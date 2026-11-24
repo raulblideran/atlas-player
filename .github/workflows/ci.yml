@@ -33,23 +33,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: "8.0.x" }
+        with: { dotnet-version: "10.0.x" }
       - uses: dtolnay/rust-toolchain@stable
       # Only what the tests use: ffmpeg makes the fixtures, libmpv2 plays them. Skipping
       # recommends and the man-db index rebuild keeps the install quick. GitHub's Ubuntu
-      # mirror has stalled mid-download for 15+ minutes (trickling, so apt's own timeouts
-      # don't fire): give it 4 minutes, then switch to Ubuntu's main archive and try again.
+      # mirror has stalled for 15+ minutes (trickling, so apt's own timeouts don't fire),
+      # both fetching the package lists and downloading the packages: give the update 2
+      # minutes and the install 4, and if either stalls switch to Ubuntu's main archive
+      # and do both again.
       - name: Install ffmpeg and libmpv
         run: |
           sudo rm -f /var/lib/man-db/auto-update
           APT="-o Acquire::Retries=3 -o Acquire::http::Timeout=30"
-          install() { sudo timeout 240 apt-get $APT install -y --no-install-recommends ffmpeg libmpv2; }
-          sudo timeout 120 apt-get $APT update
-          if ! install; then
+          fetch() {
+            sudo timeout 120 apt-get $APT update &&
+            sudo timeout 240 apt-get $APT install -y --no-install-recommends ffmpeg libmpv2
+          }
+          if ! fetch; then
             echo "::warning::GitHub's Ubuntu mirror stalled; retrying from archive.ubuntu.com"
             echo "http://archive.ubuntu.com/ubuntu/" | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
-            sudo apt-get $APT update
-            install
+            fetch
           fi
       - run: ./build/test.sh
 
@@ -61,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: "8.0.x" }
+        with: { dotnet-version: "10.0.x" }
       - uses: dtolnay/rust-toolchain@stable
       - name: Torrent engine tests
         working-directory: native/paramaja-torrent

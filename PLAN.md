@@ -7,7 +7,7 @@ You want a modern, portable Windows video player. It should play what VLC plays 
 
 | Layer | Tech | Why |
 |---|---|---|
-| UI shell | **Avalonia 11 / .NET 8 (C#)** | Modern, styleable, fluent-looking UI. Mature desktop tooling. Single-file portable publish for `win-x64`. |
+| UI shell | **Avalonia 11 / .NET 10 (C#)** | Modern, styleable, fluent-looking UI. Mature desktop tooling. Single-file portable publish for `win-x64`. |
 | Playback engine | **libmpv** (`libmpv-2.dll`, ffmpeg-based) | Same codec coverage as VLC (both use ffmpeg). `vo=gpu-next` (libplacebo) gives the best on-the-fly HDR→SDR tonemapping available, Dolby Vision P5/P8 included. Also gives d3d11va hardware decode, libass subtitles, frame-back-step, PNG screenshots and bwdif deinterlacing. |
 | Torrent streaming | **Rust `cdylib` wrapping `librqbit`** (`paramaja_torrent.dll`) | librqbit is a fast, modern BitTorrent engine with streaming support: it prioritises pieces sequentially around the playhead. It is exposed to C# through a small C ABI and serves the file over a localhost HTTP range server that mpv plays directly. |
 
@@ -107,7 +107,7 @@ paramaja/
 5. Build the Windows zip, unzip it anywhere on Windows, and run it. `settings.json` should appear next to the exe, and a 4K HEVC clip should play with d3d11va.
 
 ### Phase 7 — Linux Flatpak
-- [x] Manifest on freedesktop 25.08 (+ rust-stable, dotnet8): builds libmpv with its own ffmpeg (all decoders), libplacebo, libass, LuaJIT, libXpresent
+- [x] Manifest on freedesktop 25.08 (+ rust-stable, dotnet10): builds libmpv with its own ffmpeg (all decoders), libplacebo, libass, LuaJIT, libXpresent
 - [x] Desktop entry (incl. `magnet:` handler), metainfo, icon; Flatpak-aware data paths (XDG dirs, ~/Pictures/Paramaja)
 - [x] Native library probing: app dir → system loader → dev fallbacks (stops the sandbox loading the host's Homebrew libmpv)
 - [x] Packaging tests (manifest/desktop/metainfo/version consistency)

@@ -3,11 +3,30 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## 2.0.0-beta.2 — 2026-11-24
+## 2.0.0-beta.3 — 2026-11-24
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
 Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
 
+- **New in beta.3: security updates.** Every library Paramaja bundles was checked against the
+  published vulnerabilities (CVEs), and the ones with fixes were updated (below).
+- **.NET 10** (runtime 10.0.15): .NET 8 stopped getting security fixes on 10 November 2026. Both
+  downloads carry their own .NET, now pinned to the newest patch, so the Flatpak no longer takes
+  the older one Flathub's SDK ships (10.0.8, 100 fixes behind).
+- **Linux: FFmpeg 8.0 → 9.1.** 8.0 had dozens of known holes, among them heap overflows in the
+  VobSub (DVD subtitle) reader, the DVB subtitle parser and several decoders, and the 8.0 series
+  has stopped. Also **mpv 0.42** (a crafted playlist page could add entries through its YouTube
+  script), **libass 0.17.5** (crafted subtitles could write past a buffer), **libplacebo 7.387**
+  (which mpv 0.42 needs) and **libbluray 1.5.1**.
+- **Windows:** libmpv built from mpv 0.42, FFmpeg's 9.0 series with October's fixes, and libVLC
+  without its ARIB (Japanese TV caption) plugins, which no disc uses and whose library has open
+  holes.
+- **Both:** yt-dlp 2026.11.23, QuickJS-NG 0.18.0, and the torrent engine's `url` crate.
+- **Tried after the updates** on the Linux build: an HEVC file, a 4K AV1 file and an interlaced
+  one (hardware decoded), HDR10 tonemapped to SDR with an ASS subtitle over it, a DVD image's
+  menus, an Audio CD image, a YouTube link's formats up to 4K, and a DVD chapter ripped both
+  copied and to H.264 (LPCM to FLAC, deinterlaced to 50p). The Windows zip was built but not run
+  here.
 - **A new look, and themes.** Settings → Appearance has eleven, switched at once in every
   window: **Paramaja** (the default, its plum and orchid), **Paramaja Light**, **Graphite**,
   **Deep Sea**, **Amber**, **Forest**, and five with more character: **Call of Duty** (olive and
@@ -68,13 +87,17 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   and a 4K YouTube link, through each of the bar's menus and More's actions. With the bars up it
   used the same CPU as 1.12.0 (9.1 to 9.3% of a core on the same 720p video, in any theme). MEGA
   app links weren't tried this time; their code didn't change.
-- The Linux Flatpak is attached again: 2.0.0-beta.1's build failed on GitHub before it built
-  anything (updating the build container's own runtimes), so that beta had the Windows zip only.
+
+## 2.0.0-beta.2 — 2026-11-24
+
+- The Linux Flatpak attached again: 2.0.0-beta.1's build failed on GitHub before it built
+  anything (updating the build container's own runtimes). Its changes are all in 2.0.0-beta.3
+  above, which adds security updates.
 
 ## 2.0.0-beta.1 — 2026-11-24
 
 - Windows zip only: the Flatpak build failed on GitHub's side. Its changes are all in
-  2.0.0-beta.2 above.
+  2.0.0-beta.3 above.
 
 ## 1.12.0 — 2026-11-08
 

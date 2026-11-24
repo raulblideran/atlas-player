@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the Flatpak, installs it for the current user, and writes a bundle:
 #   dist/paramaja-<version>.flatpak
-# Needs org.flatpak.Builder plus the 25.08 Sdk and its rust-stable and dotnet8
+# Needs org.flatpak.Builder plus the 25.08 Sdk and its rust-stable and dotnet10
 # extensions (see README). The first build compiles ffmpeg, libplacebo and mpv;
 # rebuilds only redo the app.
 set -euo pipefail

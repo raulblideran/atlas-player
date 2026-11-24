@@ -6,21 +6,24 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RID="${1:-win-x64}"
-MPV_TAG="${MPV_TAG:-20261021}"
-MPV_ASSET="${MPV_ASSET:-mpv-dev-x86_64-20261021-git-e471496c56.7z}"
+# libmpv: a shinchiro build of mpv's master (it carries its own FFmpeg and libass), pinned by
+# tag and SHA-256 (as GitHub's API gives it).
+MPV_TAG=20261111
+MPV_ASSET=mpv-dev-x86_64-20261111-git-bcde6b93cc.7z
+MPV_SHA256=273c079b11ea5575822f972756f4c9a71149a5c10130353abeb8586738938452
 # YouTube and other sites: yt-dlp, plus QuickJS-NG as the JavaScript runtime it needs for
 # YouTube. Pinned by version and SHA-256 (yt-dlp's matches its published SHA2-256SUMS).
-YTDLP_VERSION=2026.08.19
-YTDLP_SHA256=66674953fe251b89f4d08c5f0e35e0728679bd67ab3d7d05c0562af101dd3e7a
-QJS_VERSION=v0.17.0
-QJS_SHA256=2aeabf0092c3262d6b2609824418f7dd7ed1f1df939f73b2b15645230cac0d77
+YTDLP_VERSION=2026.11.23
+YTDLP_SHA256=622ed48023cac1daa52a3bf3a6ac38f03514de214b5f0fa069389fd0f6d17e5c
+QJS_VERSION=v0.18.0
+QJS_SHA256=ff03398d74ea6e6bd3a8e58058f7003225abcac229d7d57775b7aaae812a49c7
 # ffmpeg.exe and ffprobe.exe: yt-dlp needs them to merge the separate video and audio streams
 # of a download and to embed its cover art, and the DVD ripper reads DVDs with FFmpeg's DVD-Video
 # reader. BtbN's GPL build has it (libdvdnav, libdvdread with libdvdcss built in); a month-end
 # autobuild, which BtbN keeps, pinned by its name and SHA-256 (as GitHub's API gives it).
-FFMPEG_TAG=autobuild-2026-09-30-13-08
-FFMPEG_BUILD=ffmpeg-n9.0.2-17-g2a571b6068-win64-gpl-9.0
-FFMPEG_SHA256=a0e45723c72141975f51d8666302e614711745f3102b704ca3f82c897a58d278
+FFMPEG_TAG=autobuild-2026-10-31-12-59
+FFMPEG_BUILD=ffmpeg-n9.0.2-39-g7adfbe40dc-win64-gpl-9.0
+FFMPEG_SHA256=693f3e224bc184b40524a62ca47526cfebaf2504414021b92fe75f677ad868b9
 # The reference FLAC encoder (flac -8) for CD rips, from Xiph's release (flac.exe needs its libFLAC.dll).
 FLAC_VERSION=1.5.0
 FLAC_SHA256=53f1500f0d6e7c61379d7fee50d4a9f7f504c650009506d9ba015530d76c0dde
@@ -59,14 +62,16 @@ case "$RID" in
       cargo build --release --target x86_64-pc-windows-gnu
       cp target/x86_64-pc-windows-gnu/release/paramaja_torrent.dll "$OUT/"
     fi
-    if [ ! -f "$OUT/libmpv-2.dll" ]; then
+    # libmpv and FFmpeg are re-fetched when their pin changes (libs/<rid>.*-build record the
+    # build, outside the folder the app ships).
+    if [ ! -f "$OUT/libmpv-2.dll" ] || [ "$(cat "$ROOT/libs/$RID.libmpv-build" 2>/dev/null)" != "$MPV_ASSET" ]; then
       DL="$(mktemp -d)"
-      echo "Downloading libmpv ($MPV_ASSET)…"
-      curl -fL --retry 3 -o "$DL/mpv-dev.7z" \
-        "https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/$MPV_TAG/$MPV_ASSET"
+      fetch_checked "https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/$MPV_TAG/$MPV_ASSET" \
+        "$MPV_SHA256" "$DL/mpv-dev.7z"
       # Relative paths: Git Bash on Windows doesn't translate a path glued to -o.
       (cd "$DL" && 7z e -y -ox mpv-dev.7z libmpv-2.dll >/dev/null)
       cp "$DL/x/libmpv-2.dll" "$OUT/"
+      echo "$MPV_ASSET" > "$ROOT/libs/$RID.libmpv-build"
       rm -rf "$DL"
     fi
     fetch_checked "https://github.com/yt-dlp/yt-dlp/releases/download/$YTDLP_VERSION/yt-dlp.exe" \
@@ -95,17 +100,20 @@ case "$RID" in
       # Encoders and formats discs never carry (FFmpeg's decoder covers the rest).
       (cd "$OUT/libvlc/plugins/codec" && rm -f libx264* libx265* libx26410b* libaom* librav1e* libqsv* libzvbi* \
         libvpx* libtheora* libdaala* libschroedinger* libkate* libspeex* libtwolame* libshine* libfluidsynth*)
+      # ARIB (Japanese TV) captions and descrambling: never on discs, and aribb24 has open CVEs.
+      rm -f "$OUT/libvlc/plugins/codec/libaribsub_plugin.dll" "$OUT/libvlc/plugins/stream_filter/libaribcam_plugin.dll"
       rm -rf "$DL"
     fi
     # VLC's deinterlacer with BWDIF added (packaging/vlc/vlc-bwdif.patch), built for this libVLC.
     cp "$ROOT/packaging/vlc/win64/libdeinterlace_plugin.dll" "$OUT/libvlc/plugins/video_filter/"
-    # Re-fetched when it's the old build without the DVD-Video reader (before 1.10.0).
-    if [ ! -f "$OUT/ffmpeg.exe" ] || [ ! -f "$OUT/ffprobe.exe" ] || ! grep -q -a -- "--enable-libdvdnav" "$OUT/ffmpeg.exe"; then
+    # Re-fetched when the pinned build changes.
+    if [ ! -f "$OUT/ffmpeg.exe" ] || [ ! -f "$OUT/ffprobe.exe" ] || [ "$(cat "$ROOT/libs/$RID.ffmpeg-build" 2>/dev/null)" != "$FFMPEG_BUILD" ]; then
       DL="$(mktemp -d)"
       fetch_checked "https://github.com/BtbN/FFmpeg-Builds/releases/download/$FFMPEG_TAG/$FFMPEG_BUILD.zip" \
         "$FFMPEG_SHA256" "$DL/ffmpeg.zip"
       (cd "$DL" && 7z e -y -ox ffmpeg.zip "$FFMPEG_BUILD/bin/ffmpeg.exe" "$FFMPEG_BUILD/bin/ffprobe.exe" >/dev/null)
       cp "$DL/x/ffmpeg.exe" "$DL/x/ffprobe.exe" "$OUT/"
+      echo "$FFMPEG_BUILD" > "$ROOT/libs/$RID.ffmpeg-build"
       rm -rf "$DL"
     fi
     if [ ! -f "$OUT/flac.exe" ] || [ ! -f "$OUT/libFLAC.dll" ]; then

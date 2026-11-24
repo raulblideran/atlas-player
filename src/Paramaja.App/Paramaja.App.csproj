@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Paramaja</AssemblyName>
@@ -12,13 +12,22 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>2.0.0-beta.2</Version>
+    <Version>2.0.0-beta.3</Version>
     <Product>Paramaja</Product>
     <Description>Modern portable video player with HDR tonemapping and magnet streaming</Description>
     <Company>Raul Blideran</Company>
     <Copyright>© 2026 Raul Blideran · GPL-3.0-or-later</Copyright>
     <!-- The commit is appended by build/publish-win.sh (SourceRevisionId), e.g. 1.1.0+50919f7. -->
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <!-- The .NET runtime a self-contained publish (the Windows zip, the Flatpak) bundles. Without
+       it each bundles the runtime its SDK shipped with, and Flathub's dotnet10 extension lags:
+       on 2026-11-24 it still carried 10.0.8, six patches and 100 CVE fixes behind. Keep it at
+       the newest 10.0 patch (https://dotnet.microsoft.com/download/dotnet/10.0); the runtime
+       pack is fetched from NuGet whatever SDK builds. -->
+  <PropertyGroup Condition="'$(SelfContained)' == 'true'">
+    <RuntimeFrameworkVersion>10.0.15</RuntimeFrameworkVersion>
   </PropertyGroup>
 
   <ItemGroup>

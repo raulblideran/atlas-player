@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: "8.0.x" }
+        with: { dotnet-version: "10.0.x" }
       - run: ./build/publish-win.sh
       # Named after the file inside, so a download from the run page says what it is.
       - uses: actions/upload-artifact@v4

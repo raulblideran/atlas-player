@@ -56,7 +56,7 @@ The Flatpak brings everything it plays with; what it takes from the machine is t
 
 ```sh
 flatpak install --user flathub org.flatpak.Builder org.freedesktop.Sdk//25.08 \
-    org.freedesktop.Sdk.Extension.rust-stable//25.08 org.freedesktop.Sdk.Extension.dotnet8//25.08
+    org.freedesktop.Sdk.Extension.rust-stable//25.08 org.freedesktop.Sdk.Extension.dotnet10//25.08
 
 ./build/publish-flatpak.sh     # builds, installs for your user, writes dist/paramaja-<version>.flatpak
 ```
@@ -131,7 +131,7 @@ Magnet flow: `nt_add(magnet)` resolves metadata and selects the largest video. m
 
 ## Building
 
-Requirements: .NET 8 SDK, Rust (with the `x86_64-pc-windows-gnu` target and MinGW for Windows cross-builds), ffmpeg + mpv/libmpv (for tests), 7-Zip, ImageMagick (icon only).
+Requirements: .NET 10 SDK, Rust (with the `x86_64-pc-windows-gnu` target and MinGW for Windows cross-builds), ffmpeg + mpv/libmpv (for tests), 7-Zip, ImageMagick (icon only).
 
 ```bash
 ./build/test.sh              # fixtures + Rust + .NET tests (add --net for the real-swarm test)

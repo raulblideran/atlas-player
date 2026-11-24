@@ -74,6 +74,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0-beta.3" date="2026-11-24" type="development">
+      <description>
+        <p>2.0.0-beta.2 with security updates: .NET 10, FFmpeg 9.1, mpv 0.42, libass 0.17.5, libplacebo, libbluray and yt-dlp.</p>
+      </description>
+    </release>
     <release version="2.0.0-beta.2" date="2026-11-24" type="development">
       <description>
         <p>A beta of 2.0.0, not yet tried on Windows: the same as 2.0.0-beta.1 (a new look with eleven themes, a simpler controls bar, regrouped settings, themed messages over the video), with the Linux Flatpak built again.</p>
