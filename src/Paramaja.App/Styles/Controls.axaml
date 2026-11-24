@@ -180,7 +180,7 @@
     <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
     <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
     <Setter Property="Padding" Value="9" />
-    <Setter Property="Margin" Value="4,0" />
+    <Setter Property="Margin" Value="8,0" />
   </Style>
   <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource ThemeAccentHover}" />
@@ -241,6 +241,7 @@
 
   <!-- Menus: the bar's flyouts and drop-down menus -->
   <Style Selector="MenuFlyoutPresenter">
+    <Setter Property="Padding" Value="6,8" />
     <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
     <Setter Property="Background" Value="{DynamicResource ThemeFlyout}" />
     <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
@@ -249,7 +250,7 @@
     <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
     <Setter Property="Background" Value="{DynamicResource ThemeFlyout}" />
     <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
-    <Setter Property="Padding" Value="16,12,16,14" />
+    <Setter Property="Padding" Value="20,14,20,18" />
   </Style>
   <Style Selector="MenuItem PathIcon">
     <Setter Property="Width" Value="16" />

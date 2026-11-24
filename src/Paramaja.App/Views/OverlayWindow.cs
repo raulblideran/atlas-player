@@ -29,8 +29,15 @@ public class OverlayWindow : Window
         AddHandler(KeyDownEvent, (_, e) =>
         {
             if (e.Source is TextBox) return;
-            if (DataContext is MainViewModel vm && KeyMapping.ToCanonical(e) is { } k && vm.HandleKey(k)) e.Handled = true;
+            if (DataContext is MainViewModel vm && KeyMapping.ToCanonical(e) is { } k && vm.HandleKey(k))
+            {
+                e.Handled = true;
+                _shortcutKeys.Add(e.Key);
+            }
         }, RoutingStrategies.Tunnel);
+        // A key that ran a shortcut is the shortcut's on its way up too: a button clicked a moment ago
+        // keeps the focus, and a focused button clicks on Space's key-up (Space paused and pressed it).
+        AddHandler(KeyUpEvent, (_, e) => { if (_shortcutKeys.Remove(e.Key)) e.Handled = true; }, RoutingStrategies.Tunnel);
         PointerEntered += (_, _) => { if (DataContext is MainViewModel vm) { vm.IsPointerOverControls = true; vm.NotifyPointerMoved(); } };
         PointerExited += (_, _) => { if (DataContext is MainViewModel vm) vm.IsPointerOverControls = false; };
         PointerMoved += (_, _) => (DataContext as MainViewModel)?.NotifyPointerMoved("a bar");
@@ -50,6 +57,7 @@ public class OverlayWindow : Window
         if (OperatingSystem.IsLinux()) X11DragDrop.Register(this);
     }
 
+    private readonly HashSet<Key> _shortcutKeys = [];
     private readonly List<FlyoutBase> _menus = [];
     private readonly HashSet<object> _open = [];
 

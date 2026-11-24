@@ -5,7 +5,7 @@
                  x:Class="Paramaja.App.Views.TopBar"
                  x:DataType="vm:MainViewModel"
                  Title="Paramaja title" Height="72">
-  <Border Background="{DynamicResource ThemeBarScrimTop}" Padding="18,12,18,18">
+  <Border Background="{DynamicResource ThemeBarScrimTop}" Padding="24,14,24,18">
     <Grid ColumnDefinitions="*,Auto,Auto">
       <StackPanel Spacing="2">
         <TextBlock Text="{Binding MediaTitle}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"

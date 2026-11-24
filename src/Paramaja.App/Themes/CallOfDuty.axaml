@@ -27,7 +27,8 @@
   <!-- The bars over the video -->
   <SolidColorBrush x:Key="ThemeBarText" Color="#EEF0E6" />
   <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimTop">
-    <GradientStop Offset="0" Color="#E6070805" />
+    <GradientStop Offset="0" Color="#F2070805" />
+    <GradientStop Offset="0.6" Color="#B3070805" />
     <GradientStop Offset="1" Color="#00070805" />
   </LinearGradientBrush>
   <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimBottom">

@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.VisualTree;
 using Avalonia.Threading;
 using Paramaja.App.Views;
 using Paramaja.Core.Playback;
@@ -43,16 +46,17 @@ public class RedesignTests
         var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
         bar.Show();
         Dispatcher.UIThread.RunJobs();
-        foreach (var name in new[] { "StopButton", "FrameBackButton", "FrameNextButton", "PreviousChapterButton", "NextChapterButton",
+        foreach (var name in new[] { "StopButton", "PreviousChapterButton", "NextChapterButton",
                      "ScreenshotButton", "DownloadVideoButton", "OpenLinkButton", "OpenMenuButton" })
             Assert.False(bar.FindControl<Button>(name)!.IsVisible, name);
-        foreach (var name in new[] { "PlayButton", "MoreButton", "SettingsButton", "FullscreenButton", "SubtitlesButton", "AudioMenuButton", "VideoMenuButton" })
+        foreach (var name in new[] { "PlayButton", "FrameBackButton", "FrameNextButton", "MoreButton", "SettingsButton", "FullscreenButton",
+                     "SubtitlesButton", "AudioMenuButton", "VideoMenuButton" })
             Assert.True(bar.FindControl<Button>(name)!.IsVisible, name);
 
         // Each one left off is in More, doing what its button did.
         Assert.Same(r.Vm.StopCommand, Item(bar, "Stop").Command);
-        Assert.Same(r.Vm.FrameBackStepCommand, Item(bar, "Previous frame").Command);
-        Assert.Same(r.Vm.FrameStepCommand, Item(bar, "Next frame").Command);
+        Assert.False(Item(bar, "Previous frame").IsVisible); // on the bar itself (2.0.1)
+        Assert.False(Item(bar, "Next frame").IsVisible);
         Assert.Same(r.Vm.PreviousChapterCommand, Item(bar, "Previous chapter").Command);
         Assert.Same(r.Vm.NextChapterCommand, Item(bar, "Next chapter").Command);
         Assert.Same(r.Vm.ScreenshotCommand, Item(bar, "Screenshot").Command);
@@ -65,7 +69,7 @@ public class RedesignTests
         Assert.Same(r.Vm.OpenDiscCommand, Item(bar, "Open disc…").Command);
         Assert.Same(r.Vm.OpenRipperCommand, Item(bar, "Rip disc…").Command);
         Assert.Same(r.Vm.OpenScreenshotsFolderCommand, Item(bar, "Screenshots folder").Command);
-        foreach (var header in new[] { "Stop", "Previous frame", "Next chapter", "Screenshot", "Open file…", "Rip disc…" })
+        foreach (var header in new[] { "Stop", "Next chapter", "Screenshot", "Open file…", "Rip disc…" })
             Assert.True(Item(bar, header).IsVisible, header);
         bar.Close();
     }
@@ -126,6 +130,90 @@ public class RedesignTests
         Dispatcher.UIThread.RunJobs();
         Assert.Equal(2, layout.SelectedIndex);
         w.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_frame_step_left_off_the_bar_is_in_more()
+    {
+        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden, "frames"] });
+        Playing(r);
+        var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
+        bar.Show();
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(bar.FindControl<Button>("FrameNextButton")!.IsVisible);
+        Assert.Same(r.Vm.FrameBackStepCommand, Item(bar, "Previous frame").Command);
+        Assert.Same(r.Vm.FrameStepCommand, Item(bar, "Next frame").Command);
+        Assert.True(Item(bar, "Next frame").IsVisible);
+        bar.Close();
+    }
+
+    [AvaloniaTheory]
+    [InlineData(1280, 0)]
+    [InlineData(1920, 1)]
+    [InlineData(720, 1)]
+    public void Play_and_the_transport_buttons_sit_on_the_bars_centre_without_overlapping(double width, int layout)
+    {
+        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+        Playing(r);
+        r.Player.State.PlaylistCount = 3;
+        r.Player.RaiseState("playlist-count");
+        r.Vm.BarLayoutIndex = layout;
+        var bar = new ControlsBar { DataContext = r.Vm, Width = width };
+        bar.Show();
+        Dispatcher.UIThread.RunJobs();
+        var transport = bar.FindControl<StackPanel>("Transport")!;
+        var row = (Panel)transport.Parent!;
+        var right = (Control)row.Children[2];
+        var middle = transport.Bounds.Center.X;
+        if (transport.Bounds.Width + right.Bounds.Width + 2 * Controls.BarRow.Gap < row.Bounds.Width / 2)
+            Assert.InRange(middle, row.Bounds.Width / 2 - 1, row.Bounds.Width / 2 + 1);
+        Assert.True(transport.Bounds.Right <= right.Bounds.Left - Controls.BarRow.Gap + 0.5, $"{transport.Bounds} overlaps {right.Bounds}");
+        Assert.True(((Control)row.Children[0]).Bounds.Right <= transport.Bounds.Left);
+        // Play is in the group, between previous and next.
+        var buttons = transport.Children.OfType<Button>().Where(b => b.IsVisible).Select(b => b.Name).ToList();
+        Assert.True(buttons.IndexOf("PreviousFileButton") < buttons.IndexOf("PlayButton"));
+        Assert.True(buttons.IndexOf("PlayButton") < buttons.IndexOf("NextFileButton"));
+        bar.Close();
+    }
+
+    /// <summary>
+    /// A clicked button keeps the keyboard focus, and a focused button clicks on Space's key-up:
+    /// Space paused and pressed the button too (fullscreen left, play toggled twice).
+    /// </summary>
+    [AvaloniaTheory]
+    [InlineData("PlayButton")]
+    [InlineData("FullscreenButton")]
+    [InlineData("SubtitlesButton")]
+    public void Space_after_clicking_a_bar_button_only_pauses(string name)
+    {
+        using var r = new Rig();
+        Playing(r);
+        var main = new MainWindow { DataContext = r.Vm };
+        main.Show();
+        var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
+        bar.Show(main);
+        Dispatcher.UIThread.RunJobs();
+        var button = bar.FindControl<Button>(name)!;
+        var at = button.TranslatePoint(new Avalonia.Point(button.Bounds.Width / 2, button.Bounds.Height / 2), bar)!.Value;
+        bar.MouseDown(at, Avalonia.Input.MouseButton.Left);
+        bar.MouseUp(at, Avalonia.Input.MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+        if (button.Flyout is { IsOpen: true } menu) menu.Hide();
+        Dispatcher.UIThread.RunJobs();
+        var fullscreen = r.Vm.IsFullscreen;
+        var before = r.Player.Calls.Count(c => c == "TogglePause");
+
+        bar.KeyPressQwerty(Avalonia.Input.PhysicalKey.Space, Avalonia.Input.RawInputModifiers.None);
+        bar.KeyReleaseQwerty(Avalonia.Input.PhysicalKey.Space, Avalonia.Input.RawInputModifiers.None);
+        main.KeyPressQwerty(Avalonia.Input.PhysicalKey.Space, Avalonia.Input.RawInputModifiers.None);
+        main.KeyReleaseQwerty(Avalonia.Input.PhysicalKey.Space, Avalonia.Input.RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(before + 2, r.Player.Calls.Count(c => c == "TogglePause")); // once per Space, nothing more
+        Assert.Equal(fullscreen, r.Vm.IsFullscreen);
+        Assert.False(button.Flyout?.IsOpen == true);
+        bar.Close();
+        main.Close();
     }
 
     [AvaloniaFact]

@@ -37,7 +37,7 @@ public enum RenderQuality
 public sealed class PlayerSettings
 {
     /// <summary>Bumped when a default changes for existing users too (see <see cref="Normalize"/>).</summary>
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 6;
 
     /// <summary>The settings.json format; 0 for files written before versioning.</summary>
     public int SettingsVersion { get; set; }
@@ -147,7 +147,10 @@ public sealed class PlayerSettings
     /// and every shortcut still works.
     /// </summary>
     public static readonly IReadOnlyList<string> SimpleBarHidden =
-        ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"];
+        ["stop", "chapters", "screenshot", "download", "openlink", "open"];
+
+    /// <summary>2.0.0's Simple bar, which left the frame steps off too.</summary>
+    private static readonly string[] SimpleBarHidden200 = ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"];
 
     // Appearance
     /// <summary>The look of the app (ThemeRegistry in the app); an id it doesn't know falls back to the default.</summary>
@@ -221,6 +224,9 @@ public sealed class PlayerSettings
         if (SettingsVersion < 4 && DisplayFps == 60) DisplayFps = 0;
         // 2.0.0 made the Simple bar the default; whoever had every button showing (the old default) moves too.
         if (SettingsVersion < 5 && (HiddenControls is null || HiddenControls.Count == 0)) HiddenControls = SimpleBarHidden.ToList();
+        // The Simple bar then got the frame steps back: whoever has 2.0.0's Simple bar gets them too.
+        if (SettingsVersion < 6 && HiddenControls is { } hidden && hidden.Count == SimpleBarHidden200.Length && SimpleBarHidden200.All(hidden.Contains))
+            HiddenControls = SimpleBarHidden.ToList();
         SettingsVersion = CurrentVersion;
         if (!ToneMappingCurves.Contains(ToneMapping)) ToneMapping = "mobius";
         HdrContrastRecovery = Math.Clamp(HdrContrastRecovery, 0, 2);

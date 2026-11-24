@@ -28,6 +28,7 @@
   <SolidColorBrush x:Key="ThemeBarText" Color="#1F1726" />
   <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimTop">
     <GradientStop Offset="0" Color="#F0F4F0F6" />
+    <GradientStop Offset="0.6" Color="#D9F4F0F6" />
     <GradientStop Offset="1" Color="#00F4F0F6" />
   </LinearGradientBrush>
   <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimBottom">

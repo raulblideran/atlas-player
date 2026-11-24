@@ -32,6 +32,8 @@ public partial class MainWindow : Window
         DiscVideo.HandleCreated += h => Vm.AttachDiscSurface(h);
 
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        // A key that ran a shortcut is the shortcut's on its way up too (see OnKeyDown).
+        AddHandler(KeyUpEvent, (_, e) => { if (_shortcutKeys.Remove(e.Key)) e.Handled = true; }, RoutingStrategies.Tunnel);
         AddHandler(DragDrop.DragOverEvent, (_, e) => e.DragEffects = DragDropEffects.Copy);
         AddHandler(DragDrop.DropEvent, OnDrop);
         PointerMoved += (_, _) => Vm.NotifyPointerMoved();
@@ -273,10 +275,20 @@ public partial class MainWindow : Window
         WindowState = fs ? WindowState.FullScreen : WindowState.Maximized;
     }
 
+    private readonly HashSet<Key> _shortcutKeys = [];
+
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
         if (e.Source is TextBox) return;
-        if (KeyMapping.ToCanonical(e) is { } key && Vm.HandleKey(key)) e.Handled = true;
+        // On the welcome screen, Space and Enter press the focused button (Open file…), as anywhere.
+        if (Vm.IsIdle && e.Source is Button && e.Key is Key.Space or Key.Enter) return;
+        if (KeyMapping.ToCanonical(e) is { } key && Vm.HandleKey(key))
+        {
+            e.Handled = true;
+            // Its key-up too: a focused button clicks on Space's key-up, so a button clicked a moment
+            // ago was pressed again along with the shortcut.
+            _shortcutKeys.Add(e.Key);
+        }
     }
 
     private async void OnDrop(object? sender, DragEventArgs e) => await DropOn(Vm, e);

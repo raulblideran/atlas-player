@@ -36,6 +36,18 @@ public class RedesignCoreTests
     }
 
     [Fact]
+    public void Who_has_the_first_simple_bar_gets_the_frame_steps_back()
+    {
+        var s = Load("""{"settingsVersion": 5, "hiddenControls": ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"]}""");
+        Assert.Equal(PlayerSettings.SimpleBarHidden, s.HiddenControls);
+        Assert.DoesNotContain("frames", s.HiddenControls);
+        // Their own choice since (frames off again, or anything else) stays.
+        Assert.Equal(["frames", "stop"], Load("""{"settingsVersion": 5, "hiddenControls": ["frames", "stop"]}""").HiddenControls);
+        Assert.Equal(["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"],
+            Load("""{"settingsVersion": 6, "hiddenControls": ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"]}""").HiddenControls);
+    }
+
+    [Fact]
     public void Who_picked_their_own_buttons_keeps_them()
     {
         var s = Load("""{"settingsVersion": 4, "hiddenControls": ["stop", "badges"]}""");
@@ -48,6 +60,7 @@ public class RedesignCoreTests
         Assert.All(PlayerSettings.SimpleBarHidden, id => Assert.Contains(id, PlayerSettings.ControlIds));
         Assert.DoesNotContain("subtitles", PlayerSettings.SimpleBarHidden);
         Assert.DoesNotContain("fullscreen", PlayerSettings.SimpleBarHidden);
+        Assert.DoesNotContain("frames", PlayerSettings.SimpleBarHidden); // the frame steps are on it
     }
 
     [Fact]
