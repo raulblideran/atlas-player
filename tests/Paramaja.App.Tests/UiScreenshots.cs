@@ -39,7 +39,7 @@ public class UiScreenshots
         {
             foreach (var theme in ThemeRegistry.All.Where(t => only.Length == 0 || only.Contains(t.Id)))
             {
-                using var r = new Rig(new PlayerSettings { Theme = theme.Id, HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+                using var r = new Rig(new PlayerSettings { Theme = theme.Id });
                 ThemeService.Apply(theme.Id);
                 var id = theme.Id;
 
@@ -69,6 +69,12 @@ public class UiScreenshots
                 Save(bar, folder, $"{id}-bar-simple");
                 r.Vm.BarLayoutIndex = 1;
                 Save(bar, folder, $"{id}-bar-everything");
+                // An arrangement of one's own: the title and the time left on the left, a divider, the clock.
+                r.Settings.BarLeft = ["title", "separator", "elapsed", "remaining"];
+                r.Settings.BarCentre = ["prevfile", "play", "nextfile"];
+                r.Settings.BarRight = ["mute", "volume", "spacer", "badge-hdr", "badge-codec", "separator", "subtitles", "audio", "more", "settings", "clock"];
+                r.Vm.ReloadBar();
+                Save(bar, folder, $"{id}-bar-custom");
                 r.Vm.BarLayoutIndex = 0;
                 bar.Close();
 
@@ -88,6 +94,11 @@ public class UiScreenshots
                     Save(settings, folder, $"{id}-settings-{tab.Name}");
                 }
                 settings.Close();
+                var barSettings = new SettingsWindow(Services.SettingsSection.ControlsBar) { DataContext = r.Vm };
+                barSettings.Show();
+                Dispatcher.UIThread.RunJobs();
+                Save(barSettings, folder, $"{id}-settings-bar-editor");
+                barSettings.Close();
 
                 var link = new OpenLinkDialog(new ViewModels.OpenLinkDialogViewModel("magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10"));
                 link.Show();

@@ -76,7 +76,8 @@ public sealed class DialogService(Window owner, Func<MainViewModel> vm) : IDialo
     public async Task<string?> ReadClipboardTextAsync() =>
         owner.Clipboard is { } c ? await c.TryGetTextAsync() : null;
 
-    public Task ShowSettingsAsync() => new SettingsWindow { DataContext = vm() }.ShowDialog(owner);
+    public Task ShowSettingsAsync(SettingsSection section = SettingsSection.None) =>
+        new SettingsWindow(section) { DataContext = vm() }.ShowDialog(owner);
 
     public async Task CopyToClipboardAsync(string text)
     {

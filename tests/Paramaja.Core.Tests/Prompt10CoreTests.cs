@@ -232,14 +232,14 @@ public class Prompt10SettingsTests
         var s = new PlayerSettings
         {
             SubtitleColor = "nonsense", SubtitlePosition = 900, SubtitleBorderSize = -3, SubtitleBackgroundOpacity = 4,
-            HiddenControls = ["stop", "frames", "stop", "no-such-button"],
+            BarRight = ["stop", "more", "stop", "no-such-button", "settings"],
         };
         s.Normalize();
         Assert.Equal(PlayerSettings.DefaultSubtitleColor, s.SubtitleColor);
         Assert.Equal(150, s.SubtitlePosition);
         Assert.Equal(0, s.SubtitleBorderSize);
         Assert.Equal(1, s.SubtitleBackgroundOpacity);
-        Assert.Equal(["stop", "frames"], s.HiddenControls);
+        Assert.Equal(["stop", "more", "settings"], s.BarRight);
         s.SubtitleBold = true;
         s.ResetSubtitleStyle();
         Assert.False(s.SubtitleBold);
@@ -251,7 +251,7 @@ public class Prompt10SettingsTests
     {
         var dir = TestEnvironment.TempDir();
         var file = Path.Combine(dir, SettingsStore.ExportName);
-        var old = new PlayerSettings { SeekSeconds = 30, SubtitleColor = "#FFE600", HiddenControls = ["download"], DisplayFps = 144, ExclusiveAudio = true };
+        var old = new PlayerSettings { SeekSeconds = 30, SubtitleColor = "#FFE600", BarRight = ["download", "more", "settings"], DisplayFps = 144, ExclusiveAudio = true };
         old.Normalize();
         SettingsStore.Export(old, file);
         Assert.True(SettingsStore.IsSettingsFile(file));
@@ -260,11 +260,11 @@ public class Prompt10SettingsTests
         here.CopyFrom(SettingsStore.ReadFile(file)!);
         Assert.Equal(30, here.SeekSeconds);
         Assert.Equal("#FFE600", here.SubtitleColor);
-        Assert.Equal(["download"], here.HiddenControls);
+        Assert.Equal(["download", "more", "settings"], here.BarRight);
         Assert.Equal(60, here.DisplayFps); // this machine's monitor
         Assert.False(here.ExclusiveAudio);
-        here.HiddenControls.Add("stop");
-        Assert.Equal(["download"], old.HiddenControls); // a copy, not the same list
+        here.BarRight.Add("stop");
+        Assert.Equal(["download", "more", "settings"], old.BarRight); // a copy, not the same list
     }
 
     [Fact]
@@ -299,11 +299,12 @@ public class Prompt10SettingsTests
     }
 
     [Fact]
-    public void Only_play_and_settings_cant_be_hidden()
+    public void Only_play_more_and_settings_cant_leave_the_bar()
     {
-        Assert.DoesNotContain("play", PlayerSettings.ControlIds);
-        Assert.DoesNotContain("settings", PlayerSettings.ControlIds);
-        Assert.Equal(PlayerSettings.ControlIds.Count, PlayerSettings.ControlIds.Distinct().Count());
+        Assert.True(BarItems.IsRequired("play"));
+        Assert.True(BarItems.IsRequired("more"));
+        Assert.True(BarItems.IsRequired("settings"));
+        Assert.False(BarItems.IsRequired("fullscreen"));
     }
 
     [Fact]

@@ -54,24 +54,25 @@ public class Prompt10BarTests
     }
 
     [Fact]
-    public void Hidden_buttons_stay_hidden_and_the_rest_show_where_they_apply()
+    public void Pieces_off_the_bar_stay_off_and_the_rest_show_where_they_apply()
     {
         using var r = new Rig();
         Playing(r);
+        Assert.True(r.Vm.OnBar("prevframe"));
+        Bar.Off(r.Vm, "prevframe");
+        Bar.Off(r.Vm, "nextframe");
+        Assert.False(r.Vm.OnBar("prevframe"));
+        Assert.DoesNotContain("prevframe", r.Settings.BarCentre);
+        Assert.True(r.Vm.PrevFrameInMore);
+        Assert.DoesNotContain("\"prevframe\"", File.ReadAllText(r.Store.FilePath)); // saved
+        r.Vm.UseEverythingBarCommand.Execute(null);
+        Assert.True(r.Vm.OnBar("prevframe"));
+        Assert.False(r.Vm.PrevFrameInMore);
+        Assert.Equal(1, r.Vm.BarLayoutIndex);
+        // On the bar, but shown only where it applies: no frames to step through in music.
         Assert.True(r.Vm.ShowFrameButtons);
-        var frames = r.Vm.ControlChoices.Single(c => c.Id == "frames");
-        frames.IsShown = false;
-        Assert.False(r.Vm.ShowFrameButtons);
-        Assert.Equal(["frames"], r.Settings.HiddenControls);
-        Assert.Contains("\"frames\"", File.ReadAllText(r.Store.FilePath)); // saved
-        r.Vm.ShowAllControlsCommand.Execute(null);
-        Assert.True(r.Vm.ShowFrameButtons);
-        Assert.Empty(r.Settings.HiddenControls);
-        Assert.True(r.Vm.ControlChoices.All(c => c.IsShown));
-        // Shown, but only where it applies: no frames to step through in music.
         Playing(r, video: false);
         Assert.False(r.Vm.ShowFrameButtons);
-        Assert.Equal(PlayerSettings.ControlIds, r.Vm.ControlChoices.Select(c => c.Id));
     }
 
     [Fact]
@@ -102,29 +103,31 @@ public class Prompt10BarTests
     }
 
     [AvaloniaFact]
-    public void The_bar_hides_the_buttons_unticked_in_settings()
+    public void The_bar_leaves_off_what_the_settings_take_off()
     {
         using var r = new Rig();
         Playing(r);
+        r.Vm.UseEverythingBarCommand.Execute(null);
         var bar = new ControlsBar { DataContext = r.Vm };
         bar.Show();
         Dispatcher.UIThread.RunJobs();
         var stop = bar.FindControl<Button>("StopButton")!;
         var download = bar.FindControl<Button>("DownloadVideoButton")!;
-        Assert.True(stop.IsVisible);
-        Assert.True(download.IsVisible);
-        foreach (var id in new[] { "stop", "download", "badges", "volume" }) r.Vm.ControlChoices.Single(c => c.Id == id).IsShown = false;
+        Assert.True(stop.IsEffectivelyVisible);
+        Assert.True(download.IsEffectivelyVisible);
+        foreach (var id in new[] { "stop", "download", "badge-codec", "mute", "volume", "volumetext" }) Bar.Off(r.Vm, id);
         Dispatcher.UIThread.RunJobs();
-        Assert.False(stop.IsVisible);
-        Assert.False(download.IsVisible);
-        Assert.False(bar.FindControl<StackPanel>("Badges")!.IsVisible);
-        Assert.False(bar.FindControl<StackPanel>("VolumeControls")!.IsVisible);
-        Assert.True(bar.FindControl<Button>("PlayButton")!.IsVisible); // always
-        Assert.True(bar.FindControl<Button>("SettingsButton")!.IsVisible);
+        Assert.False(stop.IsEffectivelyVisible);
+        Assert.False(download.IsEffectivelyVisible);
+        Assert.Null(bar.GroupOf("stop"));
+        Assert.False(bar.FindControl<Border>("CodecBadge")!.IsEffectivelyVisible);
+        Assert.False(bar.FindControl<Slider>("VolumeSlider")!.IsEffectivelyVisible);
+        Assert.True(bar.FindControl<Button>("PlayButton")!.IsEffectivelyVisible); // always
+        Assert.True(bar.FindControl<Button>("SettingsButton")!.IsEffectivelyVisible);
         r.Player.State.PlaylistCount = 4;
         r.Player.RaiseState("playlist-count");
         Dispatcher.UIThread.RunJobs();
-        Assert.True(bar.FindControl<Button>("NextFileButton")!.IsVisible);
+        Assert.True(bar.FindControl<Button>("NextFileButton")!.IsEffectivelyVisible);
         bar.Close();
     }
 }
@@ -147,7 +150,7 @@ public class Prompt10SettingsTests
     {
         using var r = new Rig();
         r.Settings.DisplayFps = 100;
-        var file = Exported(s => { s.SeekSeconds = 42; s.SubtitleColor = "#FFE600"; s.HiddenControls = ["download"]; s.DisplayFps = 144; });
+        var file = Exported(s => { s.SeekSeconds = 42; s.SubtitleColor = "#FFE600"; s.BarRight.Remove("download"); s.BarRight.Insert(0, "download"); s.DisplayFps = 144; });
 
         r.Dialogs.Confirm = false;
         await r.Vm.DropAsync([file], null);
@@ -160,7 +163,8 @@ public class Prompt10SettingsTests
         Assert.Equal(42, r.Settings.SeekSeconds);
         Assert.Equal(42, r.Vm.SeekSeconds);
         Assert.Equal("#FFE600", r.Vm.SubtitleColor);
-        Assert.False(r.Vm.ControlChoices.Single(c => c.Id == "download").IsShown);
+        Assert.Equal("download", r.Vm.BarZones[2].Slots[0].Id);
+        Assert.Equal("download", r.Settings.BarRight[0]);
         Assert.Equal(100, r.Settings.DisplayFps); // this machine's
         Assert.Contains("ApplySubtitles", r.Player.Calls);
         Assert.Contains("\"seekSeconds\": 42", File.ReadAllText(r.Store.FilePath)); // saved here
@@ -219,17 +223,17 @@ public class Prompt10SettingsTests
     }
 
     [AvaloniaFact]
-    public void The_interface_tab_lists_every_button_and_the_settings_file()
+    public void The_interface_tab_shows_every_piece_of_the_bar_and_the_settings_file()
     {
         using var r = new Rig();
         var w = new SettingsWindow { DataContext = r.Vm };
         w.Show();
         w.GetLogicalDescendants().OfType<TabControl>().Single().SelectedItem = w.FindControl<TabItem>("InterfaceTab");
         Dispatcher.UIThread.RunJobs();
-        var boxes = w.FindControl<ItemsControl>("ControlChoices")!.GetVisualDescendants().OfType<CheckBox>().ToList();
-        Assert.Equal(PlayerSettings.ControlIds.Count, boxes.Count);
-        boxes.First(b => (b.Content as string)?.StartsWith("Stop") == true).IsChecked = false;
-        Assert.Equal(["stop"], r.Settings.HiddenControls);
+        var chips = w.FindControl<BarEditor>("BarEditor")!.GetVisualDescendants().OfType<Border>()
+            .Where(b => b.Classes.Contains("bar-chip") && b.DataContext is BarSlot).ToList();
+        Assert.Equal(BarItems.Simple.All.Count() + r.Vm.BarOffZone.Slots.Count, chips.Count);
+        Assert.Equal(BarItems.All.Count, chips.Select(c => ((BarSlot)c.DataContext!).Id).Distinct().Count()); // every piece is there
         Assert.NotNull(w.FindControl<Button>("ExportSettingsButton"));
         Assert.NotNull(w.FindControl<Button>("ImportSettingsButton"));
         w.Close();

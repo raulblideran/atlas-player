@@ -1390,6 +1390,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public void TickAutoHide(DateTime utcNow)
     {
         TickToast(utcNow); // before a new buffering line is shown, not after
+        UpdateClock();
         UpdateBufferingText(utcNow);
         ReconcilePause();
         if (ControlsVisible && _player is { } p && p.State.Position != Position) ShowPosition();

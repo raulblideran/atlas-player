@@ -63,7 +63,8 @@ public sealed partial class MainViewModel
             p.ApplyStreamQuality();
             p.SetVolume(Settings.Volume);
         }
-        foreach (var c in ControlChoices) c.IsShown = Shows(c.Id);
+        LoadBarZones();
+        OnBarChanged();
         Services.ThemeService.Apply(Settings.Theme);
         OnPropertyChanged(string.Empty);
         UpdateAudioBadge();

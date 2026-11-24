@@ -74,6 +74,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0-beta.5" date="2026-11-24" type="development">
+      <description>
+        <p>A controls bar you arrange yourself: drag any button, badge or readout (time left, clock, title, spaces, dividers) to the left, centre or right of the bar, or off it, in Settings, Appearance.</p>
+      </description>
+    </release>
     <release version="2.0.0-beta.4" date="2026-11-24" type="development">
       <description>
         <p>2.0.0-beta.3 with a complete Windows zip (beta.2 and beta.3 shipped without their libraries). The Linux build is unchanged.</p>

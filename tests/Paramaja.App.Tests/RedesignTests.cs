@@ -5,6 +5,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
+using Paramaja.App.ViewModels;
 using Paramaja.App.Views;
 using Paramaja.Core.Playback;
 using Paramaja.Core.Settings;
@@ -42,17 +43,17 @@ public class RedesignTests
     [AvaloniaFact]
     public void The_simple_bar_leaves_its_buttons_off_and_more_has_each_of_them()
     {
-        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+        using var r = new Rig();
         Playing(r, chapters: true);
         var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
         bar.Show();
         Dispatcher.UIThread.RunJobs();
         foreach (var name in new[] { "StopButton", "PreviousChapterButton", "NextChapterButton",
                      "ScreenshotButton", "DownloadVideoButton", "OpenLinkButton", "OpenMenuButton" })
-            Assert.False(bar.FindControl<Button>(name)!.IsVisible, name);
+            Assert.False(bar.FindControl<Button>(name)!.IsEffectivelyVisible, name);
         foreach (var name in new[] { "PlayButton", "FrameBackButton", "FrameNextButton", "MoreButton", "SettingsButton", "FullscreenButton",
                      "SubtitlesButton", "AudioMenuButton", "VideoMenuButton" })
-            Assert.True(bar.FindControl<Button>(name)!.IsVisible, name);
+            Assert.True(bar.FindControl<Button>(name)!.IsEffectivelyVisible, name);
 
         // Each one left off is in More, doing what its button did.
         Assert.Same(r.Vm.StopCommand, Item(bar, "Stop").Command);
@@ -78,7 +79,7 @@ public class RedesignTests
     [AvaloniaFact]
     public void More_offers_only_what_applies_and_what_the_bar_doesnt_show()
     {
-        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+        using var r = new Rig();
         Playing(r, video: false); // music: no frames, no chapters
         var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
         bar.Show();
@@ -90,7 +91,7 @@ public class RedesignTests
 
         r.Vm.BarLayoutIndex = 1; // Everything: the bar has them, More doesn't repeat them
         Dispatcher.UIThread.RunJobs();
-        Assert.True(bar.FindControl<Button>("StopButton")!.IsVisible);
+        Assert.True(bar.FindControl<Button>("StopButton")!.IsEffectivelyVisible);
         Assert.False(Item(bar, "Stop").IsVisible);
         Assert.False(Item(bar, "Screenshot").IsVisible);
         Assert.False(r.Vm.HasPlaybackInMore);
@@ -99,35 +100,38 @@ public class RedesignTests
     }
 
     [Fact]
-    public void The_layout_presets_write_the_hidden_buttons_and_a_hand_picked_bar_is_custom()
+    public void The_layout_presets_write_the_arrangement_and_a_hand_made_bar_is_custom()
     {
-        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+        using var r = new Rig();
         Assert.Equal(0, r.Vm.BarLayoutIndex);
         Assert.Contains("More", r.Vm.BarLayoutText);
         r.Vm.BarLayoutIndex = 1;
-        Assert.Empty(r.Settings.HiddenControls);
-        Assert.True(r.Vm.ControlChoices.All(c => c.IsShown));
-        r.Vm.ControlChoices.Single(c => c.Id == "screenshot").IsShown = false;
+        Assert.Equal(BarItems.Everything.Right, r.Settings.BarRight);
+        Assert.Equal(BarItems.Everything.Centre, r.Vm.BarZones[1].Slots.Select(s => s.Id));
+        Bar.Off(r.Vm, "screenshot");
         Assert.Equal(2, r.Vm.BarLayoutIndex);
         r.Vm.BarLayoutIndex = 2; // choosing Custom itself changes nothing
-        Assert.Equal(["screenshot"], r.Settings.HiddenControls);
+        Assert.DoesNotContain("screenshot", r.Settings.BarRight);
         r.Vm.BarLayoutIndex = 0;
-        Assert.Equal(PlayerSettings.SimpleBarHidden.Order(), r.Settings.HiddenControls.Order());
-        Assert.Equal(r.Vm.ControlChoices.Where(c => !c.IsShown).Select(c => c.Id).Order(), PlayerSettings.SimpleBarHidden.Order());
-        Assert.Contains("\"stop\"", File.ReadAllText(r.Store.FilePath)); // saved
+        Assert.True(BarItems.Simple.SameAs(r.Settings.BarLeft, r.Settings.BarCentre, r.Settings.BarRight));
+        Assert.Equal(BarItems.Simple.Right, r.Vm.BarZones[2].Slots.Select(s => s.Id));
+        // Only the order changed: still Custom.
+        Bar.Move(r.Vm, "fullscreen", BarZoneKind.Right, 0);
+        Assert.Equal(2, r.Vm.BarLayoutIndex);
+        Assert.Contains("\"fullscreen\"", File.ReadAllText(r.Store.FilePath)); // saved
     }
 
     [AvaloniaFact]
     public void The_settings_layout_choice_follows_the_bar()
     {
-        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+        using var r = new Rig();
         var w = new SettingsWindow { DataContext = r.Vm };
         w.Show();
         var layout = w.FindControl<ComboBox>("BarLayout")!;
         Assert.Equal(0, layout.SelectedIndex);
         layout.SelectedIndex = 1;
-        Assert.Empty(r.Settings.HiddenControls);
-        r.Vm.ControlChoices.Single(c => c.Id == "stop").IsShown = false;
+        Assert.Equal(BarItems.Everything.Centre, r.Settings.BarCentre);
+        Bar.Off(r.Vm, "stop");
         Dispatcher.UIThread.RunJobs();
         Assert.Equal(2, layout.SelectedIndex);
         w.Close();
@@ -136,12 +140,12 @@ public class RedesignTests
     [AvaloniaFact]
     public void A_frame_step_left_off_the_bar_is_in_more()
     {
-        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden, "frames"] });
+        using var r = new Rig(new PlayerSettings { BarCentre = [.. BarItems.Simple.Centre.Except(["prevframe", "nextframe"])] });
         Playing(r);
         var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
         bar.Show();
         Dispatcher.UIThread.RunJobs();
-        Assert.False(bar.FindControl<Button>("FrameNextButton")!.IsVisible);
+        Assert.False(bar.FindControl<Button>("FrameNextButton")!.IsEffectivelyVisible);
         Assert.Same(r.Vm.FrameBackStepCommand, Item(bar, "Previous frame").Command);
         Assert.Same(r.Vm.FrameStepCommand, Item(bar, "Next frame").Command);
         Assert.True(Item(bar, "Next frame").IsVisible);
@@ -156,12 +160,16 @@ public class RedesignTests
     [InlineData(720, 1, true)]
     public void Play_sits_on_the_bars_centre_whatever_shows_beside_it(double width, int layout, bool chapters)
     {
-        using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
+        using var r = new Rig();
         Playing(r, chapters: chapters);
-        if (chapters) r.Vm.ControlChoices.Single(c => c.Id == "chapters").IsShown = true; // chapter steps both sides
         r.Player.State.PlaylistCount = 3;
         r.Player.RaiseState("playlist-count");
         r.Vm.BarLayoutIndex = layout;
+        if (chapters && layout == 0) // chapter steps both sides
+        {
+            Bar.Move(r.Vm, "prevchapter", BarZoneKind.Centre, r.Settings.BarCentre.IndexOf("prevframe"));
+            Bar.Move(r.Vm, "nextchapter", BarZoneKind.Centre, r.Settings.BarCentre.IndexOf("nextframe") + 1);
+        }
         var bar = new ControlsBar { DataContext = r.Vm, Width = width };
         bar.Show();
         Dispatcher.UIThread.RunJobs();
@@ -178,6 +186,8 @@ public class RedesignTests
         Assert.True(((Control)row.Children[0]).Bounds.Right <= transport.Bounds.Left);
         // Play is in the group, between previous and next.
         var buttons = transport.Children.OfType<Button>().Where(b => b.IsVisible).Select(b => b.Name).ToList();
+        if (chapters) Assert.Equal(["PreviousChapterButton", "FrameBackButton", "PlayButton", "FrameNextButton", "NextChapterButton"],
+            buttons.Where(b => b!.Contains("Chapter") || b.Contains("Frame") || b == "PlayButton"));
         Assert.True(buttons.IndexOf("PreviousFileButton") < buttons.IndexOf("PlayButton"));
         Assert.True(buttons.IndexOf("PlayButton") < buttons.IndexOf("NextFileButton"));
         bar.Close();

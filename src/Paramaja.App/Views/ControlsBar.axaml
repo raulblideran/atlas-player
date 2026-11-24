@@ -6,330 +6,363 @@
                  x:Class="Paramaja.App.Views.ControlsBar"
                  x:DataType="vm:MainViewModel"
                  Title="Paramaja controls" Height="118">
-  <Border Background="{DynamicResource ThemeBarScrimBottom}" Padding="24,14,24,12">
-    <Grid RowDefinitions="Auto,Auto">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <TextBlock Classes="time" Text="{Binding PositionText}" Margin="0,10,0,0" />
-        <c:SeekBar x:Name="Seek" Grid.Column="1" Margin="10,0" Value="{Binding Position}"
-                   Maximum="{Binding Duration}" Buffered="{Binding BufferedUntil}" />
-        <TextBlock Grid.Column="2" Classes="time" Text="{Binding DurationText}" Margin="0,10,0,0" />
+  <Panel>
+    <Border x:Name="Root" Background="{DynamicResource ThemeBarScrimBottom}" Padding="24,14,24,12">
+      <Border.ContextFlyout>
+        <MenuFlyout Placement="Pointer">
+          <MenuItem Header="Customize bar…" Command="{Binding CustomizeBarCommand}"
+                    ToolTip.Tip="Settings, Appearance: place, order and remove the bar's buttons" />
+        </MenuFlyout>
+      </Border.ContextFlyout>
+      <Grid RowDefinitions="Auto,Auto">
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <TextBlock Classes="time" Text="{Binding PositionText}" Margin="0,10,0,0" />
+          <c:SeekBar x:Name="Seek" Grid.Column="1" Margin="10,0" Value="{Binding Position}"
+                     Maximum="{Binding Duration}" Buffered="{Binding BufferedUntil}" />
+          <TextBlock Grid.Column="2" Classes="time" Text="{Binding DurationText}" Margin="0,10,0,0" />
+        </Grid>
+
+        <!-- The bar's three groups, filled from Settings → Appearance's arrangement (BarItems): the
+             middle one's Play, if it holds it, sits on the bar's centre. Every piece is in Pool below
+             and is moved into its group by ControlsBar.ApplyLayout; what's off the bar stays there. -->
+        <c:BarRow Grid.Row="1" Margin="0,4,0,0">
+          <StackPanel x:Name="LeftGroup" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" ClipToBounds="True" />
+          <StackPanel x:Name="Transport" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" />
+          <StackPanel x:Name="RightGroup" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" />
+        </c:BarRow>
       </Grid>
+    </Border>
 
-      <!-- Left: how loud and what's playing. Middle, on the bar's centre: getting around the video,
-           play at its heart. Right: this video's menus, then the app's. -->
-      <c:BarRow Grid.Row="1" Margin="0,4,0,0">
-        <StackPanel Orientation="Horizontal" Spacing="16" VerticalAlignment="Center" ClipToBounds="True">
-          <StackPanel x:Name="VolumeControls" Orientation="Horizontal" Spacing="2" IsVisible="{Binding ShowVolume}">
-            <Button Classes="icon" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="Mute (M)">
-              <Panel>
-                <PathIcon Data="{StaticResource IconVolume}" IsVisible="{Binding !IsMuted}" />
-                <PathIcon Data="{StaticResource IconMute}" IsVisible="{Binding IsMuted}" />
-              </Panel>
-            </Button>
-            <Slider Width="110" Minimum="0" Maximum="150" Value="{Binding Volume}" VerticalAlignment="Center"
-                    SmallChange="5" LargeChange="10" Focusable="False"
-                    ToolTip.Tip="{Binding VolumeDecibels, StringFormat='Volume {0} (up and down arrows)'}" />
-            <TextBlock Classes="time" Text="{Binding VolumeText}" Margin="6,0,0,0" FontSize="12" Opacity="0.8"
-                       ToolTip.Tip="{Binding VolumeDecibels}" />
-          </StackPanel>
-          <StackPanel x:Name="Badges" Orientation="Horizontal" VerticalAlignment="Center"
-                      IsVisible="{Binding ShowBadges}">
-            <Border Classes="badge hdr" IsVisible="{Binding HdrBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding HdrBadge}" />
-            </Border>
-            <Border x:Name="CodecBadge" Classes="badge" ToolTip.Tip="{Binding CodecTip}"
-                    IsVisible="{Binding CodecBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding CodecBadge}" />
-            </Border>
-            <Border Classes="badge" IsVisible="{Binding ResolutionBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding ResolutionBadge}" />
-            </Border>
-            <Border Classes="badge" IsVisible="{Binding DecoderBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                    ToolTip.Tip="HW: the graphics card decodes this video. SW: the processor does.">
-              <TextBlock Text="{Binding DecoderBadge}" />
-            </Border>
-            <Border x:Name="AudioBadge" Classes="badge" ToolTip.Tip="{Binding AudioTip}"
-                    IsVisible="{Binding AudioBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <TextBlock Text="{Binding AudioBadge}" />
-            </Border>
-            <Border Classes="badge" IsVisible="{Binding DeinterlaceBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                    ToolTip.Tip="{Binding DeinterlaceTip}">
-              <TextBlock Text="{Binding DeinterlaceBadge}" />
-            </Border>
-          </StackPanel>
-        </StackPanel>
+    <!-- Every piece the bar can hold, tagged with its BarItems id (spacers and dividers are made in
+         ControlsBar.ApplyLayout, one for each). What's off the bar stays here, out of sight. -->
+    <Panel x:Name="Pool" IsVisible="False">
+        <Button c:BarRow.Item="mute" x:Name="MuteButton" Classes="icon" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="Mute (M)">
+          <Panel>
+            <PathIcon Data="{StaticResource IconVolume}" IsVisible="{Binding !IsMuted}" />
+            <PathIcon Data="{StaticResource IconMute}" IsVisible="{Binding IsMuted}" />
+          </Panel>
+        </Button>
+        <Slider c:BarRow.Item="volume" x:Name="VolumeSlider" Width="110" Minimum="0" Maximum="150" Value="{Binding Volume}" VerticalAlignment="Center"
+                SmallChange="5" LargeChange="10" Focusable="False"
+                ToolTip.Tip="{Binding VolumeDecibels, StringFormat='Volume {0} (up and down arrows)'}" />
+        <TextBlock c:BarRow.Item="volumetext" x:Name="VolumeText" Classes="time" Text="{Binding VolumeText}" Margin="2,0,0,0" FontSize="12" Opacity="0.8"
+                   VerticalAlignment="Center" ToolTip.Tip="{Binding VolumeDecibels}" />
 
-        <StackPanel x:Name="Transport" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-          <Button x:Name="StopButton" Classes="icon" Command="{Binding StopCommand}" IsVisible="{Binding ShowStopButton}" ToolTip.Tip="Stop (Ctrl+S)">
-            <PathIcon Data="{StaticResource IconStop}" />
-          </Button>
-          <Button x:Name="PreviousFileButton" Classes="icon" Command="{Binding PreviousFileCommand}" IsVisible="{Binding ShowFileButtons}"
-                  ToolTip.Tip="{Binding PreviousFileTip}">
-            <PathIcon Data="{StaticResource IconPlaylistPrev}" />
-          </Button>
-          <Button x:Name="PreviousChapterButton" Classes="icon" Command="{Binding PreviousChapterCommand}" IsVisible="{Binding ShowChapterButtons}"
-                  ToolTip.Tip="Previous chapter (Page Up)">
-            <PathIcon Data="{StaticResource IconChapterPrev}" />
-          </Button>
-          <Button x:Name="FrameBackButton" Classes="icon" Command="{Binding FrameBackStepCommand}" IsVisible="{Binding ShowFrameButtons}"
-                  ToolTip.Tip="Previous frame ( , )">
-            <PathIcon Data="{StaticResource IconFramePrev}" />
-          </Button>
-          <Button x:Name="PlayButton" Classes="icon play" c:BarRow.CentreOn="True" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{Binding PlayButtonTip}">
-            <Panel>
-              <PathIcon Data="{StaticResource IconPlay}" IsVisible="{Binding ShowPlayIcon}" />
-              <PathIcon Data="{StaticResource IconPause}" IsVisible="{Binding ShowPauseIcon}" />
-              <PathIcon x:Name="OpeningSpinner" Classes="spin" Data="{StaticResource IconSpinner}" IsVisible="{Binding IsStartingStream}" />
-            </Panel>
-          </Button>
-          <Button x:Name="FrameNextButton" Classes="icon" Command="{Binding FrameStepCommand}" IsVisible="{Binding ShowFrameButtons}"
-                  ToolTip.Tip="Next frame ( . )">
-            <PathIcon Data="{StaticResource IconFrameNext}" />
-          </Button>
-          <Button x:Name="NextChapterButton" Classes="icon" Command="{Binding NextChapterCommand}" IsVisible="{Binding ShowChapterButtons}"
-                  ToolTip.Tip="Next chapter (Page Down)">
-            <PathIcon Data="{StaticResource IconChapterNext}" />
-          </Button>
-          <Button x:Name="NextFileButton" Classes="icon" Command="{Binding NextFileCommand}" IsVisible="{Binding ShowFileButtons}"
-                  ToolTip.Tip="{Binding NextFileTip}">
-            <PathIcon Data="{StaticResource IconPlaylistNext}" />
-          </Button>
-        </StackPanel>
+        <Border c:BarRow.Item="badge-hdr" x:Name="HdrBadge" Classes="badge hdr" IsVisible="{Binding HdrBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding HdrBadge}" />
+        </Border>
+        <Border c:BarRow.Item="badge-codec" x:Name="CodecBadge" Classes="badge" ToolTip.Tip="{Binding CodecTip}"
+                IsVisible="{Binding CodecBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding CodecBadge}" />
+        </Border>
+        <Border c:BarRow.Item="badge-resolution" x:Name="ResolutionBadge" Classes="badge" IsVisible="{Binding ResolutionBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding ResolutionBadge}" />
+        </Border>
+        <Border c:BarRow.Item="badge-decoder" x:Name="DecoderBadge" Classes="badge" IsVisible="{Binding DecoderBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                ToolTip.Tip="HW: the graphics card decodes this video. SW: the processor does.">
+          <TextBlock Text="{Binding DecoderBadge}" />
+        </Border>
+        <Border c:BarRow.Item="badge-audio" x:Name="AudioBadge" Classes="badge" ToolTip.Tip="{Binding AudioTip}"
+                IsVisible="{Binding AudioBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+          <TextBlock Text="{Binding AudioBadge}" />
+        </Border>
+        <Border c:BarRow.Item="badge-deinterlace" x:Name="DeinterlaceBadge" Classes="badge" IsVisible="{Binding DeinterlaceBadge, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                ToolTip.Tip="{Binding DeinterlaceTip}">
+          <TextBlock Text="{Binding DeinterlaceBadge}" />
+        </Border>
 
-        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-          <Button x:Name="DiscMenuButton" Classes="icon" Command="{Binding ShowDiscMenuCommand}" IsVisible="{Binding ShowDiscMenuButton}"
-                  ToolTip.Tip="Disc menu (the arrow keys and Enter choose in it)">
-            <PathIcon Data="{StaticResource IconHome}" />
-          </Button>
+        <Button c:BarRow.Item="stop" x:Name="StopButton" Classes="icon" Command="{Binding StopCommand}" ToolTip.Tip="Stop (Ctrl+S)">
+          <PathIcon Data="{StaticResource IconStop}" />
+        </Button>
+        <Button c:BarRow.Item="prevfile" x:Name="PreviousFileButton" Classes="icon" Command="{Binding PreviousFileCommand}" IsVisible="{Binding ShowFileButtons}"
+                ToolTip.Tip="{Binding PreviousFileTip}">
+          <PathIcon Data="{StaticResource IconPlaylistPrev}" />
+        </Button>
+        <Button c:BarRow.Item="prevchapter" x:Name="PreviousChapterButton" Classes="icon" Command="{Binding PreviousChapterCommand}" IsVisible="{Binding ShowChapterButtons}"
+                ToolTip.Tip="Previous chapter (Page Up)">
+          <PathIcon Data="{StaticResource IconChapterPrev}" />
+        </Button>
+        <Button c:BarRow.Item="prevframe" x:Name="FrameBackButton" Classes="icon" Command="{Binding FrameBackStepCommand}" IsVisible="{Binding ShowFrameButtons}"
+                ToolTip.Tip="Previous frame ( , )">
+          <PathIcon Data="{StaticResource IconFramePrev}" />
+        </Button>
+        <Button c:BarRow.Item="play" x:Name="PlayButton" Classes="icon play" c:BarRow.CentreOn="True" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{Binding PlayButtonTip}">
+          <Panel>
+            <PathIcon Data="{StaticResource IconPlay}" IsVisible="{Binding ShowPlayIcon}" />
+            <PathIcon Data="{StaticResource IconPause}" IsVisible="{Binding ShowPauseIcon}" />
+            <PathIcon x:Name="OpeningSpinner" Classes="spin" Data="{StaticResource IconSpinner}" IsVisible="{Binding IsStartingStream}" />
+          </Panel>
+        </Button>
+        <Button c:BarRow.Item="nextframe" x:Name="FrameNextButton" Classes="icon" Command="{Binding FrameStepCommand}" IsVisible="{Binding ShowFrameButtons}"
+                ToolTip.Tip="Next frame ( . )">
+          <PathIcon Data="{StaticResource IconFrameNext}" />
+        </Button>
+        <Button c:BarRow.Item="nextchapter" x:Name="NextChapterButton" Classes="icon" Command="{Binding NextChapterCommand}" IsVisible="{Binding ShowChapterButtons}"
+                ToolTip.Tip="Next chapter (Page Down)">
+          <PathIcon Data="{StaticResource IconChapterNext}" />
+        </Button>
+        <Button c:BarRow.Item="nextfile" x:Name="NextFileButton" Classes="icon" Command="{Binding NextFileCommand}" IsVisible="{Binding ShowFileButtons}"
+                ToolTip.Tip="{Binding NextFileTip}">
+          <PathIcon Data="{StaticResource IconPlaylistNext}" />
+        </Button>
 
-          <Button x:Name="ChaptersButton" Classes="icon" ToolTip.Tip="Titles and chapters" IsVisible="{Binding ShowChapterMenuButton}">
-            <PathIcon Data="{StaticResource IconChapters}" />
-            <Button.Flyout>
-              <Flyout Placement="TopEdgeAlignedRight">
-                <ScrollViewer MaxHeight="460" Width="340">
-                  <StackPanel Spacing="2">
-                    <StackPanel IsVisible="{Binding HasDiscTitles}" Spacing="2" Margin="0,0,0,8">
-                      <TextBlock Classes="section" Text="Titles" Margin="0,0,0,4" />
-                      <ItemsControl ItemsSource="{Binding DiscTitles}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="vm:ChapterItem">
-                            <RadioButton GroupName="titles" Content="{Binding Label}" IsChecked="{Binding IsCurrent, Mode=OneWay}"
-                                         Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).SelectDiscTitleCommand}"
-                                         CommandParameter="{Binding}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
-                    <StackPanel IsVisible="{Binding HasChapters}" Spacing="2">
-                      <TextBlock Classes="section" Text="Chapters" Margin="0,0,0,4" />
-                      <ItemsControl ItemsSource="{Binding Chapters}">
-                        <ItemsControl.ItemTemplate>
-                          <DataTemplate x:DataType="vm:ChapterItem">
-                            <RadioButton GroupName="chapters" Content="{Binding Label}" IsChecked="{Binding IsCurrent, Mode=OneWay}"
-                                         Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).GoToChapterCommand}"
-                                         CommandParameter="{Binding}" />
-                          </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                      </ItemsControl>
-                    </StackPanel>
-                    <TextBlock Classes="note" Margin="0,8,0,0" Text="Page Up and Page Down go to the previous and next chapter." />
+        <Button c:BarRow.Item="discmenu" x:Name="DiscMenuButton" Classes="icon" Command="{Binding ShowDiscMenuCommand}" IsVisible="{Binding ShowDiscMenuButton}"
+                ToolTip.Tip="Disc menu (the arrow keys and Enter choose in it)">
+          <PathIcon Data="{StaticResource IconHome}" />
+        </Button>
+
+        <Button c:BarRow.Item="chaptermenu" x:Name="ChaptersButton" Classes="icon" ToolTip.Tip="Titles and chapters" IsVisible="{Binding ShowChapterMenuButton}">
+          <PathIcon Data="{StaticResource IconChapters}" />
+          <Button.Flyout>
+            <Flyout Placement="TopEdgeAlignedRight">
+              <ScrollViewer MaxHeight="460" Width="340">
+                <StackPanel Spacing="2">
+                  <StackPanel IsVisible="{Binding HasDiscTitles}" Spacing="2" Margin="0,0,0,8">
+                    <TextBlock Classes="section" Text="Titles" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding DiscTitles}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ChapterItem">
+                          <RadioButton GroupName="titles" Content="{Binding Label}" IsChecked="{Binding IsCurrent, Mode=OneWay}"
+                                       Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).SelectDiscTitleCommand}"
+                                       CommandParameter="{Binding}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                   </StackPanel>
-                </ScrollViewer>
-              </Flyout>
-            </Button.Flyout>
-          </Button>
-
-          <Button x:Name="SubtitlesButton" Classes="icon" ToolTip.Tip="Subtitles" IsVisible="{Binding ShowSubtitlesButton}">
-            <PathIcon Data="{StaticResource IconSubtitles}" />
-            <Button.Flyout>
-              <Flyout Placement="TopEdgeAlignedRight">
-                <StackPanel Width="320" Spacing="4">
-                  <TextBlock Classes="section" Text="Subtitles" Margin="0,0,0,4" />
-                  <ItemsControl ItemsSource="{Binding SubtitleTracks}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="vm:TrackItem">
-                        <RadioButton GroupName="subs" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=OneWay}"
-                                     Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).SelectSubtitleCommand}"
-                                     CommandParameter="{Binding}" />
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                  <Button Classes="ghost" Content="Load subtitle file…" Command="{Binding LoadSubtitleCommand}" Margin="0,6,0,0" />
-                  <TextBlock Classes="section" Text="{Binding SubtitleSizeText}" />
-                  <Slider Minimum="0.5" Maximum="2.5" Value="{Binding SubtitleScale}" SmallChange="0.05" LargeChange="0.25"
-                          ToolTip.Tip="{Binding SubtitleSizeText}" />
-                  <TextBlock Classes="note" Text="J goes to the next track, V shows or hides them, Z and X move them 0.1 s earlier or later. Their look is in Settings, Subtitles." />
+                  <StackPanel IsVisible="{Binding HasChapters}" Spacing="2">
+                    <TextBlock Classes="section" Text="Chapters" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Chapters}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ChapterItem">
+                          <RadioButton GroupName="chapters" Content="{Binding Label}" IsChecked="{Binding IsCurrent, Mode=OneWay}"
+                                       Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).GoToChapterCommand}"
+                                       CommandParameter="{Binding}" />
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                  <TextBlock Classes="note" Margin="0,8,0,0" Text="Page Up and Page Down go to the previous and next chapter." />
                 </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-          </Button>
+              </ScrollViewer>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
 
-          <Button x:Name="AudioMenuButton" Classes="icon" ToolTip.Tip="Audio" IsVisible="{Binding ShowAudioButton}">
-            <PathIcon Data="{StaticResource IconAudio}" />
-            <Button.Flyout>
-              <Flyout Placement="TopEdgeAlignedRight">
-                <StackPanel Width="320" Spacing="4">
-                  <TextBlock Classes="section" Text="Audio track" Margin="0,0,0,4" />
-                  <ItemsControl ItemsSource="{Binding AudioTracks}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="vm:TrackItem">
-                        <RadioButton GroupName="audio" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=OneWay}"
-                                     Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).SelectAudioCommand}"
-                                     CommandParameter="{Binding}" />
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                  <StackPanel x:Name="SurroundOptions" Spacing="4" IsVisible="{Binding IsSurroundAudio}">
-                    <TextBlock Classes="section" Text="Surround (5.1, 7.1)" />
-                    <Grid ColumnDefinitions="*,Auto">
-                      <TextBlock Text="Downmix to stereo" VerticalAlignment="Center" />
-                      <ToggleSwitch x:Name="DownmixSwitchMenu" Grid.Column="1" IsChecked="{Binding DownmixToStereo}" OnContent="" OffContent=""
-                                    AutomationProperties.Name="Downmix to stereo" />
-                    </Grid>
-                  </StackPanel>
-                  <StackPanel x:Name="StereoOptions" Spacing="4" IsVisible="{Binding IsStereoAudio}">
-                    <TextBlock Classes="section" Text="Channels (this video)" />
-                    <ComboBox x:Name="StereoChannel" SelectedIndex="{Binding StereoChannelIndex}" HorizontalAlignment="Stretch">
-                      <ComboBoxItem Content="Both channels (default)" />
-                      <ComboBoxItem Content="Left channel only" />
-                      <ComboBoxItem Content="Right channel only" />
-                    </ComboBox>
-                  </StackPanel>
-                  <TextBlock Classes="section" Text="Loudness" />
+        <Button c:BarRow.Item="subtitles" x:Name="SubtitlesButton" Classes="icon" ToolTip.Tip="Subtitles">
+          <PathIcon Data="{StaticResource IconSubtitles}" />
+          <Button.Flyout>
+            <Flyout Placement="TopEdgeAlignedRight">
+              <StackPanel Width="320" Spacing="4">
+                <TextBlock Classes="section" Text="Subtitles" Margin="0,0,0,4" />
+                <ItemsControl ItemsSource="{Binding SubtitleTracks}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TrackItem">
+                      <RadioButton GroupName="subs" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                   Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).SelectSubtitleCommand}"
+                                   CommandParameter="{Binding}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Classes="ghost" Content="Load subtitle file…" Command="{Binding LoadSubtitleCommand}" Margin="0,6,0,0" />
+                <TextBlock Classes="section" Text="{Binding SubtitleSizeText}" />
+                <Slider Minimum="0.5" Maximum="2.5" Value="{Binding SubtitleScale}" SmallChange="0.05" LargeChange="0.25"
+                        ToolTip.Tip="{Binding SubtitleSizeText}" />
+                <TextBlock Classes="note" Text="J goes to the next track, V shows or hides them, Z and X move them 0.1 s earlier or later. Their look is in Settings, Subtitles." />
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
+
+        <Button c:BarRow.Item="audio" x:Name="AudioMenuButton" Classes="icon" ToolTip.Tip="Audio">
+          <PathIcon Data="{StaticResource IconAudio}" />
+          <Button.Flyout>
+            <Flyout Placement="TopEdgeAlignedRight">
+              <StackPanel Width="320" Spacing="4">
+                <TextBlock Classes="section" Text="Audio track" Margin="0,0,0,4" />
+                <ItemsControl ItemsSource="{Binding AudioTracks}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TrackItem">
+                      <RadioButton GroupName="audio" Content="{Binding Label}" IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                   Command="{Binding $parent[v:ControlsBar].((vm:MainViewModel)DataContext).SelectAudioCommand}"
+                                   CommandParameter="{Binding}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel x:Name="SurroundOptions" Spacing="4" IsVisible="{Binding IsSurroundAudio}">
+                  <TextBlock Classes="section" Text="Surround (5.1, 7.1)" />
                   <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Text="Even out loud and quiet parts" VerticalAlignment="Center" TextWrapping="Wrap" />
-                    <ToggleSwitch x:Name="NormalizeSwitchMenu" Grid.Column="1" IsChecked="{Binding NormalizeAudio}" OnContent="" OffContent=""
-                                  AutomationProperties.Name="Even out loud and quiet parts" />
+                    <TextBlock Text="Downmix to stereo" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="DownmixSwitchMenu" Grid.Column="1" IsChecked="{Binding DownmixToStereo}" OnContent="" OffContent=""
+                                  AutomationProperties.Name="Downmix to stereo" />
                   </Grid>
-                  <TextBlock Classes="note" Margin="0,6,0,0"
-                             Text="With these off, the audio plays exactly as recorded. Passthrough to an AV receiver is in Settings, Audio." />
                 </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-          </Button>
-
-          <Button x:Name="VideoMenuButton" Classes="icon" ToolTip.Tip="Video" IsVisible="{Binding ShowVideoButton}">
-            <PathIcon Data="{StaticResource IconVideo}" />
-            <Button.Flyout>
-              <Flyout Placement="TopEdgeAlignedRight">
-                <StackPanel Width="340" Spacing="6">
-                  <StackPanel x:Name="PictureOptions" Spacing="6" IsVisible="{Binding HasPictureOptions}">
-                    <TextBlock Classes="section" Text="Picture shape (this video)" />
-                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CanResizeTo4x3}">
-                      <TextBlock Text="Stretch to 4:3" VerticalAlignment="Center" />
-                      <ToggleSwitch x:Name="ResizeSwitch" Grid.Column="1" IsChecked="{Binding ResizeTo4x3}" IsVisible="{Binding CanResizeTo4x3}"
-                                    OnContent="" OffContent="" AutomationProperties.Name="Stretch to 4:3" />
-                    </Grid>
-                    <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CanCropTo16x9}">
-                      <TextBlock Text="Crop to 16:9" VerticalAlignment="Center" />
-                      <ToggleSwitch x:Name="CropSwitch" Grid.Column="1" IsChecked="{Binding CropTo16x9}" IsVisible="{Binding CanCropTo16x9}"
-                                    OnContent="" OffContent="" AutomationProperties.Name="Crop to 16:9" />
-                    </Grid>
-                  </StackPanel>
-                  <StackPanel x:Name="StreamQualityOptions" Spacing="6" IsVisible="{Binding HasStreamQualities}">
-                    <TextBlock Classes="section" Text="YouTube quality (this video)" />
-                    <ComboBox x:Name="StreamQuality" ItemsSource="{Binding StreamQualities}"
-                              SelectedIndex="{Binding StreamQualityChoiceIndex}" HorizontalAlignment="Stretch" />
-                  </StackPanel>
-                  <TextBlock Classes="note" Text="Deinterlacing, hardware decoding, picture quality and HDR are in Settings, Video." />
+                <StackPanel x:Name="StereoOptions" Spacing="4" IsVisible="{Binding IsStereoAudio}">
+                  <TextBlock Classes="section" Text="Channels (this video)" />
+                  <ComboBox x:Name="StereoChannel" SelectedIndex="{Binding StereoChannelIndex}" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Both channels (default)" />
+                    <ComboBoxItem Content="Left channel only" />
+                    <ComboBoxItem Content="Right channel only" />
+                  </ComboBox>
                 </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-          </Button>
+                <TextBlock Classes="section" Text="Loudness" />
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Text="Even out loud and quiet parts" VerticalAlignment="Center" TextWrapping="Wrap" />
+                  <ToggleSwitch x:Name="NormalizeSwitchMenu" Grid.Column="1" IsChecked="{Binding NormalizeAudio}" OnContent="" OffContent=""
+                                AutomationProperties.Name="Even out loud and quiet parts" />
+                </Grid>
+                <TextBlock Classes="note" Margin="0,6,0,0"
+                           Text="With these off, the audio plays exactly as recorded. Passthrough to an AV receiver is in Settings, Audio." />
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
 
-          <Button x:Name="ScreenshotButton" Classes="icon" Command="{Binding ScreenshotCommand}" CommandParameter="{x:False}" IsVisible="{Binding ShowScreenshotButton}"
-                  ToolTip.Tip="Screenshot, as a lossless PNG (S; Shift+S with the subtitles)">
-            <PathIcon Data="{StaticResource IconCamera}" />
-          </Button>
+        <Button c:BarRow.Item="video" x:Name="VideoMenuButton" Classes="icon" ToolTip.Tip="Video" IsVisible="{Binding ShowVideoButton}">
+          <PathIcon Data="{StaticResource IconVideo}" />
+          <Button.Flyout>
+            <Flyout Placement="TopEdgeAlignedRight">
+              <StackPanel Width="340" Spacing="6">
+                <StackPanel x:Name="PictureOptions" Spacing="6" IsVisible="{Binding HasPictureOptions}">
+                  <TextBlock Classes="section" Text="Picture shape (this video)" />
+                  <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CanResizeTo4x3}">
+                    <TextBlock Text="Stretch to 4:3" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="ResizeSwitch" Grid.Column="1" IsChecked="{Binding ResizeTo4x3}" IsVisible="{Binding CanResizeTo4x3}"
+                                  OnContent="" OffContent="" AutomationProperties.Name="Stretch to 4:3" />
+                  </Grid>
+                  <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding CanCropTo16x9}">
+                    <TextBlock Text="Crop to 16:9" VerticalAlignment="Center" />
+                    <ToggleSwitch x:Name="CropSwitch" Grid.Column="1" IsChecked="{Binding CropTo16x9}" IsVisible="{Binding CanCropTo16x9}"
+                                  OnContent="" OffContent="" AutomationProperties.Name="Crop to 16:9" />
+                  </Grid>
+                </StackPanel>
+                <StackPanel x:Name="StreamQualityOptions" Spacing="6" IsVisible="{Binding HasStreamQualities}">
+                  <TextBlock Classes="section" Text="YouTube quality (this video)" />
+                  <ComboBox x:Name="StreamQuality" ItemsSource="{Binding StreamQualities}"
+                            SelectedIndex="{Binding StreamQualityChoiceIndex}" HorizontalAlignment="Stretch" />
+                </StackPanel>
+                <TextBlock Classes="note" Text="Deinterlacing, hardware decoding, picture quality and HDR are in Settings, Video." />
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
 
-          <Button x:Name="DownloadVideoButton" Classes="icon" Command="{Binding OpenDownloaderCommand}" IsVisible="{Binding ShowDownloadButton}"
-                  ToolTip.Tip="Download Video: save a YouTube (or other site) video, or just its audio">
-            <PathIcon Data="{StaticResource IconDownload}" />
-          </Button>
+        <Button c:BarRow.Item="screenshot" x:Name="ScreenshotButton" Classes="icon" Command="{Binding ScreenshotCommand}" CommandParameter="{x:False}"
+                ToolTip.Tip="Screenshot, as a lossless PNG (S; Shift+S with the subtitles)">
+          <PathIcon Data="{StaticResource IconCamera}" />
+        </Button>
 
-          <Button x:Name="OpenLinkButton" Classes="icon" Command="{Binding OpenLinkCommand}" IsVisible="{Binding ShowOpenLinkButton}"
-                  ToolTip.Tip="Open Link: a magnet, YouTube, MEGA or any video address (Ctrl+U)">
-            <PathIcon Data="{StaticResource IconLink}" />
-          </Button>
+        <Button c:BarRow.Item="download" x:Name="DownloadVideoButton" Classes="icon" Command="{Binding OpenDownloaderCommand}"
+                ToolTip.Tip="Download Video: save a YouTube (or other site) video, or just its audio">
+          <PathIcon Data="{StaticResource IconDownload}" />
+        </Button>
 
-          <Button x:Name="OpenMenuButton" Classes="icon" ToolTip.Tip="Open" IsVisible="{Binding ShowOpenButton}">
-            <PathIcon Data="{StaticResource IconFolder}" />
-            <Button.Flyout>
-              <MenuFlyout Placement="TopEdgeAlignedRight">
-                <MenuItem Header="Open file" InputGesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
-                <MenuItem Header="Open folder" InputGesture="Ctrl+Shift+O" Command="{Binding OpenFolderCommand}" />
-                <MenuItem Header="Open Disc" Command="{Binding OpenDiscCommand}"
-                          ToolTip.Tip="A DVD, Blu-ray or Audio CD, from a drive, a folder or a disc image" />
-                <MenuItem Header="Rip Disc…" Command="{Binding OpenRipperCommand}"
-                          ToolTip.Tip="Copy an Audio CD to FLAC or WAV, or a DVD to MKV or its VIDEO_TS folder" />
-                <Separator />
-                <MenuItem Header="Screenshots folder" Command="{Binding OpenScreenshotsFolderCommand}" />
-              </MenuFlyout>
-            </Button.Flyout>
-          </Button>
+        <Button c:BarRow.Item="openlink" x:Name="OpenLinkButton" Classes="icon" Command="{Binding OpenLinkCommand}"
+                ToolTip.Tip="Open Link: a magnet, YouTube, MEGA or any video address (Ctrl+U)">
+          <PathIcon Data="{StaticResource IconLink}" />
+        </Button>
 
-          <!-- Whatever the bar leaves off, plus every way to open something: nothing is ever out of reach. -->
-          <Button x:Name="MoreButton" Classes="icon" ToolTip.Tip="More">
-            <PathIcon Data="{StaticResource IconMore}" />
-            <Button.Flyout>
-              <MenuFlyout Placement="TopEdgeAlignedRight">
-                <MenuItem Header="Stop" InputGesture="Ctrl+S" Command="{Binding StopCommand}" IsVisible="{Binding StopInMore}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconStop}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Previous frame" InputGesture="," Command="{Binding FrameBackStepCommand}" IsVisible="{Binding FramesInMore}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconFramePrev}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Next frame" InputGesture="." Command="{Binding FrameStepCommand}" IsVisible="{Binding FramesInMore}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconFrameNext}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Previous chapter" InputGesture="PageUp" Command="{Binding PreviousChapterCommand}" IsVisible="{Binding ChaptersInMore}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconChapterPrev}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Next chapter" InputGesture="PageDown" Command="{Binding NextChapterCommand}" IsVisible="{Binding ChaptersInMore}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconChapterNext}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Screenshot" InputGesture="S" Command="{Binding ScreenshotCommand}" CommandParameter="{x:False}"
-                          IsVisible="{Binding ScreenshotInMore}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconCamera}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Screenshot with subtitles" InputGesture="Shift+S" Command="{Binding ScreenshotCommand}" CommandParameter="{x:True}"
-                          IsVisible="{Binding ScreenshotInMore}" />
-                <Separator IsVisible="{Binding HasPlaybackInMore}" />
-                <MenuItem Header="Open file…" InputGesture="Ctrl+O" Command="{Binding OpenFileCommand}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconFile}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Open folder…" InputGesture="Ctrl+Shift+O" Command="{Binding OpenFolderCommand}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconFolder}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Open disc…" Command="{Binding OpenDiscCommand}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconDisc}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Open link…" InputGesture="Ctrl+U" Command="{Binding OpenLinkCommand}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconLink}" /></MenuItem.Icon>
-                </MenuItem>
-                <Separator />
-                <MenuItem Header="Download video…" Command="{Binding OpenDownloaderCommand}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconDownload}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Rip disc…" Command="{Binding OpenRipperCommand}">
-                  <MenuItem.Icon><PathIcon Data="{StaticResource IconRip}" /></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="Screenshots folder" Command="{Binding OpenScreenshotsFolderCommand}" />
-              </MenuFlyout>
-            </Button.Flyout>
-          </Button>
+        <Button c:BarRow.Item="open" x:Name="OpenMenuButton" Classes="icon" ToolTip.Tip="Open">
+          <PathIcon Data="{StaticResource IconFolder}" />
+          <Button.Flyout>
+            <MenuFlyout Placement="TopEdgeAlignedRight">
+              <MenuItem Header="Open file" InputGesture="Ctrl+O" Command="{Binding OpenFileCommand}" />
+              <MenuItem Header="Open folder" InputGesture="Ctrl+Shift+O" Command="{Binding OpenFolderCommand}" />
+              <MenuItem Header="Open Disc" Command="{Binding OpenDiscCommand}"
+                        ToolTip.Tip="A DVD, Blu-ray or Audio CD, from a drive, a folder or a disc image" />
+              <MenuItem Header="Rip Disc…" Command="{Binding OpenRipperCommand}"
+                        ToolTip.Tip="Copy an Audio CD to FLAC or WAV, or a DVD to MKV or its VIDEO_TS folder" />
+              <Separator />
+              <MenuItem Header="Screenshots folder" Command="{Binding OpenScreenshotsFolderCommand}" />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
 
-          <Button x:Name="SettingsButton" Classes="icon" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="Settings">
-            <PathIcon Data="{StaticResource IconSettings}" />
-          </Button>
-          <Button x:Name="FullscreenButton" Classes="icon" Command="{Binding ToggleFullscreenCommand}" IsVisible="{Binding ShowFullscreenButton}" ToolTip.Tip="Fullscreen (F, or double-click the video)">
-            <Panel>
-              <PathIcon Data="{StaticResource IconFullscreen}" IsVisible="{Binding !IsFullscreen}" />
-              <PathIcon Data="{StaticResource IconFullscreenExit}" IsVisible="{Binding IsFullscreen}" />
-            </Panel>
-          </Button>
-        </StackPanel>
-      </c:BarRow>
-    </Grid>
-  </Border>
+        <!-- Whatever the bar leaves off, plus every way to open something: nothing is ever out of reach. -->
+        <Button c:BarRow.Item="more" x:Name="MoreButton" Classes="icon" ToolTip.Tip="More">
+          <PathIcon Data="{StaticResource IconMore}" />
+          <Button.Flyout>
+            <MenuFlyout Placement="TopEdgeAlignedRight">
+              <MenuItem Header="Stop" InputGesture="Ctrl+S" Command="{Binding StopCommand}" IsVisible="{Binding StopInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconStop}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Previous frame" InputGesture="," Command="{Binding FrameBackStepCommand}" IsVisible="{Binding PrevFrameInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconFramePrev}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Next frame" InputGesture="." Command="{Binding FrameStepCommand}" IsVisible="{Binding NextFrameInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconFrameNext}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Previous chapter" InputGesture="PageUp" Command="{Binding PreviousChapterCommand}" IsVisible="{Binding PrevChapterInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconChapterPrev}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Next chapter" InputGesture="PageDown" Command="{Binding NextChapterCommand}" IsVisible="{Binding NextChapterInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconChapterNext}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Screenshot" InputGesture="S" Command="{Binding ScreenshotCommand}" CommandParameter="{x:False}"
+                        IsVisible="{Binding ScreenshotInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconCamera}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Screenshot with subtitles" InputGesture="Shift+S" Command="{Binding ScreenshotCommand}" CommandParameter="{x:True}"
+                        IsVisible="{Binding ScreenshotInMore}" />
+              <MenuItem Header="Previous file" Command="{Binding PreviousFileCommand}" IsVisible="{Binding PrevFileInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconPlaylistPrev}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Next file" Command="{Binding NextFileCommand}" IsVisible="{Binding NextFileInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconPlaylistNext}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Mute" InputGesture="M" Command="{Binding ToggleMuteCommand}" IsVisible="{Binding MuteInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconVolume}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Disc menu" Command="{Binding ShowDiscMenuCommand}" IsVisible="{Binding DiscMenuInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconHome}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Fullscreen" InputGesture="F" Command="{Binding ToggleFullscreenCommand}" IsVisible="{Binding FullscreenInMore}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconFullscreen}" /></MenuItem.Icon>
+              </MenuItem>
+              <Separator IsVisible="{Binding HasPlaybackInMore}" />
+              <MenuItem Header="Open file…" InputGesture="Ctrl+O" Command="{Binding OpenFileCommand}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconFile}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Open folder…" InputGesture="Ctrl+Shift+O" Command="{Binding OpenFolderCommand}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconFolder}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Open disc…" Command="{Binding OpenDiscCommand}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconDisc}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Open link…" InputGesture="Ctrl+U" Command="{Binding OpenLinkCommand}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconLink}" /></MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem Header="Download video…" Command="{Binding OpenDownloaderCommand}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconDownload}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Rip disc…" Command="{Binding OpenRipperCommand}">
+                <MenuItem.Icon><PathIcon Data="{StaticResource IconRip}" /></MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Screenshots folder" Command="{Binding OpenScreenshotsFolderCommand}" />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+
+        <Button c:BarRow.Item="settings" x:Name="SettingsButton" Classes="icon" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="Settings">
+          <PathIcon Data="{StaticResource IconSettings}" />
+        </Button>
+        <Button c:BarRow.Item="fullscreen" x:Name="FullscreenButton" Classes="icon" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Fullscreen (F, or double-click the video)">
+          <Panel>
+            <PathIcon Data="{StaticResource IconFullscreen}" IsVisible="{Binding !IsFullscreen}" />
+            <PathIcon Data="{StaticResource IconFullscreenExit}" IsVisible="{Binding IsFullscreen}" />
+          </Panel>
+        </Button>
+
+        <!-- Readouts: the seek bar's times, the time left, the time of day and what's playing. -->
+        <TextBlock c:BarRow.Item="elapsed" x:Name="ElapsedReadout" Classes="time readout" Text="{Binding PositionText}" ToolTip.Tip="Time played" />
+        <TextBlock c:BarRow.Item="remaining" x:Name="RemainingReadout" Classes="time readout" Text="{Binding RemainingText}"
+                   IsVisible="{Binding HasDuration}" ToolTip.Tip="Time left" />
+        <TextBlock c:BarRow.Item="total" x:Name="TotalReadout" Classes="time readout" Text="{Binding DurationText}"
+                   IsVisible="{Binding HasDuration}" ToolTip.Tip="Length" />
+        <TextBlock c:BarRow.Item="clock" x:Name="ClockReadout" Classes="time readout" Text="{Binding ClockText}" ToolTip.Tip="The time" />
+        <TextBlock c:BarRow.Item="title" x:Name="TitleReadout" Classes="readout" Text="{Binding MediaTitle}" MaxWidth="320"
+                   TextTrimming="CharacterEllipsis" FontWeight="SemiBold" ToolTip.Tip="{Binding MediaTitle}"
+                   IsVisible="{Binding MediaTitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </Panel>
+  </Panel>
 </v:OverlayWindow>

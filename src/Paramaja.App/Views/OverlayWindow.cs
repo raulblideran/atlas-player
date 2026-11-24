@@ -71,24 +71,31 @@ public class OverlayWindow : Window
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        if (_menus.Count > 0) return; // shown again after being hidden: already watched
+        if (_watching) return; // shown again after being hidden: already watched
+        _watching = true;
         foreach (var button in this.GetLogicalDescendants().OfType<Button>())
-        {
-            if (button.Flyout is not { } flyout) continue;
-            // A bar's menu opens straight above its button, unadjusted. Fitting it to the screen used
-            // X11's single work area, which on a desktop of several monitors (Xwayland under KWin)
-            // ends hundreds of pixels above the bottom of a lower one, so the menu floated far above
-            // the bar. The bar is on screen and the picture above it has room for any of its menus.
-            if (flyout is PopupFlyoutBase popup) popup.PlacementConstraintAdjustment = Avalonia.Controls.Primitives.PopupPositioning.PopupPositionerConstraintAdjustment.None;
-            _menus.Add(flyout);
-            flyout.Opened += (_, _) => MenuOpened(flyout);
-            flyout.Closed += (_, _) => MenuClosed(flyout);
-        }
+            if (button.Flyout is { } flyout) WatchMenu(flyout);
         foreach (var box in this.GetLogicalDescendants().OfType<ComboBox>())
         {
             box.DropDownOpened += (_, _) => MenuOpened(box);
             box.DropDownClosed += (_, _) => MenuClosed(box);
         }
+    }
+
+    private bool _watching;
+
+    /// <summary>A menu of this bar: while it's open the bar stays, and it opens where it's placed.</summary>
+    protected void WatchMenu(FlyoutBase flyout)
+    {
+        if (_menus.Contains(flyout)) return;
+        // A bar's menu opens straight above its button, unadjusted. Fitting it to the screen used
+        // X11's single work area, which on a desktop of several monitors (Xwayland under KWin)
+        // ends hundreds of pixels above the bottom of a lower one, so the menu floated far above
+        // the bar. The bar is on screen and the picture above it has room for any of its menus.
+        if (flyout is PopupFlyoutBase popup) popup.PlacementConstraintAdjustment = Avalonia.Controls.Primitives.PopupPositioning.PopupPositionerConstraintAdjustment.None;
+        _menus.Add(flyout);
+        flyout.Opened += (_, _) => MenuOpened(flyout);
+        flyout.Closed += (_, _) => MenuClosed(flyout);
     }
 
     private void MenuOpened(object menu)

@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Paramaja.App.ViewModels"
         xmlns:c="using:Paramaja.App.Controls"
+        xmlns:v="using:Paramaja.App.Views"
         x:Class="Paramaja.App.Views.SettingsWindow"
         x:DataType="vm:MainViewModel"
         Title="Settings — Paramaja" Icon="/Assets/paramaja.ico"
@@ -52,20 +53,9 @@
                     <ComboBoxItem Content="Custom" />
                   </ComboBox>
                 </c:SettingRow>
-                <c:SettingRow Classes="stack" Title="Buttons on the bar"
-                              Description="A button shows only where it applies, like the chapter buttons with chapters. Play, More and Settings are always there, and every shortcut works either way.">
-                  <ItemsControl x:Name="ControlChoices" ItemsSource="{Binding ControlChoices}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel ItemWidth="320" />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="vm:ControlChoice">
-                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsShown}" Margin="0,1" />
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                <c:SettingRow Classes="stack" Title="Arrange the bar"
+                              Description="Drag a piece to where you want it on the bar, or off it. A button shows only where it applies, like the chapter buttons with chapters.">
+                  <v:BarEditor x:Name="BarEditor" Margin="0,8,0,0" />
                 </c:SettingRow>
               </StackPanel>
             </Border>

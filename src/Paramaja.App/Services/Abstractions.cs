@@ -7,6 +7,9 @@ public interface IUiDispatcher
 }
 
 /// <summary>Everything the view model needs from the windowing layer, so it can be tested headless.</summary>
+/// <summary>A place in the settings window to open at.</summary>
+public enum SettingsSection { None, ControlsBar }
+
 public interface IDialogService
 {
     Task<string?> PickMediaFileAsync();
@@ -20,7 +23,8 @@ public interface IDialogService
     /// <summary>The ripper window, for <paramref name="drive"/> (a drive's root) or the first drive with a disc.</summary>
     Task ShowRipperAsync(string? drive);
     Task<string?> ReadClipboardTextAsync();
-    Task ShowSettingsAsync();
+    /// <summary>The settings window, at <paramref name="section"/> if one is given.</summary>
+    Task ShowSettingsAsync(SettingsSection section = SettingsSection.None);
     void OpenFolder(string path);
     Task CopyToClipboardAsync(string text);
     /// <summary>A yes / no question; true for <paramref name="yes"/>.</summary>

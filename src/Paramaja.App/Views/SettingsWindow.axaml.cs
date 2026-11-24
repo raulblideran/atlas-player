@@ -31,6 +31,17 @@ public partial class SettingsWindow : Window
         });
     }
 
+    /// <summary>Opened at <paramref name="section"/>: the bar's right-click Customize opens it at the bar editor.</summary>
+    public SettingsWindow(SettingsSection section) : this()
+    {
+        if (section != SettingsSection.ControlsBar) return;
+        Opened += (_, _) =>
+        {
+            InterfaceTab.IsSelected = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => BarEditor.BringIntoView(), Avalonia.Threading.DispatcherPriority.Loaded);
+        };
+    }
+
     private ViewModels.MainViewModel? Vm => DataContext as ViewModels.MainViewModel;
 
     private static readonly Avalonia.Platform.Storage.FilePickerFileType SettingsFiles = new("Paramaja settings")

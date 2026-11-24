@@ -102,7 +102,7 @@ public class SettingsTests
         Assert.Equal(60, s.Volume);
         store.Save(s);
         var json = File.ReadAllText(store.FilePath);
-        foreach (var gone in new[] { "deinterlace", "downmixToMono", "recentItems", "secret.mkv", "magnet" })
+        foreach (var gone in new[] { "\"deinterlace\"", "downmixToMono", "recentItems", "secret.mkv", "magnet" })
             Assert.DoesNotContain(gone, json);
     }
 

@@ -233,7 +233,8 @@ public sealed class FakeDialogs : IDialogService
     public List<string?> RipperOpenedWith { get; } = [];
     public Task ShowRipperAsync(string? drive) { RipperOpenedWith.Add(drive); return Task.CompletedTask; }
     public Task<string?> ReadClipboardTextAsync() => Task.FromResult(Clipboard);
-    public Task ShowSettingsAsync() { SettingsShown++; return Task.CompletedTask; }
+    public SettingsSection LastSettingsSection { get; private set; }
+    public Task ShowSettingsAsync(SettingsSection section = SettingsSection.None) { SettingsShown++; LastSettingsSection = section; return Task.CompletedTask; }
     public void OpenFolder(string path) => OpenedFolders.Add(path);
     public string? Clipboard2 { get; private set; }
     public Task CopyToClipboardAsync(string text) { Clipboard2 = text; return Task.CompletedTask; }

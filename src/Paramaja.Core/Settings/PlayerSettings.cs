@@ -37,7 +37,7 @@ public enum RenderQuality
 public sealed class PlayerSettings
 {
     /// <summary>Bumped when a default changes for existing users too (see <see cref="Normalize"/>).</summary>
-    public const int CurrentVersion = 6;
+    public const int CurrentVersion = 7;
 
     /// <summary>The settings.json format; 0 for files written before versioning.</summary>
     public int SettingsVersion { get; set; }
@@ -135,34 +135,62 @@ public sealed class PlayerSettings
         SubtitleStyleAss = false;
     }
 
-    // The controls bar
-    /// <summary>
-    /// The controls bar's buttons the user chose to hide (<see cref="ControlIds"/>); empty shows
-    /// them all. Play and Settings always show.
-    /// </summary>
-    public List<string> HiddenControls { get; set; } = [];
+    // The controls bar (BarItems): each group's pieces in order; a piece in none of them is off the bar.
+    public List<string> BarLeft { get; set; } = [.. BarItems.Simple.Left];
+    public List<string> BarCentre { get; set; } = [.. BarItems.Simple.Centre];
+    public List<string> BarRight { get; set; } = [.. BarItems.Simple.Right];
 
     /// <summary>
-    /// The Simple bar (2.0.0): what it leaves off. Each of these is still in the bar's More menu,
-    /// and every shortcut still works.
+    /// Settings version 6 and before: the bar's buttons hidden from a fixed order. Read only to
+    /// move it into <see cref="BarLeft"/>, <see cref="BarCentre"/> and <see cref="BarRight"/>; never written.
     /// </summary>
-    public static readonly IReadOnlyList<string> SimpleBarHidden =
-        ["stop", "chapters", "screenshot", "download", "openlink", "open"];
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? HiddenControls { get; set; }
 
-    /// <summary>2.0.0's Simple bar, which left the frame steps off too.</summary>
+    /// <summary>2.0.0's Simple bar (show-or-hide ids), and the one before it, which left the frame steps off too.</summary>
+    private static readonly string[] SimpleBarHidden = ["stop", "chapters", "screenshot", "download", "openlink", "open"];
     private static readonly string[] SimpleBarHidden200 = ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"];
+
+    /// <summary>Moves a version 6 (or older) show-or-hide list to the bar's groups: the Everything bar without what was hidden.</summary>
+    private void MigrateHiddenControls(List<string> hidden)
+    {
+        // 2.0.0 made the Simple bar the default; whoever had every button showing (the old default) moved too.
+        if (SettingsVersion < 5 && hidden.Count == 0) hidden = [.. SimpleBarHidden];
+        // The Simple bar then got the frame steps back: whoever had 2.0.0's Simple bar got them too.
+        if (SettingsVersion < 6 && hidden.Count == SimpleBarHidden200.Length && SimpleBarHidden200.All(hidden.Contains))
+            hidden = [.. SimpleBarHidden];
+        var layout = BarItems.Everything.Without(hidden.SelectMany(BarItems.Expand));
+        // The gap between the volume and the badges goes with them.
+        static List<string> Trim(IEnumerable<string> ids) =>
+            [.. ids.SkipWhile(i => i == BarItems.Spacer).Reverse().SkipWhile(i => i == BarItems.Spacer).Reverse()];
+        BarLeft = Trim(layout.Left);
+        BarCentre = Trim(layout.Centre);
+        BarRight = Trim(layout.Right);
+    }
+
+    /// <summary>
+    /// The bar's groups made sound: pieces it knows, each once (spacers and separators aside), and
+    /// Play, More and Settings always on it.
+    /// </summary>
+    private void NormalizeBar()
+    {
+        if (BarLeft is null && BarCentre is null && BarRight is null)
+            (BarLeft, BarCentre, BarRight) = ([.. BarItems.Simple.Left], [.. BarItems.Simple.Centre], [.. BarItems.Simple.Right]);
+        var seen = new HashSet<string>();
+        List<string> Clean(List<string>? ids) =>
+            [.. (ids ?? []).Where(id => BarItems.Find(id) is { } item && (item.Repeatable || seen.Add(id)))];
+        BarLeft = Clean(BarLeft);
+        BarCentre = Clean(BarCentre);
+        BarRight = Clean(BarRight);
+        if (!seen.Contains(BarItems.Play)) BarCentre.Insert(BarCentre.Count / 2, BarItems.Play);
+        if (!seen.Contains(BarItems.More)) BarRight.Add(BarItems.More);
+        if (!seen.Contains(BarItems.Settings)) BarRight.Add(BarItems.Settings);
+    }
 
     // Appearance
     /// <summary>The look of the app (ThemeRegistry in the app); an id it doesn't know falls back to the default.</summary>
     public string Theme { get; set; } = DefaultTheme;
     public const string DefaultTheme = "paramaja";
-
-    /// <summary>The controls bar's buttons that can be hidden, in the bar's order.</summary>
-    public static readonly IReadOnlyList<string> ControlIds =
-    [
-        "files", "frames", "stop", "chapters", "volume", "badges", "discmenu", "chaptermenu", "subtitles", "audio", "video",
-        "screenshot", "download", "openlink", "open", "fullscreen",
-    ];
 
     // Playback
     public int SeekSeconds { get; set; } = 5;
@@ -222,11 +250,9 @@ public sealed class PlayerSettings
         if (SettingsVersion < 3 && ToneMapping == "spline") ToneMapping = "mobius";
         // 1.8.0 made display sync opt-in, timed for the monitor's own rate; the old default (60) moves too.
         if (SettingsVersion < 4 && DisplayFps == 60) DisplayFps = 0;
-        // 2.0.0 made the Simple bar the default; whoever had every button showing (the old default) moves too.
-        if (SettingsVersion < 5 && (HiddenControls is null || HiddenControls.Count == 0)) HiddenControls = SimpleBarHidden.ToList();
-        // The Simple bar then got the frame steps back: whoever has 2.0.0's Simple bar gets them too.
-        if (SettingsVersion < 6 && HiddenControls is { } hidden && hidden.Count == SimpleBarHidden200.Length && SimpleBarHidden200.All(hidden.Contains))
-            HiddenControls = SimpleBarHidden.ToList();
+        // 2.0.0-beta.5 made the bar's pieces movable: the old show-or-hide list becomes the bar's groups.
+        if (SettingsVersion < 7 && HiddenControls is { } hidden) MigrateHiddenControls(hidden);
+        HiddenControls = null;
         SettingsVersion = CurrentVersion;
         if (!ToneMappingCurves.Contains(ToneMapping)) ToneMapping = "mobius";
         HdrContrastRecovery = Math.Clamp(HdrContrastRecovery, 0, 2);
@@ -248,7 +274,7 @@ public sealed class PlayerSettings
         SubtitleShadow = Math.Clamp(SubtitleShadow, 0, 10);
         SubtitleBackgroundOpacity = Math.Clamp(SubtitleBackgroundOpacity, 0, 1);
         SubtitlePosition = Math.Clamp(SubtitlePosition, 0, 150);
-        HiddenControls = (HiddenControls ?? []).Where(ControlIds.Contains).Distinct().ToList();
+        NormalizeBar();
         GamutMapping = string.IsNullOrWhiteSpace(GamutMapping) ? "perceptual" : GamutMapping;
         Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme.Trim().ToLowerInvariant();
     }

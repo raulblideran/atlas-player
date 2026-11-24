@@ -1,5 +1,4 @@
 using Avalonia.Media;
-using CommunityToolkit.Mvvm.Input;
 using Paramaja.App.Services;
 using Paramaja.Core.Settings;
 
@@ -52,23 +51,22 @@ public sealed partial class MainViewModel
 
     public string ThemeDescription => ThemeRegistry.Find(Settings.Theme).Description;
 
-    // ---- The controls bar: Simple, Everything or the user's own choice -------------------------
+    // ---- The controls bar: Simple, Everything or the user's own arrangement --------------------
 
-    /// <summary>0 Simple, 1 Everything, 2 Custom (some other choice of buttons, made below it).</summary>
+    /// <summary>0 Simple, 1 Everything, 2 Custom (arranged in the editor below it).</summary>
     public int BarLayoutIndex
     {
         get
         {
-            var hidden = Settings.HiddenControls;
-            if (hidden.Count == 0) return 1;
-            return hidden.Count == PlayerSettings.SimpleBarHidden.Count && PlayerSettings.SimpleBarHidden.All(hidden.Contains) ? 0 : 2;
+            if (BarItems.Simple.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight)) return 0;
+            return BarItems.Everything.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight) ? 1 : 2;
         }
         set
         {
             if (value == BarLayoutIndex) return;
             if (value == 0) UseSimpleBar();
-            else if (value == 1) ShowAllControls();
-            // Custom: the buttons are picked one by one, below.
+            else if (value == 1) UseEverythingBar();
+            // Custom: arranged piece by piece, below.
         }
     }
 
@@ -76,26 +74,24 @@ public sealed partial class MainViewModel
     {
         0 => "Play, volume, the track and video menus, fullscreen and settings. The rest is in More (⋯).",
         1 => "Every button that applies to what's playing. More (⋯) also has the open actions.",
-        _ => "The buttons ticked below. Anything you leave off stays in More (⋯).",
+        _ => "Your own arrangement, below. What you leave off the bar is in More (⋯) where it fits.",
     };
-
-    /// <summary>The Simple bar: what it leaves off goes to the More menu.</summary>
-    [RelayCommand]
-    private void UseSimpleBar()
-    {
-        Settings.HiddenControls = PlayerSettings.SimpleBarHidden.ToList();
-        foreach (var c in ControlChoices) c.IsShown = Shows(c.Id);
-        OnControlsShownChanged();
-        SaveSettings();
-    }
 
     // ---- The More menu: whatever the bar leaves off, so nothing is out of reach -----------------
 
-    public bool StopInMore => !Shows("stop");
-    public bool FramesInMore => !Shows("frames") && !IsAudioOnly;
-    public bool ChaptersInMore => !Shows("chapters") && HasChapters;
+    public bool StopInMore => !OnBar("stop");
+    public bool PrevFrameInMore => !OnBar("prevframe") && !IsAudioOnly;
+    public bool NextFrameInMore => !OnBar("nextframe") && !IsAudioOnly;
+    public bool PrevChapterInMore => !OnBar("prevchapter") && HasChapters;
+    public bool NextChapterInMore => !OnBar("nextchapter") && HasChapters;
+    public bool PrevFileInMore => !OnBar("prevfile") && HasPlaylist;
+    public bool NextFileInMore => !OnBar("nextfile") && HasPlaylist;
+    public bool MuteInMore => !OnBar("mute");
+    public bool DiscMenuInMore => !OnBar("discmenu") && CanShowDiscMenu;
+    public bool FullscreenInMore => !OnBar("fullscreen");
     /// <summary>Not for audio alone: there is no picture to save.</summary>
-    public bool ScreenshotInMore => !Shows("screenshot") && !IsAudioOnly;
+    public bool ScreenshotInMore => !OnBar("screenshot") && !IsAudioOnly;
     /// <summary>The playback part of More has anything in it (its separator shows with it).</summary>
-    public bool HasPlaybackInMore => StopInMore || FramesInMore || ChaptersInMore || ScreenshotInMore;
+    public bool HasPlaybackInMore => StopInMore || PrevFrameInMore || NextFrameInMore || PrevChapterInMore || NextChapterInMore
+        || PrevFileInMore || NextFileInMore || MuteInMore || DiscMenuInMore || FullscreenInMore || ScreenshotInMore;
 }

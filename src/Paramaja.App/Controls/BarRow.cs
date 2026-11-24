@@ -19,6 +19,13 @@ public sealed class BarRow : Panel
     public static bool GetCentreOn(Control c) => c.GetValue(CentreOnProperty);
     public static void SetCentreOn(Control c, bool value) => c.SetValue(CentreOnProperty, value);
 
+    /// <summary>Tags a piece of the controls bar with its id (Paramaja.Core.Settings.BarItems).</summary>
+    public static readonly AttachedProperty<string?> ItemProperty =
+        AvaloniaProperty.RegisterAttached<BarRow, Control, string?>("Item");
+
+    public static string? GetItem(Control c) => c.GetValue(ItemProperty);
+    public static void SetItem(Control c, string? value) => c.SetValue(ItemProperty, value);
+
     /// <summary>Where the marked child's centre is within a horizontal StackPanel, from its desired sizes.</summary>
     private static double? AnchorCentre(Control middle)
     {

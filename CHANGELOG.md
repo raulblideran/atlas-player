@@ -3,12 +3,28 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## 2.0.0-beta.4 — 2026-11-24
+## 2.0.0-beta.5 — 2026-11-24
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
 Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
 
-- **New in beta.4: the Windows zip works again.** The beta.2 and beta.3 zips were missing
+- **New in beta.5: a controls bar you arrange yourself**, in the spirit of foobar2000's toolbars.
+  Settings → Appearance → Controls bar shows the bar as three bands (left, centre, right) and what's
+  off it; drag any piece where you want it, or click one and use **Earlier**, **Later**, **To
+  left / centre / right** and **Take off the bar**. Every piece is its own: previous and next for
+  files, chapters and frames, each badge, the mute button, the volume slider and its %. Play, More
+  and Settings can move anywhere but stay on the bar. Right-click the bar for **Customize bar…**.
+- **New pieces to place**: the time played, the time left, the length, a clock, the title (cut short
+  with … when long), spaces and dividers (as many as you like).
+- What you take off the bar is in **More (⋯)** wherever it fits there: now also previous / next file,
+  mute, the disc menu and fullscreen. **Simple** (the default) and **Everything** set the whole
+  arrangement in one go; anything else shows as **Custom**. Your bar from beta.4 or 1.x carries
+  over: the buttons you had hidden stay off, the rest keep their places. The settings file keeps
+  the arrangement as `barLeft`, `barCentre` and `barRight`, in place of `hiddenControls`.
+- Checked by the automated tests (dragging in the editor, its buttons, the presets, the bar
+  following at once, older settings files) and rendered in three themes; the editor hasn't yet
+  been tried by hand in the running app.
+- **Before that, beta.4: the Windows zip works again.** The beta.2 and beta.3 zips were missing
   everything Paramaja plays with (libmpv, libVLC, FFmpeg, yt-dlp, the torrent engine): GitHub's
   build machine moved to the .NET 11 SDK, which leaves those files out of a single-file build
   where older SDKs put them beside it. They opened to an error and played nothing. The build now
@@ -51,7 +67,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   the chapter steps, screenshots) and every way to open something, so nothing is out of reach and every
   shortcut still works. Whoever had every button showing moves to this **Simple** bar once;
   whoever had picked their own buttons keeps them. Settings → Appearance → Controls bar switches
-  to **Everything** in one go, or ticks buttons one by one (**Custom**).
+  to **Everything** in one go, or arranges it piece by piece (**Custom**, above).
 - **The welcome screen lists every way in**: Open file, Open folder, Open disc, Open link,
   Download video and Rip disc, each with its shortcut or what it takes, instead of an Open menu
   to open first. Settings is in the corner.
@@ -95,21 +111,26 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   used the same CPU as 1.12.0 (9.1 to 9.3% of a core on the same 720p video, in any theme). MEGA
   app links weren't tried this time; their code didn't change.
 
+## 2.0.0-beta.4 — 2026-11-24
+
+- The Windows zip with its libraries again (beta.2 and beta.3 shipped without them). Its changes
+  are all in 2.0.0-beta.5 above.
+
 ## 2.0.0-beta.3 — 2026-11-24
 
 - Security updates. Its Windows zip was missing its libraries and played nothing; its
-  changes are all in 2.0.0-beta.4 above, with a complete zip.
+  changes are all in 2.0.0-beta.5 above, with a complete zip.
 
 ## 2.0.0-beta.2 — 2026-11-24
 
 - The Linux Flatpak attached again: 2.0.0-beta.1's build failed on GitHub before it built
-  anything (updating the build container's own runtimes). Its changes are all in 2.0.0-beta.4
+  anything (updating the build container's own runtimes). Its changes are all in 2.0.0-beta.5
   above, which adds security updates.
 
 ## 2.0.0-beta.1 — 2026-11-24
 
 - Windows zip only: the Flatpak build failed on GitHub's side. Its changes are all in
-  2.0.0-beta.4 above.
+  2.0.0-beta.5 above.
 
 ## 1.12.0 — 2026-11-08
 
