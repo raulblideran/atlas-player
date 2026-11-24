@@ -12,7 +12,11 @@ namespace Paramaja.App;
 
 public partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        ThemeService.Apply(ThemeRegistry.Default.Id); // the settings' own theme follows once they're read
+    }
 
     /// <summary>
     /// The high-performance GPU on laptops with two (Windows), and with PARAMAJA_DEBUG=1 a
@@ -35,6 +39,7 @@ public partial class App : Application
             var paths = PortablePaths.ForApp();
             var store = new SettingsStore(paths.SettingsFile);
             var settings = store.Load();
+            ThemeService.Apply(settings.Theme);
             var vm = new MainViewModel(settings, store, paths,
                 wid => new PlayerService(settings, paths, wid, ExtraOptions(settings, paths)),
                 new TorrentService(), new AvaloniaDispatcher(),

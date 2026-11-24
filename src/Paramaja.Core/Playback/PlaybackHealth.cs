@@ -136,7 +136,7 @@ public sealed class PlaybackHealth
     {
         Finding.NoHardwareDecoding =>
             "Hardware decoding isn't active, so this 4K video is being decoded by the CPU. " +
-            "Check Settings → Video → This video → Hardware acceleration; older GPUs can't decode 10-bit HEVC.",
+            "Check Settings → Video → Hardware decoding (shown while the video plays); older GPUs can't decode 10-bit HEVC.",
         Finding.DecoderTooSlow =>
             $"The decoder can't keep up ({DecoderDropsPerSecond:0.0} frames/s dropped before display).",
         Finding.RenderingTooSlow =>

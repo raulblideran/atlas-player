@@ -1,0 +1,395 @@
+<!--
+  Paramaja's control styles. Colours, corners and title type come from the theme
+  (Themes/*.axaml) and are always reached through DynamicResource, so a theme switches live.
+  Nothing here blurs or animates, except the spinner shown while a link opens.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:c="using:Paramaja.App.Controls">
+
+  <!-- ===== Type ===== -->
+  <Style Selector="TextBlock.hero">
+    <Setter Property="FontFamily" Value="{DynamicResource ThemeHeadingFont}" />
+    <Setter Property="FontWeight" Value="{DynamicResource ThemeHeadingWeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource ThemeHeadingSizeHero}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeTitle}" />
+  </Style>
+  <Style Selector="TextBlock.page">
+    <Setter Property="FontFamily" Value="{DynamicResource ThemeHeadingFont}" />
+    <Setter Property="FontWeight" Value="{DynamicResource ThemeHeadingWeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource ThemeHeadingSizePage}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+    <Setter Property="Margin" Value="0,0,0,6" />
+  </Style>
+  <Style Selector="TextBlock.dialog">
+    <Setter Property="FontFamily" Value="{DynamicResource ThemeHeadingFont}" />
+    <Setter Property="FontWeight" Value="{DynamicResource ThemeHeadingWeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource ThemeHeadingSizeDialog}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <!-- A group's name, above its box of rows -->
+  <Style Selector="TextBlock.group">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+    <Setter Property="Margin" Value="2,18,0,8" />
+  </Style>
+  <!-- A small heading inside a menu over the video -->
+  <Style Selector="TextBlock.section">
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeHighlight}" />
+    <Setter Property="Margin" Value="0,10,0,2" />
+  </Style>
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource ThemeTextMuted}" />
+  </Style>
+  <!-- One or two sentences explaining something -->
+  <Style Selector="TextBlock.note">
+    <Setter Property="Foreground" Value="{DynamicResource ThemeTextMuted}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="LineHeight" Value="18" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="TextBlock.status">
+    <Setter Property="Foreground" Value="{DynamicResource ThemeHighlight}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="TextBlock.progress">
+    <Setter Property="Foreground" Value="{DynamicResource ThemePositive}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="FontFeatures" Value="+tnum" />
+  </Style>
+  <Style Selector="TextBlock.time">
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeBarText}" />
+    <Setter Property="FontFeatures" Value="+tnum" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="TextBlock.shortcut">
+    <Setter Property="Foreground" Value="{DynamicResource ThemeTextMuted}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <!-- ===== Buttons ===== -->
+  <Style Selector="Button">
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusControl}" />
+  </Style>
+  <Style Selector="ToggleButton, ComboBox, TextBox, NumericUpDown">
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusControl}" />
+  </Style>
+
+  <!-- The main action of a window -->
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Padding" Value="18,9" />
+  </Style>
+  <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccentHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.accent:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Opacity" Value="0.45" />
+  </Style>
+
+  <!-- Everything else a window offers -->
+  <Style Selector="Button.ghost">
+    <Setter Property="Background" Value="{DynamicResource ThemeRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+    <Setter Property="Padding" Value="14,8" />
+  </Style>
+  <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeHover}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+  </Style>
+
+  <!-- The welcome screen's list of ways in -->
+  <Style Selector="Button.action">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="14,11" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+  </Style>
+  <Style Selector="Button.action PathIcon">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="18" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeHighlight}" />
+  </Style>
+  <Style Selector="Button.action.primary">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.action.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccentHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.action.primary PathIcon">
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.action.primary TextBlock.shortcut">
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+    <Setter Property="Opacity" Value="0.8" />
+  </Style>
+
+  <!-- The bars' round icon buttons, over the video -->
+  <Style Selector="Button.icon">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusIconButton}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeBarText}" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+  <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeBarButtonHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeBarText}" />
+  </Style>
+  <Style Selector="Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeBarButtonPressed}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeBarText}" />
+  </Style>
+  <Style Selector="Button.icon PathIcon">
+    <Setter Property="Width" Value="20" />
+    <Setter Property="Height" Value="20" />
+  </Style>
+  <Style Selector="Button.big PathIcon">
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="28" />
+  </Style>
+  <!-- Play, the one filled button on the bar -->
+  <Style Selector="Button.play">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+    <Setter Property="Padding" Value="9" />
+    <Setter Property="Margin" Value="4,0" />
+  </Style>
+  <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccentHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.play:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+  </Style>
+  <Style Selector="Button.play PathIcon">
+    <Setter Property="Width" Value="24" />
+    <Setter Property="Height" Value="24" />
+  </Style>
+
+  <Style Selector="PathIcon.spin">
+    <Setter Property="RenderTransform">
+      <RotateTransform />
+    </Setter>
+    <Style.Animations>
+      <Animation Duration="0:0:1" IterationCount="INFINITE">
+        <KeyFrame Cue="0%">
+          <Setter Property="RotateTransform.Angle" Value="0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="RotateTransform.Angle" Value="360" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+
+  <!-- ===== The bars over the video ===== -->
+  <!-- Small badges: HDR / codec / 4K / HW / 5.1 / deinterlacing -->
+  <Style Selector="Border.badge">
+    <Setter Property="Background" Value="{DynamicResource ThemeBadge}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusSmall}" />
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="Margin" Value="3,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.badge.hdr">
+    <Setter Property="Background" Value="{DynamicResource ThemeBadgeHdr}" />
+  </Style>
+  <Style Selector="Border.badge TextBlock">
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeBadgeText}" />
+  </Style>
+
+  <Style Selector="c|SeekBar">
+    <Setter Property="TrackBrush" Value="{DynamicResource ThemeSeekTrack}" />
+    <Setter Property="BufferedBrush" Value="{DynamicResource ThemeSeekBuffered}" />
+    <Setter Property="ProgressBrush" Value="{DynamicResource ThemeSeekProgress}" />
+    <Setter Property="ThumbBrush" Value="{DynamicResource ThemeSeekThumb}" />
+    <Setter Property="LabelBackground" Value="{DynamicResource ThemeSeekLabel}" />
+    <Setter Property="LabelForeground" Value="{DynamicResource ThemeSeekLabelText}" />
+    <Setter Property="LabelCornerRadius" Value="{DynamicResource ThemeRadiusSmall}" />
+  </Style>
+
+  <!-- Menus: the bar's flyouts and drop-down menus -->
+  <Style Selector="MenuFlyoutPresenter">
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
+    <Setter Property="Background" Value="{DynamicResource ThemeFlyout}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+  </Style>
+  <Style Selector="FlyoutPresenter">
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
+    <Setter Property="Background" Value="{DynamicResource ThemeFlyout}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="Padding" Value="16,12,16,14" />
+  </Style>
+  <Style Selector="MenuItem PathIcon">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+  </Style>
+
+  <!-- ===== Settings ===== -->
+  <!-- A box of related rows -->
+  <Style Selector="Border.rows">
+    <Setter Property="Background" Value="{DynamicResource ThemeRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+
+  <Style Selector="c|SettingRow">
+    <Setter Property="Padding" Value="16,12" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="HorizontalContentAlignment" Value="Right" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+          <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="20">
+            <StackPanel x:Name="PART_Text" VerticalAlignment="Center" Spacing="2">
+              <TextBlock Text="{TemplateBinding Title}" FontSize="14" Foreground="{DynamicResource ThemeText}" TextWrapping="Wrap" />
+              <TextBlock Text="{TemplateBinding Description}" Classes="note"
+                         IsVisible="{Binding $parent[c:SettingRow].Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </StackPanel>
+            <ContentPresenter x:Name="PART_ContentPresenter" Grid.Column="1" Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Grid>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <!-- Wide controls go under the text -->
+  <Style Selector="c|SettingRow.stack">
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+  </Style>
+  <Style Selector="c|SettingRow.stack /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Grid.Row" Value="1" />
+    <Setter Property="Grid.Column" Value="0" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="0,10,0,0" />
+  </Style>
+  <!-- A line above every row of a box; the box's rows sit 1 px up, so the first line (whichever
+       row is first, with others hidden) is clipped off at the top. -->
+  <Style Selector="Border.rows c|SettingRow">
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+  </Style>
+  <Style Selector="Border.rows > StackPanel">
+    <Setter Property="Margin" Value="0,-1,0,0" />
+  </Style>
+
+  <!-- The settings window's sidebar -->
+  <Style Selector="TabControl.nav">
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="TabControl.nav /template/ ItemsPresenter#PART_ItemsPresenter">
+    <Setter Property="Width" Value="220" />
+    <Setter Property="Margin" Value="12,16,12,12" />
+  </Style>
+  <Style Selector="TabControl.nav > TabItem">
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="MinHeight" Value="38" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="Margin" Value="0,1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusControl}" />
+    <Setter Property="HeaderTemplate">
+      <DataTemplate x:DataType="x:String">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <PathIcon Width="16" Height="16" Data="{Binding $parent[TabItem].Tag}" Foreground="{DynamicResource ThemeHighlight}" />
+          <TextBlock Text="{Binding}" VerticalAlignment="Center" />
+        </StackPanel>
+      </DataTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="TabControl.nav > TabItem /template/ Border#PART_LayoutRoot">
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusControl}" />
+  </Style>
+  <Style Selector="TabControl.nav > TabItem:pointerover /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource ThemeHover}" />
+  </Style>
+  <Style Selector="TabControl.nav > TabItem:selected /template/ Border#PART_LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource ThemeNavSelected}" />
+  </Style>
+  <Style Selector="TabControl.nav > TabItem /template/ Border#PART_SelectedPipe">
+    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
+  </Style>
+
+  <!-- The theme picker's tiles -->
+  <Style Selector="ListBox.themes">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="ItemsPanel">
+      <ItemsPanelTemplate>
+        <WrapPanel />
+      </ItemsPanelTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ListBox.themes > ListBoxItem">
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="0,0,10,10" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
+    <Setter Property="BorderThickness" Value="2" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+  </Style>
+  <Style Selector="ListBox.themes > ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
+  </Style>
+  <Style Selector="ListBox.themes > ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+  </Style>
+  <Style Selector="ListBox.themes > ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccent}" />
+  </Style>
+  <Style Selector="ListBox.themes > ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentHover}" />
+  </Style>
+
+  <!-- ===== Dialogs ===== -->
+  <!-- The strip of buttons at a dialog's foot -->
+  <Style Selector="Border.footer">
+    <Setter Property="Background" Value="{DynamicResource ThemeBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="BorderThickness" Value="0,1,0,0" />
+    <Setter Property="Padding" Value="24,14" />
+  </Style>
+  <Style Selector="PathIcon.title">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeHighlight}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+</Styles>

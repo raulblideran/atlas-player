@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.LogicalTree;
 using Paramaja.App.Views;
 using Paramaja.Core.Playback;
 using Paramaja.Core.Settings;
@@ -266,8 +267,11 @@ public class Prompt8UiTests
         using var r = new Rig();
         var w = new SettingsWindow { DataContext = r.Vm };
         w.Show();
+        w.GetLogicalDescendants().OfType<TabControl>().Single().SelectedItem = w.FindControl<TabItem>("AudioTab");
+        Dispatch();
         var exclusive = w.FindControl<ToggleSwitch>("ExclusiveSwitch")!;
-        Assert.Equal(OperatingSystem.IsWindows(), exclusive.IsEffectivelyVisible);
+        // Its row (name, description and switch) shows on Windows only.
+        Assert.Equal(OperatingSystem.IsWindows(), exclusive.FindLogicalAncestorOfType<Paramaja.App.Controls.SettingRow>()!.IsEffectivelyVisible);
         exclusive.IsChecked = true;
         Assert.True(r.Vm.ExclusiveAudio);
         w.Close();

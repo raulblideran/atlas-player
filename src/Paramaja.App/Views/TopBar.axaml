@@ -5,18 +5,19 @@
                  x:Class="Paramaja.App.Views.TopBar"
                  x:DataType="vm:MainViewModel"
                  Title="Paramaja title" Height="72">
-  <Border Background="{StaticResource ParamajaTopScrim}" Padding="18,12,18,18">
+  <Border Background="{DynamicResource ThemeBarScrimTop}" Padding="18,12,18,18">
     <Grid ColumnDefinitions="*,Auto,Auto">
       <StackPanel Spacing="2">
-        <TextBlock Text="{Binding MediaTitle}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding MediaTitle}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource ThemeBarText}" />
         <StackPanel Orientation="Horizontal" Spacing="12">
-          <TextBlock Text="{Binding TorrentStatus}" FontSize="12" Foreground="{StaticResource ParamajaLeaf}"
+          <TextBlock Text="{Binding TorrentStatus}" FontSize="12" Foreground="{DynamicResource ThemePositive}"
                      IsVisible="{Binding IsTorrent}" />
-          <TextBlock x:Name="OpeningText" Text="Opening…" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource ParamajaLeaf}"
+          <TextBlock x:Name="OpeningText" Text="Opening…" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemePositive}"
                      IsVisible="{Binding IsStartingStream}" />
-          <TextBlock Text="{Binding BufferingText}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource ParamajaAccentBright}"
+          <TextBlock Text="{Binding BufferingText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource ThemeHighlight}"
                      IsVisible="{Binding ShowsBufferingText}" />
-          <TextBlock Text="{Binding StatusMessage}" FontSize="12" Classes="muted" />
+          <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource ThemeBarText}" Opacity="0.75" />
         </StackPanel>
       </StackPanel>
       <ComboBox Grid.Column="1" VerticalAlignment="Center" MaxWidth="360" IsVisible="{Binding HasTorrentFiles}"
@@ -24,15 +25,15 @@
                 ToolTip.Tip="Files in this torrent" />
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0,0,0">
         <Button x:Name="DownloadButton" Classes="icon" Command="{Binding DownloadCommand}" IsVisible="{Binding CanDownload}"
-                ToolTip.Tip="Download this video: choose the quality">
+                ToolTip.Tip="Download this video, in the quality you choose">
           <PathIcon Data="{StaticResource IconDownload}" />
         </Button>
         <TextBlock Text="{Binding DownloadStatus}" FontSize="12" VerticalAlignment="Center" IsVisible="{Binding IsDownloading}"
-                   Foreground="{StaticResource ParamajaLeaf}" />
+                   Foreground="{DynamicResource ThemePositive}" />
         <Button Classes="ghost" Content="Cancel" Command="{Binding CancelDownloadCommand}" IsVisible="{Binding IsDownloading}"
                 ToolTip.Tip="Stop the download and delete the partial file" />
         <TextBlock x:Name="RipStatus" Text="{Binding RipStatus}" FontSize="12" VerticalAlignment="Center" IsVisible="{Binding IsRipping}"
-                   Foreground="{StaticResource ParamajaLeaf}" />
+                   Foreground="{DynamicResource ThemePositive}" />
         <Button Classes="ghost" Content="Cancel rip" Command="{Binding CancelRipCommand}" IsVisible="{Binding IsRipping}"
                 ToolTip.Tip="Stop ripping and delete what was ripped so far" />
       </StackPanel>

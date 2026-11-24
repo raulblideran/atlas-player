@@ -3,7 +3,7 @@ using Paramaja.Core.Settings;
 namespace Paramaja.App.ViewModels;
 
 /// <summary>
-/// The settings as a file, to carry to another install: exported from Settings → Interface, and
+/// The settings as a file, to carry to another install: exported from Settings → Backup and logs, and
 /// taken over by importing it there or dropping it on the player (an old install's settings.json
 /// works the same way).
 /// </summary>
@@ -64,6 +64,7 @@ public sealed partial class MainViewModel
             p.SetVolume(Settings.Volume);
         }
         foreach (var c in ControlChoices) c.IsShown = Shows(c.Id);
+        Services.ThemeService.Apply(Settings.Theme);
         OnPropertyChanged(string.Empty);
         UpdateAudioBadge();
         UpdateHdrBadge();

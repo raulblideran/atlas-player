@@ -5,327 +5,490 @@
         x:Class="Paramaja.App.Views.SettingsWindow"
         x:DataType="vm:MainViewModel"
         Title="Settings — Paramaja" Icon="/Assets/paramaja.ico"
-        Width="760" Height="640" MinWidth="560" MinHeight="420"
-        WindowStartupLocation="CenterOwner" Background="#15111A">
-  <TabControl Margin="12" TabStripPlacement="Left">
-    <TabItem x:Name="VideoTab" Header="Video">
-      <ScrollViewer>
-        <StackPanel Margin="16,0" Spacing="8">
-          <TextBlock Classes="section" Text="This video" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding !HasVideoSwitches}"
-                     Text="Nothing to switch for the video playing now. An interlaced video has a deinterlacing switch here, and one your graphics card decodes a hardware decoding switch, for that video." />
-          <StackPanel x:Name="DeinterlaceOptions" Spacing="6" IsVisible="{Binding IsInterlacedVideo}">
-            <ToggleSwitch x:Name="DeinterlaceSwitch" IsChecked="{Binding Deinterlacing}" OnContent="BWDIF deinterlacing (default)"
-                          OffContent="Deinterlacing off (this video)" />
-            <TextBlock Text="{Binding DeinterlaceTip}" Classes="muted" FontSize="12" TextWrapping="Wrap" />
+        Width="940" Height="680" MinWidth="700" MinHeight="460"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
+  <!-- Pages in the sidebar; each page is groups of rows (Border.rows), a row being what it is, what it
+       does, and its control (SettingRow). Every switch is named by what it does when on. -->
+  <Panel>
+    <Border Width="244" HorizontalAlignment="Left" Background="{DynamicResource ThemeBg}"
+            BorderBrush="{DynamicResource ThemeStroke}" BorderThickness="0,0,1,0" />
+    <TabControl Classes="nav" TabStripPlacement="Left">
+
+      <!-- ===================================================================== Appearance -->
+      <TabItem x:Name="InterfaceTab" Header="Appearance" Tag="{StaticResource IconPalette}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Appearance" />
+
+            <TextBlock Classes="group" Text="Theme" />
+            <ListBox x:Name="ThemePicker" Classes="themes" ItemsSource="{Binding ThemeChoices}" SelectedItem="{Binding SelectedTheme}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ThemeChoice">
+                  <Border Width="156" Height="92" Background="{Binding Background}" CornerRadius="{Binding Corners}"
+                          BorderBrush="#33808080" BorderThickness="1"
+                          ToolTip.Tip="{Binding Description}" AutomationProperties.Name="{Binding Name}">
+                    <Grid RowDefinitions="*,Auto" Margin="12,10">
+                      <TextBlock Text="{Binding Name}" Foreground="{Binding Title}" FontFamily="{Binding HeadingFont}"
+                                 FontWeight="{Binding HeadingWeight}" FontSize="15" TextWrapping="Wrap" />
+                      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
+                        <Border Width="26" Height="10" CornerRadius="5" Background="{Binding Accent}" />
+                        <Border Width="10" Height="10" CornerRadius="5" Background="{Binding Highlight}" />
+                        <Border Width="10" Height="10" CornerRadius="5" Background="{Binding Positive}" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock Classes="note" Text="{Binding ThemeDescription}" />
+
+            <TextBlock Classes="group" Text="Controls bar" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Layout" Description="{Binding BarLayoutText}">
+                  <ComboBox x:Name="BarLayout" SelectedIndex="{Binding BarLayoutIndex}" Width="220">
+                    <ComboBoxItem Content="Simple (default)" />
+                    <ComboBoxItem Content="Everything" />
+                    <ComboBoxItem Content="Custom" />
+                  </ComboBox>
+                </c:SettingRow>
+                <c:SettingRow Classes="stack" Title="Buttons on the bar"
+                              Description="A button shows only where it applies, like the chapter buttons with chapters. Play, More and Settings are always there, and every shortcut works either way.">
+                  <ItemsControl x:Name="ControlChoices" ItemsSource="{Binding ControlChoices}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel ItemWidth="320" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:ControlChoice">
+                        <CheckBox Content="{Binding Label}" IsChecked="{Binding IsShown}" Margin="0,1" />
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
           </StackPanel>
-          <StackPanel x:Name="HardwareOptions" Spacing="6" IsVisible="{Binding HardwareDecodingApplies}">
-            <ToggleSwitch x:Name="HardwareSwitch" IsChecked="{Binding HardwareDecoding}" OnContent="Hardware acceleration (default)"
-                          OffContent="Software decoding (this video)" />
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Playback -->
+      <TabItem x:Name="PlaybackTab" Header="Playback" Tag="{StaticResource IconPlayCircle}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Playback" />
+
+            <TextBlock Classes="group" Text="Seeking" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Arrow keys jump by" Description="Left and right go back and forward this many seconds.">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumericUpDown x:Name="SeekSecondsBox" Value="{Binding SeekSeconds}" Minimum="1" Maximum="600" Increment="1" FormatString="0" Width="130" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" Classes="muted" />
+                  </StackPanel>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Screenshots" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Screenshots folder"
+                              Description="S saves the picture, Shift+S with the subtitles: a lossless PNG at the video's own resolution (16-bit for HDR and 10-bit video), in the Screenshots folder next to the app.">
+                  <Button Classes="ghost" Content="Open folder" Command="{Binding OpenScreenshotsFolderCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
           </StackPanel>
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Deinterlacing is automatic, for interlaced videos only: those flagged as interlaced, and videos the CPU decodes whose picture shows it (tape captures without flags). They're deinterlaced with BWDIF, a motion-adaptive deinterlacer that makes one frame of each field (50i becomes 50p). D switches it for the playing video." />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Hardware acceleration is decided for each video: it's on for HEVC (H.265) and AV1 at any size and for every codec from 1080p up, where your graphics card can decode them. Smaller videos decode in software." />
+        </ScrollViewer>
+      </TabItem>
 
-          <TextBlock Classes="section" Text="Rendering quality" />
-          <ComboBox x:Name="RenderQuality" SelectedIndex="{Binding RenderQualityIndex}" Width="420" HorizontalAlignment="Left">
-            <ComboBoxItem Content="Auto — High below 4K, Balanced for 4K" />
-            <ComboBoxItem Content="High — best scaling, needs a strong GPU for 4K" />
-            <ComboBoxItem Content="Balanced — nearly as sharp, far lighter (default)" />
-            <ComboBoxItem Content="Fast — lightest, for laptops and older GPUs" />
-          </ComboBox>
-          <TextBlock Text="{Binding RenderProfileText}" Classes="muted" FontSize="12" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Scaling a 4K picture costs about five times as much as 1080p. If 4K stutters while 1080p is fine, the GPU is running out of time: Balanced or Fast fixes it. Auto also switches to Fast by itself if frames keep dropping." />
+      <!-- ===================================================================== Video -->
+      <TabItem x:Name="VideoTab" Header="Video" Tag="{StaticResource IconVideo}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Video" />
 
-          <TextBlock Classes="section" Text="Frame timing" />
-          <ToggleSwitch x:Name="SyncToDisplay" IsChecked="{Binding SyncToDisplay}"
-                        OnContent="Sync to the display's refresh (display-resample)" OffContent="Audio clock (default)" />
-          <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding SyncToDisplay}">
-            <TextBlock Text="Refresh rate" VerticalAlignment="Center" />
-            <ComboBox SelectedIndex="{Binding DisplayFpsIndex}" Width="300">
-              <ComboBoxItem Content="The monitor's own (default)" />
-              <ComboBoxItem Content="60 Hz" />
-              <ComboBoxItem Content="50 Hz" />
-              <ComboBoxItem Content="75 Hz" />
-              <ComboBoxItem Content="120 Hz" />
-              <ComboBoxItem Content="144 Hz" />
-            </ComboBox>
+            <TextBlock Classes="group" Text="The video playing now" />
+            <TextBlock Classes="note" IsVisible="{Binding !HasVideoSwitches}"
+                       Text="Nothing to change for what's playing. An interlaced video (TV, DVD, tape) gets a deinterlacing switch here, and one the graphics card decodes a hardware decoding switch. Both are decided for each video, and switched for that video only." />
+            <Border Classes="rows" IsVisible="{Binding HasVideoSwitches}">
+              <StackPanel>
+                <StackPanel x:Name="DeinterlaceOptions" IsVisible="{Binding IsInterlacedVideo}">
+                  <c:SettingRow Title="Deinterlace (BWDIF)" Description="{Binding DeinterlaceTip}">
+                    <ToggleSwitch x:Name="DeinterlaceSwitch" IsChecked="{Binding Deinterlacing}" />
+                  </c:SettingRow>
+                </StackPanel>
+                <StackPanel x:Name="HardwareOptions" IsVisible="{Binding HardwareDecodingApplies}">
+                  <c:SettingRow Title="Hardware decoding"
+                                Description="The graphics card decodes this video. On by itself for HEVC and AV1, and for anything 1080p and up. Off: the processor does it.">
+                    <ToggleSwitch x:Name="HardwareSwitch" IsChecked="{Binding HardwareDecoding}" />
+                  </c:SettingRow>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" IsVisible="{Binding HasVideoSwitches}"
+                       Text="Interlaced video is deinterlaced by itself: each field becomes a frame, so 50i plays as 50p. D switches it while a video plays." />
+
+            <TextBlock Classes="group" Text="Picture quality" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Rendering quality" Description="{Binding RenderProfileText}">
+                  <ComboBox x:Name="RenderQuality" SelectedIndex="{Binding RenderQualityIndex}" Width="220">
+                    <ComboBoxItem Content="Auto" />
+                    <ComboBoxItem Content="High" />
+                    <ComboBoxItem Content="Balanced (default)" />
+                    <ComboBoxItem Content="Fast" />
+                  </ComboBox>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0"
+                       Text="High is the sharpest and needs a strong graphics card for 4K. Balanced is nearly as sharp for far less work. Fast is the lightest, for laptops and older cards. Auto picks High below 4K and Balanced for 4K, and switches to Fast by itself if frames keep dropping. If 4K stutters while 1080p is fine, choose Balanced or Fast." />
+
+            <TextBlock Classes="group" Text="Smoothness" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Time frames to the display"
+                              Description="Can be a little smoother when the monitor's refresh rate suits the video, but stutters if the rate is wrong. Off (default): frames follow the audio clock, which nothing upsets.">
+                  <ToggleSwitch x:Name="SyncToDisplay" IsChecked="{Binding SyncToDisplay}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Display refresh rate" Description="The rate frames are timed for." IsVisible="{Binding SyncToDisplay}">
+                  <ComboBox x:Name="DisplayFps" SelectedIndex="{Binding DisplayFpsIndex}" Width="240">
+                    <ComboBoxItem Content="The monitor's own (default)" />
+                    <ComboBoxItem Content="60 Hz" />
+                    <ComboBoxItem Content="50 Hz" />
+                    <ComboBoxItem Content="75 Hz" />
+                    <ComboBoxItem Content="120 Hz" />
+                    <ComboBoxItem Content="144 Hz" />
+                  </ComboBox>
+                </c:SettingRow>
+                <c:SettingRow Title="Use the high-performance graphics card" IsVisible="{Binding IsWindows}"
+                              Description="For laptops with two: Windows otherwise gives apps the power-saving one, which can be too slow for 4K or a high refresh rate. Applies from the next start.">
+                  <ToggleSwitch x:Name="HighPerformanceGpu" IsChecked="{Binding PreferHighPerformanceGpu}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="HDR" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="HDR video" Description="{Binding HdrStatusText}">
+                  <ComboBox x:Name="HdrMode" SelectedIndex="{Binding HdrModeIndex}" Width="220">
+                    <ComboBoxItem Content="Auto (default)" />
+                    <ComboBoxItem Content="Always convert to SDR" />
+                    <ComboBoxItem Content="Always send as HDR" />
+                  </ComboBox>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0"
+                       Text="Auto sends HDR video as it is (passthrough) to a screen in HDR mode, and converts it to SDR (tonemapping) for any other." />
+
+            <TextBlock Classes="group" Text="Converting HDR to SDR" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Tonemapping curve"
+                              Description="mobius (default) keeps colours exact and softens only the highlights. spline is balanced, bt.2446a brighter, bt.2390 the ITU reference, hable filmic.">
+                  <ComboBox x:Name="ToneMappingCurve" Width="160" ItemsSource="{Binding ToneMappingCurves}" SelectedItem="{Binding ToneMapping}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Adapt to each scene"
+                              Description="Measures every frame's brightness. Off: uses the brightness the video declares once for all of it.">
+                  <ToggleSwitch x:Name="HdrDynamicPeak" IsChecked="{Binding HdrDynamicPeak}" />
+                </c:SettingRow>
+                <c:SettingRow Title="{Binding HdrContrastRecovery, StringFormat='Highlight detail: {0:0.00}'}"
+                              Description="Brings back fine detail the conversion flattens in bright areas. 0 is off.">
+                  <Slider x:Name="HdrContrastRecovery" Minimum="0" Maximum="1" Value="{Binding HdrContrastRecovery}" Width="220" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="These apply only while HDR is converted. H switches between converting and passthrough while a video plays." />
           </StackPanel>
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Frames are timed by the audio clock, as mpv does by default, which no monitor can upset. Syncing to the display can be a touch smoother where the monitor's rate suits the video, but needs that rate right: with a wrong one it stutters." />
+        </ScrollViewer>
+      </TabItem>
 
-          <StackPanel Spacing="8" IsVisible="{Binding IsWindows}">
-            <TextBlock Classes="section" Text="Graphics card" />
-            <ToggleSwitch IsChecked="{Binding PreferHighPerformanceGpu}"
-                          OnContent="Use the high-performance GPU on laptops with two (default)" OffContent="Use the GPU Windows chooses" />
-            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                       Text="Laptops with built-in and gaming graphics give apps the power-saving one by default, which may be too slow for 1080p and 4K at a high refresh rate. Applies from the next start." />
+      <!-- ===================================================================== Audio -->
+      <TabItem x:Name="AudioTab" Header="Audio" Tag="{StaticResource IconAudio}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Audio" />
+
+            <TextBlock Classes="group" Text="Output" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Exclusive output (bit-perfect)" IsVisible="{Binding IsWindows}"
+                              Description="The player has the audio device to itself, so each file plays at its own rate, up to 192 kHz for DSD and SACDs. Other apps go silent meanwhile. Discs always play shared.">
+                  <ToggleSwitch x:Name="ExclusiveSwitch" IsChecked="{Binding ExclusiveAudio}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Passthrough to an AV receiver"
+                              Description="Sends Dolby and DTS untouched, for the receiver to decode. Such audio can't be downmixed or evened out.">
+                  <ToggleSwitch x:Name="PassthroughSwitch" IsChecked="{Binding AudioPassthrough}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Channels and loudness" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Downmix surround to stereo"
+                              Description="For 5.1 and 7.1 sources only. Off (default): every channel plays.">
+                  <ToggleSwitch x:Name="DownmixSwitch" IsChecked="{Binding DownmixToStereo}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Even out loud and quiet parts"
+                              Description="Dynamic normalization, for late nights. Off (default): the original dynamics.">
+                  <ToggleSwitch x:Name="NormalizeSwitch" IsChecked="{Binding NormalizeAudio}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0"
+                       Text="With these off the audio plays exactly as recorded, at its own sample rate (DSD and SACDs as 192 kHz PCM). For a stereo video the audio menu can also play just the left or right channel." />
+
+            <TextBlock Classes="group" Text="Language" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Preferred audio languages"
+                              Description="Language codes, most wanted first. Empty: the file's default track, a stereo one where there is one.">
+                  <TextBox x:Name="AudioLanguages" Text="{Binding PreferredAudioLanguages}" Watermark="e.g. jpn,eng" Width="200" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
           </StackPanel>
+        </ScrollViewer>
+      </TabItem>
 
-          <TextBlock Classes="section" Text="HDR" />
-          <ComboBox x:Name="HdrMode" SelectedIndex="{Binding HdrModeIndex}" Width="460" HorizontalAlignment="Left">
-            <ComboBoxItem Content="Auto — passthrough on an HDR display, tonemap on SDR (default)" />
-            <ComboBoxItem Content="Always tonemap HDR to SDR" />
-            <ComboBoxItem Content="Always pass HDR through to the display" />
-          </ComboBox>
-          <TextBlock Text="{Binding HdrStatusText}" Classes="muted" FontSize="12" TextWrapping="Wrap" />
+      <!-- ===================================================================== Subtitles -->
+      <TabItem x:Name="SubtitlesTab" Header="Subtitles" Tag="{StaticResource IconSubtitles}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Subtitles" />
 
-          <TextBlock Classes="section" Text="Tonemapping (HDR to SDR)" />
-          <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
-            <TextBlock Text="Tonemapping curve" VerticalAlignment="Center" />
-            <ComboBox Grid.Column="1" Width="160" ItemsSource="{Binding ToneMappingCurves}" SelectedItem="{Binding ToneMapping}" />
-          </Grid>
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="mobius: default, keeps colours exact and softens only the highlights · spline: balanced · bt.2446a: brighter, closer to PotPlayer · bt.2390: the ITU reference curve · hable: filmic" />
-          <ToggleSwitch IsChecked="{Binding HdrDynamicPeak}"
-                        OnContent="Scene-adaptive brightness (measures each frame)" OffContent="Use the disc's static metadata" />
-          <StackPanel>
-            <TextBlock Text="{Binding HdrContrastRecovery, StringFormat='Highlight detail recovery: {0:0.00}'}" />
-            <Slider Minimum="0" Maximum="1" Value="{Binding HdrContrastRecovery}" Width="320" HorizontalAlignment="Left" />
+            <TextBlock Classes="group" Text="Choosing subtitles" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Load subtitle files next to the video"
+                              Description="Files named like the video. Off: only the subtitles inside it.">
+                  <ToggleSwitch x:Name="AutoLoadSubtitles" IsChecked="{Binding AutoLoadExternalSubtitles}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Preferred subtitle languages" Description="Language codes, most wanted first.">
+                  <TextBox x:Name="SubtitleLanguages" Text="{Binding PreferredSubtitleLanguages}" Watermark="e.g. eng,spa" Width="200" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Look" />
+            <Border Classes="rows">
+              <StackPanel>
+                <Border Padding="16,14,16,12">
+                  <c:SubtitlePreview x:Name="SubtitlePreview" Height="96"
+                                     FontName="{Binding SubtitlePreviewFont}" IsBold="{Binding SubtitleBold}" TextColor="{Binding SubtitleColor}"
+                                     OutlineColor="{Binding SubtitleBorderColor}" Outline="{Binding SubtitleBorderSize}" Shadow="{Binding SubtitleShadow}"
+                                     HasBox="{Binding SubtitleBackground}" BoxOpacity="{Binding SubtitleBackgroundOpacity}" Scale="{Binding SubtitleScale}" />
+                </Border>
+                <c:SettingRow Title="Font">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <ComboBox x:Name="SubtitleFont" ItemsSource="{Binding SubtitleFonts}" SelectedItem="{Binding SubtitleFontChoice}" Width="240"
+                              MaxDropDownHeight="360" />
+                    <CheckBox x:Name="SubtitleBold" Content="Bold" IsChecked="{Binding SubtitleBold}" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="{Binding SubtitleSizeText}">
+                  <Slider x:Name="SubtitleSize" Minimum="0.5" Maximum="2.5" Value="{Binding SubtitleScale}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Text colour">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox x:Name="SubtitleColor" ItemsSource="{Binding SubtitleColors}" SelectedItem="{Binding SubtitleColorChoice}" Width="170"
+                              PlaceholderText="Custom">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MainViewModel+ColorChoice">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="#80808080" BorderThickness="1" />
+                            <TextBlock Text="{Binding Name}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding SubtitleColor}" Width="96" ToolTip.Tip="Any colour, as #RRGGBB" AutomationProperties.Name="Text colour code" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Outline colour">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox x:Name="SubtitleBorderColor" ItemsSource="{Binding SubtitleBorderColors}" SelectedItem="{Binding SubtitleBorderColorChoice}"
+                              Width="170" PlaceholderText="Custom">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MainViewModel+ColorChoice">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="#80808080" BorderThickness="1" />
+                            <TextBlock Text="{Binding Name}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding SubtitleBorderColor}" Width="96" ToolTip.Tip="Any colour, as #RRGGBB" AutomationProperties.Name="Outline colour code" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Outline thickness">
+                  <Slider x:Name="SubtitleOutline" Minimum="0" Maximum="6" Value="{Binding SubtitleBorderSize}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Shadow">
+                  <Slider x:Name="SubtitleShadow" Minimum="0" Maximum="4" Value="{Binding SubtitleShadow}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Box behind the text" Description="Like TV subtitles. The slider sets how dark the box is.">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Slider Minimum="0.1" Maximum="1" Value="{Binding SubtitleBackgroundOpacity}" Width="120" IsEnabled="{Binding SubtitleBackground}"
+                            VerticalAlignment="Center" AutomationProperties.Name="Box darkness" />
+                    <ToggleSwitch x:Name="SubtitleBackground" IsChecked="{Binding SubtitleBackground}" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Height" Description="0 is the bottom. Raise them above a letterbox or burnt-in captions.">
+                  <Slider x:Name="SubtitleRaise" Minimum="0" Maximum="40" Value="{Binding SubtitleRaise}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Restyle styled subtitles (ASS)"
+                              Description="ASS subtitles, common for anime, have their own fonts and colours. Off (default): they keep them.">
+                  <ToggleSwitch x:Name="SubtitleStyleAss" IsChecked="{Binding SubtitleStyleAss}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <Grid ColumnDefinitions="*,Auto" Margin="2,10,0,0" ColumnSpacing="12">
+              <TextBlock Classes="note" Text="{Binding SubtitleLookText}" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Classes="ghost" Content="Back to the default look" Command="{Binding ResetSubtitleStyleCommand}" />
+            </Grid>
+            <TextBlock Classes="note" Margin="2,10,0,0"
+                       Text="The look applies to text subtitles (SRT, WebVTT, embedded text) at once, the playing video too. Picture subtitles (DVD, Blu-ray, PGS, VobSub) can't be restyled; on files their size still changes." />
           </StackPanel>
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="These apply while HDR video is tonemapped to SDR (see HDR above). H switches between tonemapping and passthrough." />
-        </StackPanel>
-      </ScrollViewer>
-    </TabItem>
+        </ScrollViewer>
+      </TabItem>
 
-    <TabItem x:Name="AudioTab" Header="Audio">
-      <ScrollViewer>
-      <StackPanel Margin="16,0" Spacing="8">
-        <TextBlock Classes="section" Text="Surround" />
-        <ToggleSwitch IsChecked="{Binding DownmixToStereo}" OnContent="Downmix 5.1 / 7.1 to stereo" OffContent="Output original channels (default)" />
-        <TextBlock Classes="section" Text="Volume" />
-        <ToggleSwitch IsChecked="{Binding NormalizeAudio}" OnContent="Normalize volume (evens out loud and quiet parts)" OffContent="Original dynamics (default)" />
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="All off by default: the audio plays as-is, at its own sample rate (DSD and SACDs as 192 kHz PCM), 5.1 and 7.1 with all their channels. The downmix applies only to 5.1 / 7.1 sources. Where a video has several audio tracks, a stereo one plays by default; for a stereo source, the audio menu can play just its left or right channel. No ReplayGain or downmix normalisation is ever applied. Passthrough to an AV receiver is below." />
-        <StackPanel Spacing="8" IsVisible="{Binding IsWindows}">
-          <TextBlock Classes="section" Text="Output" />
-          <ToggleSwitch x:Name="ExclusiveSwitch" IsChecked="{Binding ExclusiveAudio}" OnContent="Exclusive (bit-perfect): the device plays each file's own rate"
-                        OffContent="Shared with other apps (default)" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Windows mixes every app's sound at one rate (often 48 kHz). With exclusive output the player has the audio device to itself, so it runs at the file's own rate: 96 or 192 kHz for hi-res files, 192 kHz for DSD and SACDs, where the device takes it. Other apps can't play sound meanwhile. Discs (DVDs, Audio CDs) always play shared." />
-        </StackPanel>
-        <TextBlock Classes="section" Text="Preferred audio languages" />
-        <TextBox Text="{Binding PreferredAudioLanguages}" Watermark="e.g. jpn,eng" Width="320" HorizontalAlignment="Left" />
-        <TextBlock Classes="section" Text="Audio passthrough" />
-        <ToggleSwitch x:Name="PassthroughSwitch" IsChecked="{Binding AudioPassthrough}" OnContent="Passthrough Dolby / DTS to an AV receiver"
-                      OffContent="Decode audio in the player (default)" />
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="Sends Dolby and DTS bitstreams untouched to a receiver, which decodes them (on Windows the receiver then has the audio device to itself). Such audio can't be downmixed or normalized." />
-      </StackPanel>
-      </ScrollViewer>
-    </TabItem>
+      <!-- ===================================================================== Streaming -->
+      <TabItem x:Name="StreamingTab" Header="Streaming and downloads" Tag="{StaticResource IconWeb}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Streaming and downloads" />
 
-    <TabItem x:Name="SubtitlesTab" Header="Subtitles">
-      <ScrollViewer>
-        <StackPanel Margin="16,0" Spacing="8">
-          <TextBlock Classes="section" Text="Loading" />
-          <ToggleSwitch IsChecked="{Binding AutoLoadExternalSubtitles}" OnContent="Auto-load matching subtitle files next to the video" OffContent="Only embedded subtitles" />
-          <TextBlock Classes="section" Text="Preferred subtitle languages" />
-          <TextBox Text="{Binding PreferredSubtitleLanguages}" Watermark="e.g. eng,spa" Width="320" HorizontalAlignment="Left" />
+            <TextBlock Classes="group" Text="YouTube and other sites" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Starting quality"
+                              Description="YouTube videos start in this quality; other sites play their best. The video menu changes it for one video.">
+                  <ComboBox x:Name="StreamQualityDefault" SelectedIndex="{Binding StreamQualityIndex}" Width="220">
+                    <ComboBoxItem Content="Best available (default)" />
+                    <ComboBoxItem Content="Up to 2160p (4K)" />
+                    <ComboBoxItem Content="Up to 1440p" />
+                    <ComboBoxItem Content="Up to 1080p" />
+                    <ComboBoxItem Content="Up to 720p" />
+                    <ComboBoxItem Content="Up to 480p" />
+                    <ComboBoxItem Content="Up to 360p" />
+                  </ComboBox>
+                </c:SettingRow>
+                <c:SettingRow Title="YouTube support (yt-dlp)"
+                              Description="Plays links from YouTube and about 1,800 other sites. Sites change often: if one stops playing, update.">
+                  <Button x:Name="UpdateYtDlpButton" Classes="ghost" Content="Update" Command="{Binding UpdateYtDlpCommand}" IsEnabled="{Binding HasYtDlp}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Downloads folder" Description="Where Download Video saves.">
+                  <Button Classes="ghost" Content="Open folder" Command="{Binding OpenDownloadsFolderCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding YtDlpStatus}"
+                       IsVisible="{Binding YtDlpStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-          <TextBlock Classes="section" Text="Look" />
-          <c:SubtitlePreview x:Name="SubtitlePreview" Height="96" Margin="0,0,0,4"
-                             FontName="{Binding SubtitlePreviewFont}" IsBold="{Binding SubtitleBold}" TextColor="{Binding SubtitleColor}"
-                             OutlineColor="{Binding SubtitleBorderColor}" Outline="{Binding SubtitleBorderSize}" Shadow="{Binding SubtitleShadow}"
-                             HasBox="{Binding SubtitleBackground}" BoxOpacity="{Binding SubtitleBackgroundOpacity}" Scale="{Binding SubtitleScale}" />
-          <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="8">
-            <TextBlock Text="Font" VerticalAlignment="Center" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-              <ComboBox x:Name="SubtitleFont" ItemsSource="{Binding SubtitleFonts}" SelectedItem="{Binding SubtitleFontChoice}" Width="260"
-                        MaxDropDownHeight="360" />
-              <CheckBox x:Name="SubtitleBold" Content="Bold" IsChecked="{Binding SubtitleBold}" />
+            <TextBlock Classes="group" Text="Torrents" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Delete downloaded data on closing"
+                              Description="Only the file you watch is downloaded, around where you are in it. Off: it stays in the cache folder.">
+                  <ToggleSwitch x:Name="ClearCacheSwitch" IsChecked="{Binding ClearTorrentCacheOnExit}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Cache folder" Description="The 'cache' folder next to the app.">
+                  <Button Classes="ghost" Content="Open folder" Command="{Binding OpenCacheFolderCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Backup and logs -->
+      <TabItem x:Name="DeveloperTab" Header="Backup and logs" Tag="{StaticResource IconWrench}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Backup and logs" />
+
+            <TextBlock Classes="group" Text="Settings file" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Export settings" Description="Every setting in one file, to take to another install or PC.">
+                  <Button x:Name="ExportSettingsButton" Classes="ghost" Content="Export…" Click="OnExportSettings" />
+                </c:SettingRow>
+                <c:SettingRow Title="Import settings"
+                              Description="Or drop the file on the player; an old install's settings.json works too. This PC's graphics card, refresh rate and audio device choices stay as they are.">
+                  <Button x:Name="ImportSettingsButton" Classes="ghost" Content="Import…" Click="OnImportSettings" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding SettingsFileStatus}"
+                       IsVisible="{Binding SettingsFileStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <TextBlock Classes="group" Text="Troubleshooting" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Classes="stack" Title="Playback log"
+                              Description="Play the video that lags, then create a log: every second's playback statistics since it started, the machine, and how the video is played. Send it to whoever helps you.">
+                  <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                    <Button x:Name="CreateLogButton" Content="Create log" Command="{Binding CreateLogCommand}" Classes="accent" />
+                    <Button Classes="ghost" Content="Open logs folder" Command="{Binding OpenLogsFolderCommand}" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Statistics over the video" Description="Live numbers: dropped frames, decoder, bit rate.">
+                  <Button Classes="ghost" Content="Statistics overlay (I)" Command="{Binding ToggleStatsCommand}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Diagnostics" Description="While the problem video plays: copies the machine, the video and why it's struggling.">
+                  <Button Classes="ghost" Content="Copy diagnostics (Ctrl+I)" Command="{Binding CopyDiagnosticsCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding LogStatus}"
+                       IsVisible="{Binding LogStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Shortcuts -->
+      <TabItem x:Name="ShortcutsTab" Header="Shortcuts" Tag="{StaticResource IconKeyboard}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Shortcuts" />
+            <TextBlock Classes="note" Margin="2,0,0,12" Text="They work whether or not their button is on the bar." />
+            <Border Classes="rows" Padding="16,8">
+              <ItemsControl ItemsSource="{Binding Shortcuts}" x:Name="ShortcutList" />
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== About -->
+      <TabItem x:Name="AboutTab" Header="About" Tag="{StaticResource IconInfo}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,8">
+              <Image Source="/Assets/paramaja-256.png" Width="72" Height="72" />
+              <StackPanel VerticalAlignment="Center" Spacing="4">
+                <TextBlock Classes="page" Text="Paramaja" Margin="0" />
+                <TextBlock x:Name="VersionText" Text="{Binding AppVersion, StringFormat='Version {0}'}" Classes="muted" />
+              </StackPanel>
             </StackPanel>
-
-            <TextBlock Grid.Row="1" Text="{Binding SubtitleSizeText}" VerticalAlignment="Center" TextWrapping="Wrap" />
-            <Slider Grid.Row="1" Grid.Column="1" Minimum="0.5" Maximum="2.5" Value="{Binding SubtitleScale}" Width="320" HorizontalAlignment="Left" />
-
-            <TextBlock Grid.Row="2" Text="Text colour" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="10">
-              <ComboBox x:Name="SubtitleColor" ItemsSource="{Binding SubtitleColors}" SelectedItem="{Binding SubtitleColorChoice}" Width="180"
-                        PlaceholderText="Custom">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:MainViewModel+ColorChoice">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="#80FFFFFF" BorderThickness="1" />
-                      <TextBlock Text="{Binding Name}" />
-                    </StackPanel>
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-              <TextBox Text="{Binding SubtitleColor}" Width="100" ToolTip.Tip="Any colour, as #RRGGBB" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <Button Classes="ghost" Content="Copy version" Click="OnCopyVersion" />
+              <TextBlock Classes="note" VerticalAlignment="Center" Width="460"
+                         Text="Include it when you report a problem: the part in brackets is the exact build." />
             </StackPanel>
-
-            <TextBlock Grid.Row="3" Text="Outline" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" Spacing="10">
-              <ComboBox x:Name="SubtitleBorderColor" ItemsSource="{Binding SubtitleBorderColors}" SelectedItem="{Binding SubtitleBorderColorChoice}"
-                        Width="180" PlaceholderText="Custom">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:MainViewModel+ColorChoice">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="#80FFFFFF" BorderThickness="1" />
-                      <TextBlock Text="{Binding Name}" />
-                    </StackPanel>
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-              <TextBox Text="{Binding SubtitleBorderColor}" Width="100" ToolTip.Tip="Any colour, as #RRGGBB" />
-            </StackPanel>
-
-            <TextBlock Grid.Row="4" Text="Thickness" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="10">
-              <Slider x:Name="SubtitleOutline" Minimum="0" Maximum="6" Value="{Binding SubtitleBorderSize}" Width="150" ToolTip.Tip="Outline" />
-              <TextBlock Text="Shadow" VerticalAlignment="Center" />
-              <Slider x:Name="SubtitleShadow" Minimum="0" Maximum="4" Value="{Binding SubtitleShadow}" Width="120" />
-            </StackPanel>
-
-            <TextBlock Grid.Row="5" Text="Background" VerticalAlignment="Center" />
-            <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Spacing="10">
-              <ToggleSwitch x:Name="SubtitleBackground" IsChecked="{Binding SubtitleBackground}" OnContent="Box behind the text" OffContent="No box" />
-              <Slider Minimum="0.1" Maximum="1" Value="{Binding SubtitleBackgroundOpacity}" Width="120" IsEnabled="{Binding SubtitleBackground}"
-                      ToolTip.Tip="How dark the box is" VerticalAlignment="Center" />
-            </StackPanel>
-
-            <TextBlock Grid.Row="6" Text="Height" VerticalAlignment="Center" />
-            <Slider x:Name="SubtitleRaise" Grid.Row="6" Grid.Column="1" Minimum="0" Maximum="40" Value="{Binding SubtitleRaise}" Width="320"
-                    HorizontalAlignment="Left" ToolTip.Tip="0 is the bottom; raise them over a letterbox or a burnt-in caption" />
-
-            <TextBlock Grid.Row="7" Text="Styled subtitles" VerticalAlignment="Center" />
-            <ToggleSwitch x:Name="SubtitleStyleAss" Grid.Row="7" Grid.Column="1" IsChecked="{Binding SubtitleStyleAss}"
-                          OnContent="Styled ones (ASS) take this look too" OffContent="Styled ones (ASS) keep their own look (default)" />
-          </Grid>
-          <TextBlock Text="{Binding SubtitleLookText}" Classes="muted" FontSize="12" />
-          <Button Content="Back to the default look" Command="{Binding ResetSubtitleStyleCommand}" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="The look applies to text subtitles (SRT, WebVTT, embedded text tracks), at once, to the video playing too. Styled subtitles (ASS, common for anime) have their own fonts and colours, kept unless switched above. Subtitles that are pictures (DVDs, Blu-rays, PGS, VobSub) can't be restyled; the size still applies to them on files." />
-        </StackPanel>
-      </ScrollViewer>
-    </TabItem>
-
-    <TabItem x:Name="PlaybackTab" Header="Playback">
-      <ScrollViewer>
-      <StackPanel Margin="16,0" Spacing="8">
-        <TextBlock Classes="section" Text="Seeking" />
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <TextBlock Text="Arrow key jump (seconds)" VerticalAlignment="Center" />
-          <NumericUpDown Value="{Binding SeekSeconds}" Minimum="1" Maximum="600" Increment="1" FormatString="0" Width="130" />
-        </StackPanel>
-        <TextBlock Classes="section" Text="Screenshots" />
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="Lossless, uncompressed PNG at the video's native resolution (16-bit for HDR/10-bit sources), saved to the 'Screenshots' folder next to the app." />
-        <Button Content="Open screenshots folder" Command="{Binding OpenScreenshotsFolderCommand}" />
-        <TextBlock Classes="section" Text="YouTube &amp; other sites" />
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="Links from YouTube and ~1800 other sites play through yt-dlp. Sites change often; if one stops working, update it. While a YouTube video plays, the video menu can change its quality." />
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <Button Content="Update YouTube support" Command="{Binding UpdateYtDlpCommand}" IsEnabled="{Binding HasYtDlp}" />
-          <Button Content="Open downloads folder" Command="{Binding OpenDownloadsFolderCommand}" />
-          <TextBlock Text="{Binding YtDlpStatus}" VerticalAlignment="Center" Classes="muted" FontSize="12" />
-        </StackPanel>
-        <TextBlock Classes="section" Text="YouTube quality" />
-        <ComboBox x:Name="StreamQualityDefault" SelectedIndex="{Binding StreamQualityIndex}" Width="220" HorizontalAlignment="Left">
-          <ComboBoxItem Content="Best available (default)" />
-          <ComboBoxItem Content="Up to 2160p (4K)" />
-          <ComboBoxItem Content="Up to 1440p" />
-          <ComboBoxItem Content="Up to 1080p" />
-          <ComboBoxItem Content="Up to 720p" />
-          <ComboBoxItem Content="Up to 480p" />
-          <ComboBoxItem Content="Up to 360p" />
-        </ComboBox>
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="The quality YouTube videos start in (other sites' play at their best). While one plays, the video menu can change it for that video." />
-      </StackPanel>
-      </ScrollViewer>
-    </TabItem>
-
-    <TabItem x:Name="TorrentsTab" Header="Torrents">
-      <ScrollViewer>
-      <StackPanel Margin="16,0" Spacing="8">
-        <TextBlock Classes="section" Text="Cache" />
-        <ToggleSwitch IsChecked="{Binding ClearTorrentCacheOnExit}" OnContent="Delete downloaded data when closing" OffContent="Keep downloaded data in the cache folder" />
-        <Button Content="Open cache folder" Command="{Binding OpenCacheFolderCommand}" />
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="Only the file you're watching is downloaded, prioritised around the playhead so seeking works. Data lives in the 'cache' folder next to the app." />
-      </StackPanel>
-      </ScrollViewer>
-    </TabItem>
-
-    <TabItem x:Name="InterfaceTab" Header="Interface">
-      <ScrollViewer>
-        <StackPanel Margin="16,0" Spacing="8">
-          <TextBlock Classes="section" Text="Controls bar" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="The buttons the bar shows. Each still shows only where it applies (chapter buttons with chapters, the video menu with a video…). Play and Settings are always there, and every button's shortcut works whether it shows or not." />
-          <ItemsControl x:Name="ControlChoices" ItemsSource="{Binding ControlChoices}">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="vm:ControlChoice">
-                <CheckBox Content="{Binding Label}" IsChecked="{Binding IsShown}" Margin="0,1" />
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
-          <Button Content="Show every button" Command="{Binding ShowAllControlsCommand}" />
-
-          <TextBlock Classes="section" Text="Settings file" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Every setting in one file, to carry to another install or a new PC: export it here, then on the new one drop it on the player (or import it here). An old install's settings.json works too. That machine's own graphics card, refresh rate and audio device choices stay as they are." />
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button x:Name="ExportSettingsButton" Content="Export settings…" Click="OnExportSettings" />
-            <Button x:Name="ImportSettingsButton" Content="Import settings…" Click="OnImportSettings" />
+            <TextBlock Classes="group" Text="Licence" />
+            <TextBlock Classes="note"
+                       Text="GPL-3.0-or-later. Built on mpv, FFmpeg, libplacebo, libVLC, librqbit, Avalonia, yt-dlp and QuickJS-NG. Icons from Material Design Icons (Apache-2.0). Theme title fonts Black Ops One, Anton, Rye, Audiowide and Creepster are under the SIL Open Font License. CHANGELOG.txt next to the app lists what changed in each version." />
+            <TextBlock Classes="note" Text="github.com/raulblideran/paramaja" />
           </StackPanel>
-          <TextBlock Text="{Binding SettingsFileStatus}" Classes="muted" FontSize="12" TextWrapping="Wrap" />
-        </StackPanel>
-      </ScrollViewer>
-    </TabItem>
-
-    <TabItem x:Name="DeveloperTab" Header="Developer">
-      <ScrollViewer>
-        <StackPanel Margin="16,0" Spacing="8">
-          <TextBlock Classes="section" Text="Troubleshooting" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Play the video that lags (or the clip to benchmark), then create a log: it has every second's playback statistics since the video started (frames dropped and late, GPU time per frame, CPU use, refresh rates), the machine and how the video is played. Send it to whoever is helping." />
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button x:Name="CreateLogButton" Content="Create log" Command="{Binding CreateLogCommand}" Classes="accent" />
-            <Button Content="Open logs folder" Command="{Binding OpenLogsFolderCommand}" />
-          </StackPanel>
-          <TextBlock Text="{Binding LogStatus}" Classes="muted" FontSize="12" TextWrapping="Wrap" />
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <Button Content="Statistics overlay (I)" Command="{Binding ToggleStatsCommand}" />
-            <Button Content="Copy diagnostics (Ctrl+I)" Command="{Binding CopyDiagnosticsCommand}"
-                    ToolTip.Tip="While the problem video is playing: copies the machine, the video and why it's struggling" />
-          </StackPanel>
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                     Text="Everything else that was here has moved where it belongs: rendering, frame timing, HDR and this video's switches to Video, passthrough to Audio, the YouTube quality to Playback." />
-        </StackPanel>
-      </ScrollViewer>
-    </TabItem>
-
-    <TabItem x:Name="AboutTab" Header="About">
-      <StackPanel Margin="16,0" Spacing="8">
-        <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,8,0,0">
-          <Image Source="/Assets/paramaja-256.png" Width="72" Height="72" />
-          <StackPanel VerticalAlignment="Center" Spacing="2">
-            <TextBlock Text="Paramaja" FontSize="22" FontWeight="Bold" />
-            <TextBlock x:Name="VersionText" Text="{Binding AppVersion, StringFormat='Version {0}'}" Classes="muted" />
-          </StackPanel>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <Button Content="Copy version" Click="OnCopyVersion" />
-        </StackPanel>
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="When reporting a problem, include the version above: the part in brackets is the exact build." />
-        <TextBlock Classes="section" Text="Licence" />
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="GPL-3.0-or-later. Built on mpv, FFmpeg, libplacebo, librqbit, Avalonia, yt-dlp and QuickJS-NG. CHANGELOG.txt next to the app lists what changed in each version." />
-        <TextBlock Text="github.com/raulblideran/paramaja" Classes="muted" FontSize="12" />
-      </StackPanel>
-    </TabItem>
-
-    <TabItem Header="Shortcuts">
-      <ScrollViewer>
-        <ItemsControl Margin="16,8" ItemsSource="{Binding Shortcuts}" x:Name="ShortcutList" />
-      </ScrollViewer>
-    </TabItem>
-  </TabControl>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </Panel>
 </Window>

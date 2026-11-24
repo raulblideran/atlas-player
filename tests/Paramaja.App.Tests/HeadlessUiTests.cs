@@ -77,14 +77,16 @@ public class HeadlessUiTests
         var w = new SettingsWindow { DataContext = r.Vm };
         w.Show();
         var tabs = w.GetLogicalDescendants().OfType<TabItem>().Select(t => t.Header as string).ToList();
-        Assert.Equal(["Video", "Audio", "Subtitles", "Playback", "Torrents", "Interface", "Developer", "About", "Shortcuts"], tabs);
+        Assert.Equal(["Appearance", "Playback", "Video", "Audio", "Subtitles", "Streaming and downloads", "Backup and logs", "Shortcuts", "About"], tabs);
 
         w.GetLogicalDescendants().OfType<TabControl>().Single().SelectedItem = w.FindControl<TabItem>("AudioTab");
         Dispatch();
-        var switches = w.GetVisualDescendants().OfType<ToggleSwitch>().ToList();
-        Assert.DoesNotContain(switches, t => (t.OnContent as string)?.Contains("mono", StringComparison.OrdinalIgnoreCase) == true);
-        Assert.Contains(switches, t => (t.OnContent as string)?.Contains("Passthrough") == true); // back in Audio (1.12.0)
-        var toggle = switches.First(t => (t.OnContent as string)?.Contains("Downmix") == true);
+        // 2.0.0: each switch is named by its row (on the left), the switch only says On or Off.
+        var rows = w.GetVisualDescendants().OfType<SettingRow>().Where(row => row.IsEffectivelyVisible).ToList();
+        Assert.DoesNotContain(rows, row => row.Title!.Contains("mono", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(rows, row => row.Title!.Contains("Passthrough") && row.Content is ToggleSwitch); // back in Audio (1.12.0)
+        var toggle = (ToggleSwitch)rows.Single(row => row.Title!.Contains("Downmix")).Content!;
+        Assert.Same(w.FindControl<ToggleSwitch>("DownmixSwitch"), toggle);
         toggle.IsChecked = true;
         Assert.True(r.Settings.DownmixToStereo);
         Assert.Contains("SetDownmix True", r.Player.Calls);
@@ -258,9 +260,9 @@ public class HeadlessUiTests
         Assert.DoesNotContain(w.GetVisualDescendants().OfType<ComboBox>().SelectMany(c => c.Items.OfType<ComboBoxItem>()),
             i => (i.Content as string)?.StartsWith("Bob") == true);
         var tabs = w.GetLogicalDescendants().OfType<TabControl>().Single();
-        tabs.SelectedItem = tabs.Items.OfType<TabItem>().Single(t => t.Header as string == "Playback");
+        tabs.SelectedItem = tabs.Items.OfType<TabItem>().Single(t => t.Header as string == "Streaming and downloads");
         Dispatch();
-        // Back in Playback (1.12.0), under YouTube & other sites.
+        // With YouTube and other sites (2.0.0: their own page, with torrents).
         Assert.Contains(w.GetVisualDescendants().OfType<ComboBox>(), c => c.Name == "StreamQualityDefault" && c.IsEffectivelyVisible);
         w.Close();
     }
@@ -292,12 +294,13 @@ public class HeadlessUiTests
         using var r = new Rig(attach: false);
         var w = new MainWindow { DataContext = r.Vm };
         w.Show();
-        var texts = w.FindControl<Grid>("Welcome")!.GetLogicalDescendants().OfType<Button>().Select(ButtonText).ToList();
-        Assert.Contains("Open", texts);
-        Assert.Contains("Open Link", texts);
-        Assert.Contains("Download Video", texts);
-        Assert.DoesNotContain("Paste", texts);
-        Assert.Equal(["Open file", "Open folder", "Open Disc", "Rip Disc…"], MenuHeaders(w.FindControl<Button>("OpenMenu")!));
+        // 2.0.0: every way in is its own named button, no menu to open first.
+        var buttons = w.FindControl<Grid>("Welcome")!.GetLogicalDescendants().OfType<Button>().ToList();
+        Assert.Equal(["Open file…", "Open folder…", "Open disc…", "Open link…", "Download video…", "Rip disc…", "Settings"],
+            buttons.Select(b => b.GetLogicalDescendants().OfType<TextBlock>().First().Text).ToList());
+        Assert.Equal([r.Vm.OpenFileCommand, r.Vm.OpenFolderCommand, r.Vm.OpenDiscCommand, r.Vm.OpenLinkCommand, r.Vm.OpenDownloaderCommand,
+            r.Vm.OpenRipperCommand, r.Vm.OpenSettingsCommand], buttons.Select(b => b.Command).ToList());
+        Assert.DoesNotContain(buttons, b => ButtonText(b) == "Paste");
         w.Close();
     }
 

@@ -8,39 +8,41 @@
         x:DataType="vm:RipDialogViewModel"
         Title="Rip Disc" Icon="/Assets/paramaja.ico"
         Width="720" SizeToContent="Height" MaxHeight="900" CanResize="False"
-        WindowStartupLocation="CenterOwner" Background="#15111A">
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
   <!-- The form scrolls when the window is fitted to a smaller screen (RipDialogLayout); the rip's
        progress and the buttons below it always stay in view. -->
   <DockPanel>
-    <StackPanel x:Name="Actions" DockPanel.Dock="Bottom" Margin="24,10,24,20" Spacing="10">
-      <StackPanel Spacing="6" IsVisible="{Binding Main.IsRipping}">
-        <ProgressBar Minimum="0" Maximum="1" Value="{Binding Main.RipFraction}" />
-        <Grid ColumnDefinitions="*,Auto">
-          <TextBlock Text="{Binding Main.RipStatus}" VerticalAlignment="Center" Foreground="{StaticResource ParamajaLeaf}" />
-          <Button Grid.Column="1" Classes="ghost" Content="Cancel rip" Command="{Binding Main.CancelRipCommand}" />
-        </Grid>
-        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
-                   Text="You can close this window: the rip carries on, with its progress at the top of the player." />
-      </StackPanel>
-      <TextBlock x:Name="RipResult" Text="{Binding Main.RipResult}" FontSize="12" TextWrapping="Wrap"
-                 IsVisible="{Binding Main.RipResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    <Border Classes="footer" DockPanel.Dock="Bottom">
+      <StackPanel x:Name="Actions" Spacing="10">
+        <StackPanel Spacing="6" IsVisible="{Binding Main.IsRipping}">
+          <ProgressBar Minimum="0" Maximum="1" Value="{Binding Main.RipFraction}" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding Main.RipStatus}" VerticalAlignment="Center" Classes="progress" />
+            <Button Grid.Column="1" Classes="ghost" Content="Cancel rip" Command="{Binding Main.CancelRipCommand}" />
+          </Grid>
+          <TextBlock Classes="note"
+                     Text="You can close this window: the rip carries on, with its progress at the top of the player." />
+        </StackPanel>
+        <TextBlock x:Name="RipResult" Text="{Binding Main.RipResult}" FontSize="12" TextWrapping="Wrap"
+                   IsVisible="{Binding Main.RipResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <Button Classes="ghost" Content="Open folder" Command="{Binding Main.OpenRipFolderCommand}"
-                IsVisible="{Binding Main.LastRipFolder, Converter={x:Static ObjectConverters.IsNotNull}}" />
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-          <Button Classes="ghost" Content="Close" Click="OnClose" IsCancel="True" />
-          <Button x:Name="StartButton" Classes="accent" Content="Rip" Command="{Binding StartCommand}" IsDefault="True" />
-        </StackPanel>
-      </Grid>
-    </StackPanel>
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button Classes="ghost" Content="Open folder" Command="{Binding Main.OpenRipFolderCommand}"
+                  IsVisible="{Binding Main.LastRipFolder, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+            <Button Classes="ghost" Content="Close" Click="OnClose" IsCancel="True" />
+            <Button x:Name="StartButton" Classes="accent" Content="Rip" Command="{Binding StartCommand}" IsDefault="True" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
     <ScrollViewer x:Name="Form">
-      <StackPanel Margin="24,24,24,4" Spacing="12">
+      <StackPanel Margin="24,22,24,16" Spacing="12">
         <StackPanel Orientation="Horizontal" Spacing="10">
-          <PathIcon Data="{StaticResource IconDisc}" Width="22" Height="22" Foreground="{StaticResource ParamajaAccentBright}" />
-          <TextBlock Text="Rip Disc" FontSize="20" FontWeight="SemiBold" />
+          <PathIcon Classes="title" Data="{StaticResource IconDisc}" />
+          <TextBlock Classes="dialog" Text="Rip Disc" />
         </StackPanel>
-        <TextBlock Classes="muted" TextWrapping="Wrap"
+        <TextBlock Classes="note" FontSize="13.5"
                    Text="Audio CDs: read securely (test and copy, every block until two reads agree), checked against AccurateRip, tagged from MusicBrainz and saved as FLAC (level 8) or WAV, with a cue sheet and a log. DVDs: the VIDEO_TS folder as it is, decrypted, or a title (or chosen chapters of it) as an MKV with every track and the chapters, its video copied as it is or encoded with x264 or x265 to look the same in less space." />
 
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
@@ -60,12 +62,12 @@
         </Grid>
         <TextBlock Classes="muted" FontSize="12" Text="No CD or DVD drive found." IsVisible="{Binding !HasDrives}" />
         <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
-        <TextBlock Text="{Binding Message}" FontSize="12" TextWrapping="Wrap" Foreground="{StaticResource ParamajaAccentBright}"
+        <TextBlock Text="{Binding Message}" Classes="status"
                    IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
         <!-- Audio CD -->
         <StackPanel Spacing="10" IsVisible="{Binding IsCd}">
-          <TextBlock Classes="muted" FontSize="12" Text="{Binding DiscNote}" TextWrapping="Wrap" />
+          <TextBlock Classes="note" Text="{Binding DiscNote}" />
           <ComboBox x:Name="Releases" HorizontalAlignment="Stretch" ItemsSource="{Binding Releases}" SelectedItem="{Binding SelectedRelease}"
                     IsVisible="{Binding HasReleases}" ToolTip.Tip="MusicBrainz knows this disc in several releases">
             <ComboBox.ItemTemplate>
@@ -85,14 +87,14 @@
               <TextBlock Grid.Row="3" Text="Genre" VerticalAlignment="Center" />
               <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Genre}" />
             </Grid>
-            <Border Grid.Column="1" Width="132" Height="132" Background="#221A2A" CornerRadius="6" ClipToBounds="True">
+            <Border Grid.Column="1" Width="132" Height="132" Background="{DynamicResource ThemeRaised}" CornerRadius="{DynamicResource ThemeRadiusControl}" ClipToBounds="True">
               <Panel>
                 <TextBlock Text="No cover" Classes="muted" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 <Image Source="{Binding CoverImage}" Stretch="UniformToFill" />
               </Panel>
             </Border>
           </Grid>
-          <TextBlock Classes="section" Text="Tracks" />
+          <TextBlock Classes="group" Text="Tracks" />
           <ScrollViewer MaxHeight="240">
             <ItemsControl x:Name="Tracks" ItemsSource="{Binding Tracks}">
               <ItemsControl.ItemTemplate>
@@ -116,20 +118,20 @@
           <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
             <TextBlock Text="Read offset" VerticalAlignment="Center" />
             <TextBox x:Name="Offset" Grid.Column="1" Width="80" Text="{Binding OffsetText}" Watermark="auto" />
-            <TextBlock Grid.Column="2" Classes="muted" FontSize="12" Text="{Binding OffsetNote}" TextWrapping="Wrap" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="2" Classes="note" Text="{Binding OffsetNote}" VerticalAlignment="Center" />
           </Grid>
           <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
             <TextBlock Text="Save in" VerticalAlignment="Center" />
             <TextBox Grid.Column="1" Text="{Binding CdFolder}" />
             <Button Grid.Column="2" Classes="ghost" Content="Change…" Click="OnPickCdFolder" />
           </Grid>
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+          <TextBlock Classes="note"
                      Text="Each album goes in Artist / Album (Year), with its cue sheet, its log and cover.jpg. The log uses rip logs' layout and scores itself as tracker log checkers would, but it's Paramaja's: those checkers only accept EAC's, XLD's and whipper's own logs." />
         </StackPanel>
 
         <!-- DVD -->
         <StackPanel Spacing="10" IsVisible="{Binding IsDvd}">
-          <TextBlock Classes="muted" FontSize="12" Text="{Binding Source}" TextWrapping="Wrap" />
+          <TextBlock Classes="note" Text="{Binding Source}" />
           <StackPanel Orientation="Horizontal" Spacing="16">
             <RadioButton x:Name="MkvMode" GroupName="dvdmode" Content="A title as MKV" IsEnabled="{Binding CanMkv}"
                          IsChecked="{Binding IsMkv, Mode=OneWay}" Click="OnMkvMode" />
@@ -181,8 +183,8 @@
                             IsEnabled="{Binding HasX265}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="Needs FFmpeg with x265" />
             </ComboBox>
           </Grid>
-          <TextBlock x:Name="MkvNote" Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding IsMkv}" Text="{Binding MkvNote}" />
-          <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" IsVisible="{Binding !IsMkv}"
+          <TextBlock x:Name="MkvNote" Classes="note" IsVisible="{Binding IsMkv}" Text="{Binding MkvNote}" />
+          <TextBlock Classes="note" IsVisible="{Binding !IsMkv}"
                      Text="Every file of the disc's VIDEO_TS folder, menus included, decrypted, in its own folder: it plays like the disc." />
           <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
             <TextBlock Text="Save in" VerticalAlignment="Center" />

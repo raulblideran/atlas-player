@@ -6,7 +6,7 @@ using Paramaja.Core.Settings;
 
 namespace Paramaja.App.ViewModels;
 
-/// <summary>A button (or group) of the controls bar, shown or hidden in Settings → Interface.</summary>
+/// <summary>A button (or group) of the controls bar, shown or hidden in Settings → Appearance.</summary>
 public sealed partial class ControlChoice(string id, string label, bool shown, Action<ControlChoice> changed) : ObservableObject
 {
     public string Id { get; } = id;
@@ -21,7 +21,7 @@ public sealed partial class ControlChoice(string id, string label, bool shown, A
 /// </summary>
 public sealed partial class MainViewModel
 {
-    /// <summary>The labels of <see cref="PlayerSettings.ControlIds"/>, as Settings → Interface lists them.</summary>
+    /// <summary>The labels of <see cref="PlayerSettings.ControlIds"/>, as Settings → Appearance lists them.</summary>
     public static readonly IReadOnlyDictionary<string, string> ControlLabels = new Dictionary<string, string>
     {
         ["files"] = "Previous / Next file (folders, several files, torrents)",
@@ -80,6 +80,8 @@ public sealed partial class MainViewModel
         nameof(ShowBadges), nameof(ShowDiscMenuButton), nameof(ShowChapterMenuButton), nameof(ShowSubtitlesButton),
         nameof(ShowAudioButton), nameof(ShowVideoButton), nameof(ShowScreenshotButton), nameof(ShowDownloadButton),
         nameof(ShowOpenLinkButton), nameof(ShowOpenButton), nameof(ShowFullscreenButton),
+        nameof(StopInMore), nameof(FramesInMore), nameof(ChaptersInMore), nameof(ScreenshotInMore), nameof(HasPlaybackInMore),
+        nameof(BarLayoutIndex), nameof(BarLayoutText),
     ];
 
     public bool ShowFileButtons => Shows("files") && HasPlaylist;
@@ -132,8 +134,8 @@ public sealed partial class MainViewModel
         [nameof(IsDiscMode)] = [nameof(HasPlaylist)],
         [nameof(IsTorrent)] = [nameof(PreviousFileTip), nameof(NextFileTip)],
         [nameof(HasPlaylist)] = [nameof(ShowFileButtons)],
-        [nameof(IsAudioOnly)] = [nameof(ShowFrameButtons), nameof(ShowVideoButton)],
-        [nameof(HasChapters)] = [nameof(ShowChapterButtons)],
+        [nameof(IsAudioOnly)] = [nameof(ShowFrameButtons), nameof(ShowVideoButton), nameof(FramesInMore), nameof(ScreenshotInMore), nameof(HasPlaybackInMore)],
+        [nameof(HasChapters)] = [nameof(ShowChapterButtons), nameof(ChaptersInMore), nameof(HasPlaybackInMore)],
         [nameof(CanShowDiscMenu)] = [nameof(ShowDiscMenuButton)],
         [nameof(HasChapterMenu)] = [nameof(ShowChapterMenuButton)],
     };

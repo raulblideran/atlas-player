@@ -2,14 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Paramaja.App.App"
              RequestedThemeVariant="Dark">
+  <!-- The theme (Themes/*.axaml) is put in by ThemeService, with Fluent's palette and the
+       light or dark variant: see App.Initialize. -->
   <Application.Styles>
-    <FluentTheme>
-      <FluentTheme.Palettes>
-        <ColorPaletteResources x:Key="Dark" Accent="#A259B5" AltHigh="#0E0B12" RegionColor="#15111A"
-                               ChromeMediumLow="#1C1622" ChromeMedium="#241C2B" ChromeLow="#130F17" />
-      </FluentTheme.Palettes>
-    </FluentTheme>
-    <StyleInclude Source="avares://Paramaja/Styles/Theme.axaml" />
+    <FluentTheme />
+    <StyleInclude Source="avares://Paramaja/Styles/Controls.axaml" />
   </Application.Styles>
   <Application.Resources>
     <ResourceDictionary>

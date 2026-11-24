@@ -13,11 +13,18 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         Title = $"Settings — {AppInfo.Name} {AppInfo.Display}";
+        // Escape closes Settings, as it cancels the other dialogs (an open drop-down takes it first).
+        KeyDown += (_, e) =>
+        {
+            if (e.Key != Avalonia.Input.Key.Escape || e.Handled) return;
+            e.Handled = true;
+            Close();
+        };
         ShortcutList.ItemTemplate = new FuncDataTemplate<(string Keys, PlayerAction Action)>((item, _) =>
         {
-            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("200,*"), Margin = new(0, 3) };
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("210,*"), Margin = new(0, 4) };
             grid.Children.Add(new TextBlock { Text = item.Keys, FontWeight = Avalonia.Media.FontWeight.SemiBold });
-            var label = new TextBlock { Text = Humanize(item.Action), VerticalAlignment = VerticalAlignment.Center };
+            var label = new TextBlock { Text = Describe(item.Action), VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(label, 1);
             grid.Children.Add(label);
             return grid;
@@ -61,6 +68,43 @@ public partial class SettingsWindow : Window
     {
         if (Clipboard is { } c) await c.SetTextAsync($"{AppInfo.Name} {AppInfo.Display}");
     }
+
+    /// <summary>What a shortcut does, in plain words.</summary>
+    internal static string Describe(PlayerAction action) => action switch
+    {
+        PlayerAction.TogglePause => "Play or pause",
+        PlayerAction.SeekForward => "Jump forward (Settings, Playback sets how far)",
+        PlayerAction.SeekBackward => "Jump back",
+        PlayerAction.SeekForwardLong => "Jump forward a minute",
+        PlayerAction.SeekBackwardLong => "Jump back a minute",
+        PlayerAction.FrameStep => "Next frame (pauses)",
+        PlayerAction.FrameBackStep => "Previous frame (pauses)",
+        PlayerAction.NextChapter => "Next chapter",
+        PlayerAction.PreviousChapter => "Previous chapter",
+        PlayerAction.VolumeUp => "Louder",
+        PlayerAction.VolumeDown => "Quieter",
+        PlayerAction.ToggleMute => "Mute or unmute",
+        PlayerAction.ToggleFullscreen => "Fullscreen on or off",
+        PlayerAction.ExitFullscreen => "Leave fullscreen",
+        PlayerAction.Screenshot => "Screenshot",
+        PlayerAction.ScreenshotWithSubtitles => "Screenshot with the subtitles",
+        PlayerAction.ToggleDeinterlace => "Deinterlacing on or off (this video)",
+        PlayerAction.ToggleStats => "Statistics over the video",
+        PlayerAction.ToggleHdrMode => "HDR: convert to SDR or send as HDR",
+        PlayerAction.ToggleDownmix => "Downmix surround to stereo, on or off",
+        PlayerAction.CycleAudioTrack => "Next audio track",
+        PlayerAction.CycleSubtitleTrack => "Next subtitle track",
+        PlayerAction.ToggleSubtitles => "Show or hide subtitles",
+        PlayerAction.SubtitleDelayUp => "Subtitles 0.1 s later",
+        PlayerAction.SubtitleDelayDown => "Subtitles 0.1 s earlier",
+        PlayerAction.OpenFile => "Open a file",
+        PlayerAction.OpenFolder => "Open a folder",
+        PlayerAction.OpenLink => "Open a link",
+        PlayerAction.PasteAndPlay => "Play the link or file on the clipboard",
+        PlayerAction.Stop => "Stop",
+        PlayerAction.CopyDiagnostics => "Copy diagnostics",
+        _ => Humanize(action),
+    };
 
     internal static string Humanize(PlayerAction action)
     {

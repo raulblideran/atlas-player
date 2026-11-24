@@ -17,10 +17,35 @@ public sealed class SeekBar : Control
     public static readonly StyledProperty<double> BufferedProperty =
         AvaloniaProperty.Register<SeekBar, double>(nameof(Buffered));
 
+    // Colours, from the theme (Styles/Controls.axaml sets them to its Seek… keys).
+    public static readonly StyledProperty<IBrush?> TrackBrushProperty =
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(TrackBrush), new SolidColorBrush(Color.Parse("#40FFFFFF")));
+    public static readonly StyledProperty<IBrush?> BufferedBrushProperty =
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(BufferedBrush), new SolidColorBrush(Color.Parse("#70FFFFFF")));
+    public static readonly StyledProperty<IBrush?> ProgressBrushProperty =
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(ProgressBrush), new SolidColorBrush(Color.Parse("#C98BDB")));
+    public static readonly StyledProperty<IBrush?> ThumbBrushProperty =
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(ThumbBrush), Brushes.White);
+    public static readonly StyledProperty<IBrush?> LabelBackgroundProperty =
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(LabelBackground), new SolidColorBrush(Color.Parse("#E6181320")));
+    public static readonly StyledProperty<IBrush?> LabelForegroundProperty =
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(LabelForeground), Brushes.White);
+    public static readonly StyledProperty<CornerRadius> LabelCornerRadiusProperty =
+        AvaloniaProperty.Register<SeekBar, CornerRadius>(nameof(LabelCornerRadius), new CornerRadius(4));
+
     static SeekBar()
     {
-        AffectsRender<SeekBar>(ValueProperty, MaximumProperty, BufferedProperty);
+        AffectsRender<SeekBar>(ValueProperty, MaximumProperty, BufferedProperty, TrackBrushProperty, BufferedBrushProperty,
+            ProgressBrushProperty, ThumbBrushProperty, LabelBackgroundProperty, LabelForegroundProperty, LabelCornerRadiusProperty);
     }
+
+    public IBrush? TrackBrush { get => GetValue(TrackBrushProperty); set => SetValue(TrackBrushProperty, value); }
+    public IBrush? BufferedBrush { get => GetValue(BufferedBrushProperty); set => SetValue(BufferedBrushProperty, value); }
+    public IBrush? ProgressBrush { get => GetValue(ProgressBrushProperty); set => SetValue(ProgressBrushProperty, value); }
+    public IBrush? ThumbBrush { get => GetValue(ThumbBrushProperty); set => SetValue(ThumbBrushProperty, value); }
+    public IBrush? LabelBackground { get => GetValue(LabelBackgroundProperty); set => SetValue(LabelBackgroundProperty, value); }
+    public IBrush? LabelForeground { get => GetValue(LabelForegroundProperty); set => SetValue(LabelForegroundProperty, value); }
+    public CornerRadius LabelCornerRadius { get => GetValue(LabelCornerRadiusProperty); set => SetValue(LabelCornerRadiusProperty, value); }
 
     public double Value { get => GetValue(ValueProperty); set => SetValue(ValueProperty, value); }
     public double Maximum { get => GetValue(MaximumProperty); set => SetValue(MaximumProperty, value); }
@@ -32,11 +57,6 @@ public sealed class SeekBar : Control
     private double? _hoverX;
     private double? _dragValue;
 
-    private static readonly IBrush Track = new SolidColorBrush(Color.Parse("#40FFFFFF"));
-    private static readonly IBrush BufferedBrush = new SolidColorBrush(Color.Parse("#70FFFFFF"));
-    private static readonly IBrush Progress = new SolidColorBrush(Color.Parse("#C98BDB"));
-    private static readonly IBrush Thumb = Brushes.White;
-    private static readonly IBrush LabelBg = new SolidColorBrush(Color.Parse("#E6181320"));
     private static readonly Typeface Font = new("Inter");
 
     public SeekBar()
@@ -101,23 +121,23 @@ public sealed class SeekBar : Control
         var value = _dragValue ?? Value;
 
         ctx.FillRectangle(Brushes.Transparent, new Rect(Bounds.Size)); // whole area is hit-testable
-        ctx.DrawRectangle(Track, null, new RoundedRect(new Rect(Pad, y, w - 2 * Pad, barH), barH / 2.0));
+        ctx.DrawRectangle(TrackBrush, null, new RoundedRect(new Rect(Pad, y, w - 2 * Pad, barH), barH / 2.0));
         if (Maximum > 0)
         {
             var bx = XAt(Math.Max(Buffered, value));
             ctx.DrawRectangle(BufferedBrush, null, new RoundedRect(new Rect(Pad, y, Math.Max(0, bx - Pad), barH), barH / 2.0));
             var px = XAt(value);
-            ctx.DrawRectangle(Progress, null, new RoundedRect(new Rect(Pad, y, Math.Max(0, px - Pad), barH), barH / 2.0));
-            if (hovering) ctx.DrawEllipse(Thumb, null, new Point(px, y + barH / 2.0), 7, 7);
+            ctx.DrawRectangle(ProgressBrush, null, new RoundedRect(new Rect(Pad, y, Math.Max(0, px - Pad), barH), barH / 2.0));
+            if (hovering) ctx.DrawEllipse(ThumbBrush, null, new Point(px, y + barH / 2.0), 7, 7);
         }
 
         if (_hoverX is { } hx && Maximum > 0)
         {
             var text = new FormattedText(TimeFormat.Format(TimeAt(hx), Maximum >= 3600), CultureInfo.InvariantCulture,
-                FlowDirection.LeftToRight, Font, 12, Brushes.White);
+                FlowDirection.LeftToRight, Font, 12, LabelForeground ?? Brushes.White);
             var lw = text.Width + 12;
             var lx = Math.Clamp(hx - lw / 2, 0, Math.Max(0, w - lw));
-            ctx.DrawRectangle(LabelBg, null, new RoundedRect(new Rect(lx, 0, lw, 18), 4));
+            ctx.DrawRectangle(LabelBackground, null, new RoundedRect(new Rect(lx, 0, lw, 18), LabelCornerRadius.TopLeft));
             ctx.DrawText(text, new Point(lx + 6, 1));
         }
     }

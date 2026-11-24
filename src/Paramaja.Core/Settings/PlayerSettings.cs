@@ -37,7 +37,7 @@ public enum RenderQuality
 public sealed class PlayerSettings
 {
     /// <summary>Bumped when a default changes for existing users too (see <see cref="Normalize"/>).</summary>
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
 
     /// <summary>The settings.json format; 0 for files written before versioning.</summary>
     public int SettingsVersion { get; set; }
@@ -142,6 +142,18 @@ public sealed class PlayerSettings
     /// </summary>
     public List<string> HiddenControls { get; set; } = [];
 
+    /// <summary>
+    /// The Simple bar (2.0.0): what it leaves off. Each of these is still in the bar's More menu,
+    /// and every shortcut still works.
+    /// </summary>
+    public static readonly IReadOnlyList<string> SimpleBarHidden =
+        ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"];
+
+    // Appearance
+    /// <summary>The look of the app (ThemeRegistry in the app); an id it doesn't know falls back to the default.</summary>
+    public string Theme { get; set; } = DefaultTheme;
+    public const string DefaultTheme = "paramaja";
+
     /// <summary>The controls bar's buttons that can be hidden, in the bar's order.</summary>
     public static readonly IReadOnlyList<string> ControlIds =
     [
@@ -207,6 +219,8 @@ public sealed class PlayerSettings
         if (SettingsVersion < 3 && ToneMapping == "spline") ToneMapping = "mobius";
         // 1.8.0 made display sync opt-in, timed for the monitor's own rate; the old default (60) moves too.
         if (SettingsVersion < 4 && DisplayFps == 60) DisplayFps = 0;
+        // 2.0.0 made the Simple bar the default; whoever had every button showing (the old default) moves too.
+        if (SettingsVersion < 5 && (HiddenControls is null || HiddenControls.Count == 0)) HiddenControls = SimpleBarHidden.ToList();
         SettingsVersion = CurrentVersion;
         if (!ToneMappingCurves.Contains(ToneMapping)) ToneMapping = "mobius";
         HdrContrastRecovery = Math.Clamp(HdrContrastRecovery, 0, 2);
@@ -230,5 +244,6 @@ public sealed class PlayerSettings
         SubtitlePosition = Math.Clamp(SubtitlePosition, 0, 150);
         HiddenControls = (HiddenControls ?? []).Where(ControlIds.Contains).Distinct().ToList();
         GamutMapping = string.IsNullOrWhiteSpace(GamutMapping) ? "perceptual" : GamutMapping;
+        Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme.Trim().ToLowerInvariant();
     }
 }

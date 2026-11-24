@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
@@ -91,11 +92,11 @@ public sealed class DialogService(Window owner, Func<MainViewModel> vm) : IDialo
             SizeToContent = SizeToContent.Height,
             CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Background = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#15111A")),
             Icon = owner.Icon,
         };
+        dialog[!Window.BackgroundProperty] = dialog.GetResourceObservable("ThemeSurface").ToBinding();
         var ok = new Button { Content = yes, Classes = { "accent" }, IsDefault = true };
-        var cancel = new Button { Content = "Cancel", IsCancel = true };
+        var cancel = new Button { Content = "Cancel", Classes = { "ghost" }, IsCancel = true };
         ok.Click += (_, _) => dialog.Close(true);
         cancel.Click += (_, _) => dialog.Close(false);
         dialog.Content = new StackPanel

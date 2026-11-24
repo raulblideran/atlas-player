@@ -1,0 +1,112 @@
+<!--
+  The "80s Synthwave" theme. Neon magenta and cyan over a midnight grid.
+
+  Every theme defines the same keys (ThemeTests checks it). To add a theme: copy this file,
+  change the values, and add one line to Services/ThemeRegistry.cs. Views use these keys only
+  through DynamicResource, so a theme switches live.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Grounds: the player, windows, raised groups and menus, hovered rows, lines -->
+  <SolidColorBrush x:Key="ThemeBg" Color="#0D0724" />
+  <SolidColorBrush x:Key="ThemeSurface" Color="#130A31" />
+  <SolidColorBrush x:Key="ThemeRaised" Color="#1C1043" />
+  <SolidColorBrush x:Key="ThemeHover" Color="#271657" />
+  <SolidColorBrush x:Key="ThemeStroke" Color="#3C2079" />
+  <SolidColorBrush x:Key="ThemeNavSelected" Color="#2E1866" />
+  <SolidColorBrush x:Key="ThemeFlyout" Color="#F2140B33" />
+  <!-- Text -->
+  <SolidColorBrush x:Key="ThemeText" Color="#F5EEFF" />
+  <SolidColorBrush x:Key="ThemeTextMuted" Color="#B5A8DB" />
+  <!-- Accent (buttons, selection), its text, and the status colours -->
+  <SolidColorBrush x:Key="ThemeAccent" Color="#FF2ED1" />
+  <SolidColorBrush x:Key="ThemeAccentHover" Color="#FF57DA" />
+  <SolidColorBrush x:Key="ThemeOnAccent" Color="#14052A" />
+  <SolidColorBrush x:Key="ThemeHighlight" Color="#2DE2FF" />
+  <SolidColorBrush x:Key="ThemePositive" Color="#7CFFB2" />
+  <!-- The bars over the video -->
+  <SolidColorBrush x:Key="ThemeBarText" Color="#F8F2FF" />
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimTop">
+    <GradientStop Offset="0" Color="#E60A051C" />
+    <GradientStop Offset="1" Color="#000A051C" />
+  </LinearGradientBrush>
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimBottom">
+    <GradientStop Offset="0" Color="#000A051C" />
+    <GradientStop Offset="0.35" Color="#B30A051C" />
+    <GradientStop Offset="1" Color="#F20A051C" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="ThemeBarButtonHover" Color="#33FFFFFF" />
+  <SolidColorBrush x:Key="ThemeBarButtonPressed" Color="#55FF2ED1" />
+  <SolidColorBrush x:Key="ThemeBadge" Color="#2EFFFFFF" />
+  <SolidColorBrush x:Key="ThemeBadgeHdr" Color="#80FF2ED1" />
+  <SolidColorBrush x:Key="ThemeBadgeText" Color="#F8F2FF" />
+  <!-- The seek bar -->
+  <SolidColorBrush x:Key="ThemeSeekTrack" Color="#40FFFFFF" />
+  <SolidColorBrush x:Key="ThemeSeekBuffered" Color="#70FFFFFF" />
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%" x:Key="ThemeSeekProgress">
+    <GradientStop Offset="0" Color="#FF2ED1" />
+    <GradientStop Offset="1" Color="#2DE2FF" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="ThemeSeekThumb" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="ThemeSeekLabel" Color="#F2140B33" />
+  <SolidColorBrush x:Key="ThemeSeekLabelText" Color="#F8F2FF" />
+  <!-- The welcome screen and titles -->
+  <VisualBrush Stretch="UniformToFill" AlignmentY="Bottom" x:Key="ThemeWelcome">
+    <VisualBrush.Visual>
+      <Canvas Width="1600" Height="900">
+        <Rectangle Width="1600" Height="900">
+          <Rectangle.Fill>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+              <GradientStop Offset="0" Color="#0D0724" />
+              <GradientStop Offset="0.7" Color="#1E0A40" />
+              <GradientStop Offset="0.86" Color="#3A0D5C" />
+              <GradientStop Offset="0.861" Color="#0D0724" />
+              <GradientStop Offset="1" Color="#0D0724" />
+            </LinearGradientBrush>
+          </Rectangle.Fill>
+        </Rectangle>
+        <Ellipse Canvas.Left="1180" Canvas.Top="560" Width="300" Height="300" Opacity="0.6">
+          <Ellipse.Fill>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+              <GradientStop Offset="0" Color="#FFE45C" />
+              <GradientStop Offset="0.55" Color="#FF2ED1" />
+              <GradientStop Offset="1" Color="#7A1BC9" />
+            </LinearGradientBrush>
+          </Ellipse.Fill>
+        </Ellipse>
+        <Rectangle Canvas.Top="775" Width="1600" Height="125" Fill="#0D0724" />
+        <Path Stroke="#55FF2ED1" StrokeThickness="2"
+              Data="M0,776 H1600 M0,786 H1600 M0,800 H1600 M0,820 H1600 M0,848 H1600 M0,888 H1600
+                    M800,776 V900 M700,776 L560,900 M600,776 L320,900 M500,776 L80,900 M400,776 L-160,900 M300,776 L-400,900
+                    M900,776 L1040,900 M1000,776 L1280,900 M1100,776 L1520,900 M1200,776 L1760,900 M1300,776 L2000,900" />
+      </Canvas>
+    </VisualBrush.Visual>
+  </VisualBrush>
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%" x:Key="ThemeTitle">
+    <GradientStop Offset="0" Color="#FF2ED1" />
+    <GradientStop Offset="1" Color="#2DE2FF" />
+  </LinearGradientBrush>
+  <!-- Shape: small (badges, swatches), controls (buttons, fields), large (groups, menus), bar buttons -->
+  <CornerRadius x:Key="ThemeRadiusSmall">3</CornerRadius>
+  <CornerRadius x:Key="ThemeRadiusControl">6</CornerRadius>
+  <CornerRadius x:Key="ThemeRadiusLarge">8</CornerRadius>
+  <CornerRadius x:Key="ThemeRadiusIconButton">6</CornerRadius>
+  <!-- Titles' type (body text is Inter in every theme) -->
+  <FontFamily x:Key="ThemeHeadingFont">avares://Paramaja/Assets/Fonts#Audiowide</FontFamily>
+  <FontWeight x:Key="ThemeHeadingWeight">Normal</FontWeight>
+  <x:Double x:Key="ThemeHeadingSizeHero">38</x:Double>
+  <x:Double x:Key="ThemeHeadingSizePage">22</x:Double>
+  <x:Double x:Key="ThemeHeadingSizeDialog">19</x:Double>
+  <!-- Fluent's own controls (switches, sliders, drop-downs) follow these -->
+  <Color x:Key="ThemePaletteAccent">#FF2ED1</Color>
+  <Color x:Key="ThemePaletteRegionColor">#130A31</Color>
+  <Color x:Key="ThemePaletteAltHigh">#0D0724</Color>
+  <Color x:Key="ThemePaletteChromeLow">#130A31</Color>
+  <Color x:Key="ThemePaletteChromeMedium">#1C1043</Color>
+  <Color x:Key="ThemePaletteChromeMediumLow">#1C1043</Color>
+  <Color x:Key="ThemePaletteBaseHigh">#F5EEFF</Color>
+  <!-- Fluent's switch knob, on the accent: the accent's own text colour -->
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#14052A" />
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPointerOver" Color="#14052A" />
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPressed" Color="#14052A" />
+</ResourceDictionary>
