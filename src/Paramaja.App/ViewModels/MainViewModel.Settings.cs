@@ -420,10 +420,15 @@ public sealed partial class MainViewModel
 
     // ---- The subtitles' look ----------------------------------------------------------------------
 
-    /// <summary>A colour to pick, with a swatch.</summary>
+    /// <summary>
+    /// A colour to pick, with a swatch. The lists of them are static, built by whichever thread
+    /// first touches this class, so the swatch is an immutable brush: a SolidColorBrush belongs to
+    /// the thread that made it, and made off the UI thread it threw in the type initializer (the
+    /// Windows tests on .NET 10).
+    /// </summary>
     public sealed record ColorChoice(string Name, string Hex)
     {
-        public Avalonia.Media.IBrush Brush { get; } = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(Hex));
+        public Avalonia.Media.IBrush Brush { get; } = new Avalonia.Media.Immutable.ImmutableSolidColorBrush(Avalonia.Media.Color.Parse(Hex));
         public override string ToString() => Name;
     }
 

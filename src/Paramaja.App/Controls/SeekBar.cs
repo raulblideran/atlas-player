@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.Immutable;
 using Paramaja.Core.Playback;
 
 namespace Paramaja.App.Controls;
@@ -19,15 +20,15 @@ public sealed class SeekBar : Control
 
     // Colours, from the theme (Styles/Controls.axaml sets them to its Seek… keys).
     public static readonly StyledProperty<IBrush?> TrackBrushProperty =
-        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(TrackBrush), new SolidColorBrush(Color.Parse("#40FFFFFF")));
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(TrackBrush), new ImmutableSolidColorBrush(Color.Parse("#40FFFFFF")));
     public static readonly StyledProperty<IBrush?> BufferedBrushProperty =
-        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(BufferedBrush), new SolidColorBrush(Color.Parse("#70FFFFFF")));
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(BufferedBrush), new ImmutableSolidColorBrush(Color.Parse("#70FFFFFF")));
     public static readonly StyledProperty<IBrush?> ProgressBrushProperty =
-        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(ProgressBrush), new SolidColorBrush(Color.Parse("#C98BDB")));
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(ProgressBrush), new ImmutableSolidColorBrush(Color.Parse("#C98BDB")));
     public static readonly StyledProperty<IBrush?> ThumbBrushProperty =
         AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(ThumbBrush), Brushes.White);
     public static readonly StyledProperty<IBrush?> LabelBackgroundProperty =
-        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(LabelBackground), new SolidColorBrush(Color.Parse("#E6181320")));
+        AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(LabelBackground), new ImmutableSolidColorBrush(Color.Parse("#E6181320")));
     public static readonly StyledProperty<IBrush?> LabelForegroundProperty =
         AvaloniaProperty.Register<SeekBar, IBrush?>(nameof(LabelForeground), Brushes.White);
     public static readonly StyledProperty<CornerRadius> LabelCornerRadiusProperty =
