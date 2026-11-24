@@ -6,6 +6,7 @@
 # the Release is published as soon as the Windows zip is ready (a few minutes), so it can be
 # shared right away, and the Flatpak is attached to it when its longer build finishes.
 # The notes are the version's CHANGELOG.md section (build/release-notes.sh).
+# A version with a suffix (2.0.0-beta.1) is published as a pre-release.
 name: Release
 on:
   push:
@@ -86,7 +87,9 @@ jobs:
         run: |
           ./build/release-notes.sh "${{ needs.check.outputs.version }}" linux-pending > notes.md
           cat notes.md
-          gh release create "$GITHUB_REF_NAME" assets/*.zip \
+          PRE=()
+          case "${{ needs.check.outputs.version }}" in *-*) PRE=(--prerelease) ;; esac
+          gh release create "$GITHUB_REF_NAME" assets/*.zip "${PRE[@]}" \
             --title "Paramaja ${{ needs.check.outputs.version }}" --notes-file notes.md
 
   # Attaches the Flatpak once built, and takes the "still building" line out of the notes.

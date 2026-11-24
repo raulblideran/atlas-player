@@ -165,7 +165,7 @@ paramaja/
 - [x] Flatpak: mpv `x11vk,x11egl`, Avalonia GLX → EGL → software, NVIDIA extension check with the install command, no-DISPLAY message, crash.log; tried on CachyOS (fresh), Arch, Debian 13, Ubuntu 24.04, Fedora 43 in containers, plus no-Vulkan and fake-NVIDIA runs
 - [ ] The pointer fix on the user's desktop and on Windows; the CachyOS NVIDIA machine itself
 
-### Phase 13 — 2.0.0: a new look, themes, a simpler bar, regrouped settings
+### Phase 13 — 2.0.0-beta.1: a new look, themes, a simpler bar, regrouped settings
 - [x] Themes: one ResourceDictionary per theme in `src/Paramaja.App/Themes/` with a fixed key set (`ThemeRegistry.Keys`), switched live by `ThemeService` (application resources, light/dark variant, Fluent palette); views reach theme keys only through DynamicResource. Eleven: Paramaja, Paramaja Light, Graphite, Deep Sea, Amber, Forest, Call of Duty, GTA 6, Red Dead Redemption 2, 80s Synthwave, Halloween (title fonts bundled, SIL OFL). `PlayerSettings.Theme`, carried in the settings file
 - [x] Tests: every theme has every key, WCAG contrast for its text, no StaticResource or hard-coded colour in views, live switching (Fluent's accent follows), unknown ids fall back, picker fonts resolve to themselves
 - [x] Controls bar: Simple by default (settings version 5 moves whoever had every button), a More menu with whatever the bar leaves off and every way to open something; Simple / Everything / Custom in Settings → Appearance
@@ -173,4 +173,6 @@ paramaja/
 - [x] Settings: sidebar pages (Appearance, Playback, Video, Audio, Subtitles, Streaming and downloads, Backup and logs, Shortcuts, About), each setting a `SettingRow` (title, one sentence, control); switches keep their label and say On or Off; Escape closes; shortcuts described in plain words
 - [x] Dialogs share title, body and a footer strip; the confirm dialog follows the theme
 - [x] Checked: headless sweep of every window in every theme (`UiScreenshots`, PARAMAJA_SCREENSHOTS), and the Flatpak in a nested KWin with files, a folder, a DVD image, a CD image, an SACD image, a magnet and YouTube; CPU with the bars up equal to 1.12.0's in every theme
+- [x] Follow-ups from the user's desktop: play on the bar's centre (BarRow), frame steps back on the Simple bar (settings version 6), bar buttons not focusable and shortcut key-ups swallowed (Space pressed the clicked button), popups and centred windows fitted to each monitor (X11's one work area, ScreenWorkAreas), Settings padding beyond every theme's corner radius, messages over the video as the app's themed toast (ToastWindow) instead of the engines' text
+- [ ] Windows testing of the beta, then 2.0.0
 - [ ] A MEGA app link with the new UI (the MEGA app's streaming server wasn't running here); the new look on Windows (CI's UI tests only)

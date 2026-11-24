@@ -3,7 +3,10 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## 2.0.0 — 2026-11-24
+## 2.0.0-beta.1 — 2026-11-24
+
+A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
+Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
 
 - **A new look, and themes.** Settings → Appearance has eleven, switched at once in every
   window: **Paramaja** (the default, its plum and orchid), **Paramaja Light**, **Graphite**,
@@ -16,10 +19,10 @@ also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
   colours, corners and one title font: nothing blurs or animates, so the player costs what it
   did. Body text stays Inter in every theme, and every theme's text passes the WCAG contrast
   ratio (4.5:1), checked by a test. Adding a theme is one file (see the README).
-- **A simpler controls bar.** By default it now shows play, previous / next file, volume, the
-  badges, the subtitle, audio and video menus, titles and chapters, the disc menu, Settings and
-  fullscreen. A new **More (⋯)** menu holds whatever the bar leaves off (stop, frame and chapter
-  steps, screenshots) and every way to open something, so nothing is out of reach and every
+- **A simpler controls bar.** By default it now shows play, previous / next file, the frame
+  steps, volume, the badges, the subtitle, audio and video menus, titles and chapters, the disc
+  menu, Settings and fullscreen. A new **More (⋯)** menu holds whatever the bar leaves off (stop,
+  the chapter steps, screenshots) and every way to open something, so nothing is out of reach and every
   shortcut still works. Whoever had every button showing moves to this **Simple** bar once;
   whoever had picked their own buttons keeps them. Settings → Appearance → Controls bar switches
   to **Everything** in one go, or ticks buttons one by one (**Custom**).
@@ -36,6 +39,28 @@ also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
   in plain words ("Play or pause", "Subtitles 0.1 s earlier").
 - **Dialogs** (Open link, Open disc, Download video, Rip disc) share one layout: title, what it
   does, then the buttons in a strip at the foot.
+- **Play sits on the bar's centre**, with previous / next file, the frame steps, stop and the
+  chapter steps as one group around it, whatever shows on each side; volume and the badges on
+  the left, the menus on the right. On a narrow window the group moves aside rather than overlap
+  the menus. The frame steps are on the Simple bar, with icons of their own (a frame with an
+  arrow in it, not the skip-track look). The bars have more room at their edges and between
+  their buttons, and the top bar's shade reaches further down so the title reads over a bright
+  picture.
+- **Space after clicking a bar button only pauses.** The clicked button kept the keyboard focus
+  and clicked again on Space: after the fullscreen button, Space also left fullscreen; after
+  play, it paused and played again. The bars' buttons no longer take the keyboard, and a key
+  that runs a shortcut is the shortcut's alone. (This was so in 1.12.0 too.)
+- **Menus, tooltips, drop-down lists and dialogs open where they belong on a desktop of several
+  monitors** (Linux). They were fitted into the one work area X11 gives the whole desktop, which
+  on three monitors here ended 1174 px into the main 1440 px one: the bar's menus floated far
+  above the bar, tooltips away from their buttons, and Settings, the dialogs and the player
+  itself opened pushed towards the top. Each monitor now counts as its own area.
+- **Messages over the video follow the theme.** The volume shows a speaker, a level in the
+  theme's colours (with a mark at 100 %) and the percentage; muted, a crossed speaker; the
+  subtitle delay, a screenshot saved and the rest, a line of text in the same card. They were
+  the engines' own white text (mpv's and libVLC's), each in its own font.
+- **Settings have room for every theme's corners**: more padding in the rows than the roundest
+  theme's corner (GTA 6's), a wider sidebar, and the selected page marked by its highlight alone.
 - Nothing about playback, streaming or ripping changed: every setting, button and shortcut does
   what it did, with the same names in the settings file (plus `theme`). Every window and settings
   page was rendered in every theme and looked at, and the Linux build was played here: a file, a

@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Sets the app version everywhere it lives, so builds shared with friends are identifiable:
 #   ./build/bump-version.sh 1.2.0 "Short summary of the release"
+#   ./build/bump-version.sh 2.0.0-beta.1 "…"   (a pre-release: a development entry in the metainfo,
+#                                               published as a pre-release by the Release workflow)
 # Updates the project file (exe version, zip name, in-app About), adds a CHANGELOG.md
 # section and a metainfo release entry (the Flatpak's version). Fill in the changelog after.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="${1:?usage: bump-version.sh <major.minor.patch> [summary]}"
 SUMMARY="${2:-}"
-[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must look like 1.2.3" >&2; exit 1; }
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "version must look like 1.2.3 or 1.2.3-beta.1" >&2; exit 1; }
 DATE="$(date +%F)"
 CSPROJ="$ROOT/src/Paramaja.App/Paramaja.App.csproj"
 META="$ROOT/packaging/io.github.raulblideran.Paramaja.metainfo.xml"
@@ -26,7 +28,8 @@ i = s.index("\n## ")
 s = s[:i] + f"\n## {version} — {date}\n\n- {item}\n" + s[i:]
 open(changelog, "w", encoding="utf-8").write(s)
 m = open(meta, encoding="utf-8").read()
-m = m.replace("  <releases>\n", f'  <releases>\n    <release version="{version}" date="{date}">\n'
+kind = ' type="development"' if "-" in version else ""
+m = m.replace("  <releases>\n", f'  <releases>\n    <release version="{version}" date="{date}"{kind}>\n'
               f'      <description>\n        <p>{html.escape(item)}</p>\n      </description>\n    </release>\n', 1)
 open(meta, "w", encoding="utf-8").write(m)
 PY
