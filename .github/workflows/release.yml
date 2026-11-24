@@ -60,6 +60,15 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v4
+      # The image's preinstalled runtimes can't be updated where they are: ostree renames their
+      # directories, which the container's overlay filesystem refuses ("Invalid cross-device
+      # link"), and flatpak-builder then crashed (2.0.0-beta.1). A copy on the job's own disk
+      # (a plain bind mount) can be updated.
+      - name: Flatpak installation off the image's overlay
+        run: |
+          cp -a /var/lib/flatpak "$RUNNER_TEMP/flatpak"
+          echo "FLATPAK_SYSTEM_DIR=$RUNNER_TEMP/flatpak" >> "$GITHUB_ENV"
+          df -h "$RUNNER_TEMP" | tail -1
       # Caches the built FFmpeg, libplacebo, mpv and friends; only the app is rebuilt
       # until the manifest's other modules change.
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
