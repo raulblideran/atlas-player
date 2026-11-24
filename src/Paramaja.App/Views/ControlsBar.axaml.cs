@@ -10,6 +10,7 @@ public partial class ControlsBar : OverlayWindow
     public ControlsBar()
     {
         InitializeComponent();
+        Classes.Add("bottom-bar"); // tooltips above its buttons (Styles/Controls.axaml)
         Seek.SeekRequested += t => (DataContext as MainViewModel)?.SeekTo(t);
     }
 }

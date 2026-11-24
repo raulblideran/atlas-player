@@ -49,6 +49,7 @@ public partial class App : Application
             _ = VlcDiscPlayer.PrepareAsync();
 
             var window = new MainWindow { DataContext = vm };
+            ScreenWorkAreas.Watch(window); // popups and dialogs fitted to each monitor (several monitors on X11)
             vm.Dialogs = new DialogService(window, () => vm);
             window.Closed += (_, _) => vm.Dispose();
             desktop.MainWindow = window;

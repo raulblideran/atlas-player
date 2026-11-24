@@ -172,6 +172,24 @@
   <Style Selector="Window.overlay Button.icon">
     <Setter Property="Focusable" Value="False" />
   </Style>
+  <!-- A bar's tooltips sit next to the button they describe, on the video's side: above the
+       bottom bar's, below the top bar's, rather than wherever the pointer happens to be. -->
+  <Style Selector="Window.bottom-bar Button">
+    <Setter Property="ToolTip.Placement" Value="Top" />
+    <Setter Property="ToolTip.VerticalOffset" Value="-6" />
+  </Style>
+  <Style Selector="Window.bottom-bar Border.badge">
+    <Setter Property="ToolTip.Placement" Value="Top" />
+    <Setter Property="ToolTip.VerticalOffset" Value="-6" />
+  </Style>
+  <Style Selector="Window.bottom-bar Slider, Window.bottom-bar TextBlock">
+    <Setter Property="ToolTip.Placement" Value="Top" />
+    <Setter Property="ToolTip.VerticalOffset" Value="-6" />
+  </Style>
+  <Style Selector="Window.top-bar Button, Window.top-bar ComboBox">
+    <Setter Property="ToolTip.Placement" Value="Bottom" />
+    <Setter Property="ToolTip.VerticalOffset" Value="6" />
+  </Style>
   <Style Selector="Button.icon PathIcon">
     <Setter Property="Width" Value="20" />
     <Setter Property="Height" Value="20" />

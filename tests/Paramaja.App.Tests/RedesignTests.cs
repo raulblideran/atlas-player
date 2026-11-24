@@ -267,6 +267,43 @@ public class RedesignTests
         }
     }
 
+    /// <summary>
+    /// X11's one work area for a desktop of several monitors cut the lower ones far above their
+    /// bottom (1174 px into a 1440 px monitor here), and every popup and centred window was fitted
+    /// into that. With several monitors each one's working area is its own bounds.
+    /// </summary>
+    [Fact]
+    public void Several_monitors_each_get_their_own_bounds_as_working_area()
+    {
+#pragma warning disable CS0618 // Screen's constructor: fine for a test
+        var main = new Avalonia.Platform.Screen(1, new PixelRect(1920, 672, 2560, 1440), new PixelRect(1920, 672, 2560, 1174), true);
+        var side = new Avalonia.Platform.Screen(1, new PixelRect(0, 816, 1920, 1080), new PixelRect(0, 816, 1920, 1030), false);
+        var alone = new Avalonia.Platform.Screen(1, new PixelRect(0, 0, 1920, 1080), new PixelRect(0, 0, 1920, 1040), true);
+#pragma warning restore CS0618
+        Assert.Equal(2, Services.ScreenWorkAreas.Fix([main, side]));
+        Assert.Equal(main.Bounds, main.WorkingArea);
+        Assert.Equal(side.Bounds, side.WorkingArea);
+        Assert.Equal(0, Services.ScreenWorkAreas.Fix([alone])); // one monitor: the window manager's panels stand
+        Assert.Equal(new PixelRect(0, 0, 1920, 1040), alone.WorkingArea);
+    }
+
+    [AvaloniaFact]
+    public void The_bars_tooltips_sit_next_to_their_buttons()
+    {
+        using var r = new Rig();
+        Playing(r);
+        var bottom = new ControlsBar { DataContext = r.Vm, Width = 1280 };
+        var top = new TopBar { DataContext = r.Vm, Width = 1280 };
+        bottom.Show();
+        top.Show();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(PlacementMode.Top, ToolTip.GetPlacement(bottom.FindControl<Button>("SettingsButton")!));
+        Assert.Equal(PlacementMode.Top, ToolTip.GetPlacement(bottom.FindControl<Border>("CodecBadge")!));
+        Assert.Equal(PlacementMode.Bottom, ToolTip.GetPlacement(top.GetLogicalDescendants().OfType<Button>().First()));
+        bottom.Close();
+        top.Close();
+    }
+
     [AvaloniaFact]
     public void Escape_closes_settings()
     {
