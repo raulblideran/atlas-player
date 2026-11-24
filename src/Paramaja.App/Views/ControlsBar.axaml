@@ -60,6 +60,9 @@
         </StackPanel>
 
         <StackPanel x:Name="Transport" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+          <Button x:Name="StopButton" Classes="icon" Command="{Binding StopCommand}" IsVisible="{Binding ShowStopButton}" ToolTip.Tip="Stop (Ctrl+S)">
+            <PathIcon Data="{StaticResource IconStop}" />
+          </Button>
           <Button x:Name="PreviousFileButton" Classes="icon" Command="{Binding PreviousFileCommand}" IsVisible="{Binding ShowFileButtons}"
                   ToolTip.Tip="{Binding PreviousFileTip}">
             <PathIcon Data="{StaticResource IconPlaylistPrev}" />
@@ -72,7 +75,7 @@
                   ToolTip.Tip="Previous frame ( , )">
             <PathIcon Data="{StaticResource IconFramePrev}" />
           </Button>
-          <Button x:Name="PlayButton" Classes="icon play" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{Binding PlayButtonTip}">
+          <Button x:Name="PlayButton" Classes="icon play" c:BarRow.CentreOn="True" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{Binding PlayButtonTip}">
             <Panel>
               <PathIcon Data="{StaticResource IconPlay}" IsVisible="{Binding ShowPlayIcon}" />
               <PathIcon Data="{StaticResource IconPause}" IsVisible="{Binding ShowPauseIcon}" />
@@ -90,9 +93,6 @@
           <Button x:Name="NextFileButton" Classes="icon" Command="{Binding NextFileCommand}" IsVisible="{Binding ShowFileButtons}"
                   ToolTip.Tip="{Binding NextFileTip}">
             <PathIcon Data="{StaticResource IconPlaylistNext}" />
-          </Button>
-          <Button x:Name="StopButton" Classes="icon" Command="{Binding StopCommand}" IsVisible="{Binding ShowStopButton}" ToolTip.Tip="Stop (Ctrl+S)">
-            <PathIcon Data="{StaticResource IconStop}" />
           </Button>
         </StackPanel>
 

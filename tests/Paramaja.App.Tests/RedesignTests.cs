@@ -148,13 +148,16 @@ public class RedesignTests
     }
 
     [AvaloniaTheory]
-    [InlineData(1280, 0)]
-    [InlineData(1920, 1)]
-    [InlineData(720, 1)]
-    public void Play_and_the_transport_buttons_sit_on_the_bars_centre_without_overlapping(double width, int layout)
+    [InlineData(1280, 0, false)]
+    [InlineData(1280, 0, true)]
+    [InlineData(1280, 1, true)]
+    [InlineData(1920, 1, false)]
+    [InlineData(720, 1, true)]
+    public void Play_sits_on_the_bars_centre_whatever_shows_beside_it(double width, int layout, bool chapters)
     {
         using var r = new Rig(new PlayerSettings { HiddenControls = [.. PlayerSettings.SimpleBarHidden] });
-        Playing(r);
+        Playing(r, chapters: chapters);
+        if (chapters) r.Vm.ControlChoices.Single(c => c.Id == "chapters").IsShown = true; // chapter steps both sides
         r.Player.State.PlaylistCount = 3;
         r.Player.RaiseState("playlist-count");
         r.Vm.BarLayoutIndex = layout;
@@ -164,16 +167,42 @@ public class RedesignTests
         var transport = bar.FindControl<StackPanel>("Transport")!;
         var row = (Panel)transport.Parent!;
         var right = (Control)row.Children[2];
-        var middle = transport.Bounds.Center.X;
+        var play = bar.FindControl<Button>("PlayButton")!;
+        var playCentre = transport.Bounds.X + play.Bounds.Center.X;
         if (transport.Bounds.Width + right.Bounds.Width + 2 * Controls.BarRow.Gap < row.Bounds.Width / 2)
-            Assert.InRange(middle, row.Bounds.Width / 2 - 1, row.Bounds.Width / 2 + 1);
-        Assert.True(transport.Bounds.Right <= right.Bounds.Left - Controls.BarRow.Gap + 0.5, $"{transport.Bounds} overlaps {right.Bounds}");
+            Assert.InRange(playCentre, row.Bounds.Width / 2 - 1, row.Bounds.Width / 2 + 1);
+        var rightShown = right.Bounds.Left + (right.Clip?.Bounds.Left ?? 0); // a narrow bar clips the right group's start
+        Assert.True(transport.Bounds.Right <= rightShown - Controls.BarRow.Gap + 0.5, $"{transport.Bounds} overlaps {right.Bounds} from {rightShown}");
+        Assert.True(right.Bounds.Right <= row.Bounds.Width + 0.5); // fullscreen at the end always shows
         Assert.True(((Control)row.Children[0]).Bounds.Right <= transport.Bounds.Left);
         // Play is in the group, between previous and next.
         var buttons = transport.Children.OfType<Button>().Where(b => b.IsVisible).Select(b => b.Name).ToList();
         Assert.True(buttons.IndexOf("PreviousFileButton") < buttons.IndexOf("PlayButton"));
         Assert.True(buttons.IndexOf("PlayButton") < buttons.IndexOf("NextFileButton"));
         bar.Close();
+    }
+
+    [AvaloniaFact]
+    public void A_clicked_bar_button_doesnt_take_the_keyboard()
+    {
+        using var r = new Rig();
+        Playing(r);
+        var main = new MainWindow { DataContext = r.Vm };
+        main.Show();
+        var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
+        bar.Show(main);
+        Dispatcher.UIThread.RunJobs();
+        foreach (var name in new[] { "PlayButton", "FullscreenButton", "MoreButton", "SettingsButton" })
+            Assert.False(bar.FindControl<Button>(name)!.Focusable, name);
+        var play = bar.FindControl<Button>("PlayButton")!;
+        var at = play.TranslatePoint(new Point(play.Bounds.Width / 2, play.Bounds.Height / 2), bar)!.Value;
+        bar.MouseDown(at, Avalonia.Input.MouseButton.Left);
+        bar.MouseUp(at, Avalonia.Input.MouseButton.Left);
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(play.IsFocused);
+        Assert.Contains("TogglePause", r.Player.Calls); // the click still works
+        bar.Close();
+        main.Close();
     }
 
     /// <summary>

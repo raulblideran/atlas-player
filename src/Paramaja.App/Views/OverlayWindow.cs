@@ -23,6 +23,7 @@ public class OverlayWindow : Window
         CanResize = false;
         ShowActivated = false;
         Background = Brushes.Transparent;
+        Classes.Add("overlay"); // the bars' buttons never take the keyboard (Styles/Controls.axaml)
         TransparencyLevelHint = [WindowTransparencyLevel.Transparent];
         SizeToContent = SizeToContent.Manual;
 
