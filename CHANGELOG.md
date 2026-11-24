@@ -3,6 +3,47 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0 — 2026-11-24
+
+- **A new look, and themes.** Settings → Appearance has eleven, switched at once in every
+  window: **Paramaja** (the default, its plum and orchid), **Paramaja Light**, **Graphite**,
+  **Deep Sea**, **Amber**, **Forest**, and five with more character: **Call of Duty** (olive and
+  HUD yellow, square edges, stencil titles), **GTA 6** (sunset pink and orange, neon teal, poster
+  titles), **Red Dead Redemption 2** (leather, bone and blood red, western titles), **80s
+  Synthwave** (magenta and cyan over a horizon grid) and **Halloween** (pumpkin and slime green).
+  They borrow the games' colours and mood only: no game art or logos, and their title fonts are
+  free look-alikes (SIL Open Font License), bundled so Windows and Linux look the same. A theme is
+  colours, corners and one title font: nothing blurs or animates, so the player costs what it
+  did. Body text stays Inter in every theme, and every theme's text passes the WCAG contrast
+  ratio (4.5:1), checked by a test. Adding a theme is one file (see the README).
+- **A simpler controls bar.** By default it now shows play, previous / next file, volume, the
+  badges, the subtitle, audio and video menus, titles and chapters, the disc menu, Settings and
+  fullscreen. A new **More (⋯)** menu holds whatever the bar leaves off (stop, frame and chapter
+  steps, screenshots) and every way to open something, so nothing is out of reach and every
+  shortcut still works. Whoever had every button showing moves to this **Simple** bar once;
+  whoever had picked their own buttons keeps them. Settings → Appearance → Controls bar switches
+  to **Everything** in one go, or ticks buttons one by one (**Custom**).
+- **The welcome screen lists every way in**: Open file, Open folder, Open disc, Open link,
+  Download video and Rip disc, each with its shortcut or what it takes, instead of an Open menu
+  to open first. Settings is in the corner.
+- **Settings, regrouped and reworded.** A sidebar of pages: Appearance, Playback, Video, Audio,
+  Subtitles, **Streaming and downloads** (YouTube and other sites with torrents), **Backup and
+  logs** (the settings file with the troubleshooting tools), Shortcuts and About. Each setting is
+  one row: what it is, a sentence on what it does, and its control. Switches no longer change
+  their own wording when flipped ("Deinterlacing off (this video)" / "BWDIF deinterlacing"):
+  the row names what the switch does, and the switch says On or Off. Long drop-down entries
+  became short ones with the explanation beside them. The Shortcuts page says what each key does
+  in plain words ("Play or pause", "Subtitles 0.1 s earlier").
+- **Dialogs** (Open link, Open disc, Download video, Rip disc) share one layout: title, what it
+  does, then the buttons in a strip at the foot.
+- Nothing about playback, streaming or ripping changed: every setting, button and shortcut does
+  what it did, with the same names in the settings file (plus `theme`). Every window and settings
+  page was rendered in every theme and looked at, and the Linux build was played here: a file, a
+  folder (previous / next), a DVD image with its menus, an Audio CD image, an SACD image, a magnet
+  and a 4K YouTube link, through each of the bar's menus and More's actions. With the bars up it
+  used the same CPU as 1.12.0 (9.1 to 9.3% of a core on the same 720p video, in any theme). MEGA
+  app links weren't tried this time; their code didn't change.
+
 ## 1.12.0 — 2026-11-08
 
 - **MEGA desktop app links no longer buffer slowly.** The MEGA app's "Stream from MEGA" link
