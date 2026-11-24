@@ -304,6 +304,61 @@ public class RedesignTests
         top.Close();
     }
 
+    [Fact]
+    public void Messages_over_the_video_are_the_apps_own_and_go_after_a_moment()
+    {
+        using var r = new Rig();
+        Playing(r);
+        r.Vm.HandleKey("DOWN");
+        Assert.True(r.Vm.ToastIsVolume);
+        Assert.Equal("95%", r.Vm.ToastText);
+        r.Vm.HandleKey("m");
+        Assert.True(r.Vm.ToastIsMuted);
+        Assert.Equal("Muted", r.Vm.ToastText);
+        r.Vm.HandleKey("x");
+        Assert.False(r.Vm.ToastIsVolume);
+        Assert.Equal("Subtitles +0.1s", r.Vm.ToastText);
+        Assert.DoesNotContain(r.Player.Calls, c => c.StartsWith("ShowText")); // not the engine's any more
+        r.Vm.TickAutoHide(DateTime.UtcNow + ViewModels.MainViewModel.ToastDuration + TimeSpan.FromMilliseconds(100));
+        Assert.False(r.Vm.ToastVisible);
+    }
+
+    [Fact]
+    public void The_message_sits_at_the_videos_top_left_below_the_top_bar()
+    {
+        var area = new PixelRect(100, 50, 1280, 720);
+        Assert.Equal(new PixelPoint(120, 70), OverlayPlacement.ToastAt(area, 0, 1));
+        Assert.Equal(new PixelPoint(130, 50 + (int)Math.Round((TopBar.BarHeight + 20) * 1.5)), OverlayPlacement.ToastAt(area, TopBar.BarHeight, 1.5));
+    }
+
+    [AvaloniaFact]
+    public void The_volume_message_shows_its_icon_level_and_percentage_in_every_theme()
+    {
+        try
+        {
+            foreach (var theme in Services.ThemeRegistry.All)
+            {
+                Services.ThemeService.Apply(theme.Id);
+                using var r = new Rig();
+                Playing(r);
+                r.Vm.HandleKey("UP");
+                var toast = new ToastWindow { DataContext = r.Vm };
+                toast.Show();
+                Dispatcher.UIThread.RunJobs();
+                Assert.True(toast.FindControl<StackPanel>("VolumeToast")!.IsVisible);
+                Assert.False(toast.FindControl<TextBlock>("MessageText")!.IsVisible);
+                Assert.Equal(105.0 / 150, toast.FindControl<Controls.LevelBar>("VolumeLevel")!.Value, 3);
+                Assert.True(toast.Bounds.Width is > 150 and < 400, $"{theme.Id}: {toast.Bounds}");
+                Assert.NotNull(toast.CaptureRenderedFrame());
+                toast.Close();
+            }
+        }
+        finally
+        {
+            Services.ThemeService.Apply(Services.ThemeRegistry.Default.Id);
+        }
+    }
+
     [AvaloniaFact]
     public void Escape_closes_settings()
     {

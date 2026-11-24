@@ -138,10 +138,11 @@ public class Prompt7ViewModelTests
         r.Vm.BarsShown = true;
         r.Vm.TickAutoHide(DateTime.UtcNow);
         Assert.NotEmpty(r.Vm.BufferingText);
-        Assert.DoesNotContain(r.Player.Calls, c => c.StartsWith("ShowText")); // the top bar shows it
+        Assert.False(r.Vm.ToastVisible); // the top bar shows it
         r.Vm.BarsShown = false;
         r.Vm.TickAutoHide(DateTime.UtcNow.AddSeconds(5));
-        Assert.Contains(r.Player.Calls, c => c.StartsWith("ShowText"));
+        Assert.True(r.Vm.ToastVisible);
+        Assert.Equal(r.Vm.BufferingText, r.Vm.ToastText);
     }
 
     [Fact]

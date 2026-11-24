@@ -76,7 +76,11 @@ public sealed class FakePlayer(PlayerSettings settings) : IPlayer
     public void FrameBackStep() => Log("FrameBackStep");
     public void SetVolume(double volume) { Settings.Volume = volume; Log($"SetVolume {volume}"); }
     public void ChangeVolume(double delta) { Settings.Volume += delta; Log($"ChangeVolume {delta}"); }
-    public void ToggleMute() => Log("ToggleMute");
+    public void ToggleMute()
+    {
+        Settings.Muted = !Settings.Muted; // as the engines do
+        Log("ToggleMute");
+    }
     public void ShowText(string text, int durationMs = 1500) => Log($"ShowText {text}");
     public void SetCursorHidden(bool hidden) => Log($"SetCursorHidden {hidden}");
     public void ApplyStreamQuality() => Log($"ApplyStreamQuality {Settings.StreamMaxHeight}");

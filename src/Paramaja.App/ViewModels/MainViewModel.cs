@@ -910,7 +910,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             var file = _player.Screenshot(withSubtitles);
-            _player.ShowText($"Screenshot saved: {Path.GetFileName(file)}");
+            Toast($"Screenshot saved: {Path.GetFileName(file)}");
             ShowStatus($"Saved {Path.GetFileName(file)}");
         }
         catch (MpvException e)
@@ -1083,7 +1083,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _player.FallBackToFastRendering();
             _health.Reset(); // judge the new profile on its own frames
             const string msg = "Frames were dropping, so Paramaja switched to Fast rendering (Settings → Video → Rendering quality)";
-            _player.ShowText(msg, 5000);
+            Toast(msg, TimeSpan.FromSeconds(5));
             ShowStatus(msg);
         }
     }
@@ -1150,7 +1150,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (Dialogs is null) return;
         await Dialogs.CopyToClipboardAsync(BuildDiagnostics());
         ShowStatus("Diagnostics copied: paste them to whoever is helping you.");
-        _player?.ShowText("Diagnostics copied to the clipboard");
+        Toast("Diagnostics copied to the clipboard");
     }
 
     /// <summary>Sites (YouTube especially) change often; a yt-dlp update fixes most failures.</summary>
@@ -1223,9 +1223,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             case PlayerAction.FrameBackStep: p?.FrameBackStep(); break;
             case PlayerAction.NextChapter: p?.StepChapter(1); break;
             case PlayerAction.PreviousChapter: p?.StepChapter(-1); break;
-            case PlayerAction.VolumeUp: p?.ChangeVolume(5); Osd($"Volume {p?.Settings.Volume:0}%"); break;
-            case PlayerAction.VolumeDown: p?.ChangeVolume(-5); Osd($"Volume {p?.Settings.Volume:0}%"); break;
-            case PlayerAction.ToggleMute: p?.ToggleMute(); break;
+            case PlayerAction.VolumeUp: p?.ChangeVolume(5); ToastVolume(); break;
+            case PlayerAction.VolumeDown: p?.ChangeVolume(-5); ToastVolume(); break;
+            case PlayerAction.ToggleMute: p?.ToggleMute(); ToastVolume(); break;
             case PlayerAction.ToggleFullscreen: FullscreenRequested?.Invoke(null); break;
             case PlayerAction.ExitFullscreen: FullscreenRequested?.Invoke(false); break;
             case PlayerAction.Screenshot: Screenshot(false); break;
@@ -1272,7 +1272,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         else Osd("This video isn't interlaced: nothing to deinterlace");
     }
 
-    private void Osd(string text) => _player?.ShowText(text);
+    private void Osd(string text) => Toast(text);
 
     // ---- Auto-hiding controls -------------------------------------------------------------
 
@@ -1389,6 +1389,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>Called periodically by the view; hides controls after inactivity during playback.</summary>
     public void TickAutoHide(DateTime utcNow)
     {
+        TickToast(utcNow); // before a new buffering line is shown, not after
         UpdateBufferingText(utcNow);
         ReconcilePause();
         if (ControlsVisible && _player is { } p && p.State.Position != Position) ShowPosition();
@@ -1435,7 +1436,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         BufferingText = BufferingQuips.Next(BufferingText);
         // On the video too, where people are looking while it stalls, unless the top bar (which
         // shows it) is up: then it would only say it twice.
-        if (IsBuffering && !IsIdle && !BarsShown) _player?.ShowText(BufferingText, (int)QuipInterval.TotalMilliseconds + 300);
+        if (IsBuffering && !IsIdle && !BarsShown) Toast(BufferingText, QuipInterval + TimeSpan.FromMilliseconds(300));
     }
 
     // ---- On-screen messages ----------------------------------------------------------------

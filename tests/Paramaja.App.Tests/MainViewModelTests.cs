@@ -99,7 +99,11 @@ public class KeyboardTests
         using var r = new Rig();
         r.Vm.HandleKey("UP");
         Assert.Contains("ChangeVolume 5", r.Player.Calls);
-        Assert.Contains(r.Player.Calls, c => c.StartsWith("ShowText Volume 105"));
+        // On the video, as the app's themed message (2.0.0), with its level bar.
+        Assert.True(r.Vm.ToastVisible);
+        Assert.True(r.Vm.ToastIsVolume);
+        Assert.Equal("105%", r.Vm.ToastText);
+        Assert.Equal(105.0 / 150, r.Vm.ToastLevel, 3);
     }
 
     [Fact]
@@ -204,7 +208,7 @@ public class KeyboardTests
         r.Player.RaiseState("hardware-decoding");
         r.Vm.HardwareDecoding = false;
         Assert.Contains("SetHardwareDecoding False", r.Player.Calls);
-        Assert.Contains("ShowText Hardware decoding: off for this video", r.Player.Calls);
+        Assert.Equal("Hardware decoding: off for this video", r.Vm.ToastText);
         Assert.False(r.Vm.HardwareDecoding);
         Assert.DoesNotContain("ardware", File.Exists(r.Store.FilePath) ? File.ReadAllText(r.Store.FilePath) : "");
     }
@@ -226,13 +230,14 @@ public class KeyboardTests
     {
         using var r = new Rig();
         r.Vm.HandleKey("x");
-        Assert.Contains("ShowText Subtitles +0.1s", r.Player.Calls);
+        Assert.Equal("Subtitles +0.1s", r.Vm.ToastText);
         r.Vm.HandleKey("x");
-        Assert.Contains("ShowText Subtitles +0.2s", r.Player.Calls);
+        Assert.Equal("Subtitles +0.2s", r.Vm.ToastText);
         r.Vm.HandleKey("z");
         r.Vm.HandleKey("z");
         r.Vm.HandleKey("z");
-        Assert.Contains("ShowText Subtitles -0.1s", r.Player.Calls);
+        Assert.Equal("Subtitles -0.1s", r.Vm.ToastText);
+        Assert.True(r.Vm.ToastVisible);
     }
 
     [Fact]
@@ -298,7 +303,7 @@ public class KeyboardTests
         using var r = new Rig();
         r.Vm.HandleKey("d");
         Assert.DoesNotContain(r.Player.Calls, c => c.StartsWith("SetDeinterlacing"));
-        Assert.Contains("ShowText This video isn't interlaced: nothing to deinterlace", r.Player.Calls);
+        Assert.Equal("This video isn't interlaced: nothing to deinterlace", r.Vm.ToastText);
 
         r.Player.State.SourceInterlaced = true;
         r.Player.State.DeinterlaceActive = true;
@@ -860,7 +865,8 @@ public class StreamingFeatureTests
         r.Vm.TickAutoHide(t0);
         var first = r.Vm.BufferingText;
         Assert.Contains(first, BufferingQuips.All);
-        Assert.Contains($"ShowText {first}", r.Player.Calls);
+        Assert.Equal(first, r.Vm.ToastText);
+        Assert.True(r.Vm.ToastVisible);
 
         r.Vm.TickAutoHide(t0 + TimeSpan.FromSeconds(1));
         Assert.Equal(first, r.Vm.BufferingText);
@@ -880,7 +886,7 @@ public class StreamingFeatureTests
         r.Vm.IsResolving = true;
         r.Vm.TickAutoHide(DateTime.UtcNow);
         Assert.Contains(r.Vm.BufferingText, BufferingQuips.All);
-        Assert.DoesNotContain(r.Player.Calls, c => c.StartsWith("ShowText"));
+        Assert.False(r.Vm.ToastVisible); // the welcome screen says it, not the video
     }
 
     [Fact]
@@ -988,7 +994,7 @@ public class PlaybackSettingTests
         Assert.True(r.Vm.IsStereoAudio);
         r.Vm.StereoChannelIndex = 1;
         Assert.Contains("SetStereoChannel Left", r.Player.Calls);
-        Assert.Contains("ShowText Left channel only (on both speakers)", r.Player.Calls);
+        Assert.Equal("Left channel only (on both speakers)", r.Vm.ToastText);
         Assert.Equal(1, r.Vm.StereoChannelIndex);
         r.Vm.StereoChannelIndex = 2;
         Assert.Contains("SetStereoChannel Right", r.Player.Calls);

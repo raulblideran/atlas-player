@@ -252,6 +252,40 @@
     <Setter Property="Foreground" Value="{DynamicResource ThemeBadgeText}" />
   </Style>
 
+  <!-- The message over the video (Views/ToastWindow) -->
+  <Style Selector="Border.toast">
+    <Setter Property="Background" Value="{DynamicResource ThemeFlyout}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ThemeStroke}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource ThemeRadiusLarge}" />
+    <Setter Property="Padding" Value="18,11" />
+  </Style>
+  <Style Selector="Border.toast PathIcon">
+    <Setter Property="Width" Value="22" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeHighlight}" />
+  </Style>
+  <Style Selector="TextBlock.toast-value">
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontFeatures" Value="+tnum" />
+    <Setter Property="MinWidth" Value="48" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+  </Style>
+  <Style Selector="TextBlock.toast-text">
+    <Setter Property="FontSize" Value="15" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="MaxWidth" Value="560" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+  </Style>
+  <Style Selector="c|LevelBar">
+    <Setter Property="TrackBrush" Value="{DynamicResource ThemeSeekTrack}" />
+    <Setter Property="FillBrush" Value="{DynamicResource ThemeSeekProgress}" />
+    <Setter Property="MarkBrush" Value="{DynamicResource ThemeTextMuted}" />
+  </Style>
+
   <Style Selector="c|SeekBar">
     <Setter Property="TrackBrush" Value="{DynamicResource ThemeSeekTrack}" />
     <Setter Property="BufferedBrush" Value="{DynamicResource ThemeSeekBuffered}" />

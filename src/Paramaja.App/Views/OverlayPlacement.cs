@@ -36,6 +36,12 @@ public static class OverlayPlacement
         return (area.TopLeft, new PixelPoint(area.X, bottomY));
     }
 
+    /// <summary>The message's corner: the video's top-left, below the top bar while it shows.</summary>
+    public const double ToastMargin = 20;
+
+    public static PixelPoint ToastAt(PixelRect area, double topBarHeight, double scale) =>
+        new(area.X + (int)Math.Round(ToastMargin * scale), area.Y + (int)Math.Round((topBarHeight + ToastMargin) * scale));
+
     public static PixelRect WindowRect(PixelPoint position, Size clientSize, double scale) =>
         new(position, PixelSize.FromSize(clientSize, scale));
 

@@ -29,7 +29,7 @@ public class RenderingTests
         r.Vm.IsIdle = false;
         Play(r, seconds: 8, dropsPerSecond: 4);
         Assert.Contains("FallBackToFastRendering", r.Player.Calls);
-        Assert.Contains(r.Player.Calls, c => c.StartsWith("ShowText Frames were dropping"));
+        Assert.StartsWith("Frames were dropping", r.Vm.ToastText);
         Assert.Contains("Fast rendering", r.Vm.StatusMessage);
         Assert.Equal("Auto is using Fast", r.Vm.RenderProfileText);
     }

@@ -14,6 +14,7 @@ public partial class MainWindow : Window
 {
     private ControlsBar? _bottom;
     private TopBar? _top;
+    private ToastWindow? _toast;
     private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };
     /// <summary>While the pointer is hidden its position is polled more often, so it's back as soon as it moves.</summary>
     private readonly DispatcherTimer _hiddenTick = new() { Interval = TimeSpan.FromMilliseconds(50) };
@@ -83,6 +84,12 @@ public partial class MainWindow : Window
         base.OnOpened(e);
         _bottom = new ControlsBar { DataContext = DataContext };
         _top = new TopBar { DataContext = DataContext };
+        _toast = new ToastWindow { DataContext = DataContext };
+        if (OverlayPlacement.ParkInsteadOfHiding)
+        {
+            _toast.Position = OverlayPlacement.Parked;
+            _toast.Show(this);
+        }
         // On Windows the bars are shown once and parked off-screen while hidden; see
         // OverlayPlacement.Parked.
         foreach (var bar in new Window[] { _top, _bottom })
@@ -175,7 +182,7 @@ public partial class MainWindow : Window
                 ApplySurfaces();
                 UpdateOverlays();
                 break;
-            case nameof(MainViewModel.ControlsVisible):
+            case nameof(MainViewModel.ControlsVisible) or nameof(MainViewModel.ToastVisible):
                 UpdateOverlays();
                 break;
             case nameof(MainViewModel.IsCursorHidden):
@@ -239,6 +246,7 @@ public partial class MainWindow : Window
         // The engines' messages start below the top bar, which covers the top of the video.
         if (area.Height > 0) vm.SetOsdInset(OverlayPlacement.OsdInset(TopBar.BarHeight, RenderScaling, area.Height));
         vm.BarsShown = visible;
+        PlaceToast(vm, area, visible, topmost, appActive);
         if (visible)
         {
             _top.Width = _bottom.Width = area.Width / RenderScaling;
@@ -276,6 +284,24 @@ public partial class MainWindow : Window
     }
 
     private readonly HashSet<Key> _shortcutKeys = [];
+
+    /// <summary>The message over the video (ToastWindow): at its top-left while it lasts, else hidden (parked on Windows).</summary>
+    private void PlaceToast(MainViewModel vm, PixelRect area, bool barsShown, bool topmost, bool appActive)
+    {
+        if (_toast is null) return;
+        var show = vm.ToastVisible && !vm.IsIdle && area.Width > 0 && WindowState != WindowState.Minimized && IsVisible
+                   && (!OverlayPlacement.HideWhileInactive || appActive);
+        if (_toast.Topmost != topmost) _toast.Topmost = topmost;
+        if (!show)
+        {
+            if (OverlayPlacement.ParkInsteadOfHiding) { if (_toast.Position != OverlayPlacement.Parked) _toast.Position = OverlayPlacement.Parked; }
+            else if (_toast.IsVisible) _toast.Hide();
+            return;
+        }
+        var at = OverlayPlacement.ToastAt(area, barsShown ? TopBar.BarHeight : 0, RenderScaling);
+        if (_toast.Position != at) _toast.Position = at;
+        if (!_toast.IsVisible) _toast.Show(this);
+    }
 
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
