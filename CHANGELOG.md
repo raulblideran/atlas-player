@@ -3,7 +3,7 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## 2.0.0-beta.1 — 2026-11-24
+## 2.0.0-beta.2 — 2026-11-24
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
 Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
@@ -68,6 +68,13 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   and a 4K YouTube link, through each of the bar's menus and More's actions. With the bars up it
   used the same CPU as 1.12.0 (9.1 to 9.3% of a core on the same 720p video, in any theme). MEGA
   app links weren't tried this time; their code didn't change.
+- The Linux Flatpak is attached again: 2.0.0-beta.1's build failed on GitHub before it built
+  anything (updating the build container's own runtimes), so that beta had the Windows zip only.
+
+## 2.0.0-beta.1 — 2026-11-24
+
+- Windows zip only: the Flatpak build failed on GitHub's side. Its changes are all in
+  2.0.0-beta.2 above.
 
 ## 1.12.0 — 2026-11-08
 
