@@ -74,6 +74,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0-beta.7" date="2026-11-25" type="development">
+      <description>
+        <p>Thirteen new themes, a font for the interface, codec badges for audio, deinterlaced screenshots</p>
+      </description>
+    </release>
     <release version="2.0.0-beta.6" date="2026-11-25" type="development">
       <description>
         <p>Rip single tracks of an Audio CD; a DVD's resolution badge no longer reads 0p (interlaced video shows as 576i); torrents only play, their data always deleted; More leaves out Download video while the top bar offers it.</p>

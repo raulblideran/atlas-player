@@ -314,6 +314,7 @@ public sealed partial class MainViewModel
         nameof(StopInMore), nameof(PrevFrameInMore), nameof(NextFrameInMore), nameof(PrevChapterInMore), nameof(NextChapterInMore),
         nameof(ScreenshotInMore), nameof(PrevFileInMore), nameof(NextFileInMore), nameof(MuteInMore), nameof(DiscMenuInMore),
         nameof(FullscreenInMore), nameof(HasPlaybackInMore), nameof(BarLayoutIndex), nameof(BarLayoutText), nameof(ShowsClock),
+        nameof(DownloadInMore),
     ];
 
     // ---- Each piece shows where it applies (wherever it is on the bar) --------------------------
@@ -388,6 +389,7 @@ public sealed partial class MainViewModel
         [nameof(HasChapters)] = [nameof(ShowChapterButtons), nameof(PrevChapterInMore), nameof(NextChapterInMore), nameof(HasPlaybackInMore)],
         [nameof(CanShowDiscMenu)] = [nameof(ShowDiscMenuButton), nameof(DiscMenuInMore), nameof(HasPlaybackInMore)],
         [nameof(HasChapterMenu)] = [nameof(ShowChapterMenuButton)],
+        [nameof(CanDownload)] = [nameof(DownloadInMore)],
         [nameof(PositionText)] = [nameof(RemainingText)],
         [nameof(DurationText)] = [nameof(RemainingText), nameof(HasDuration)],
     };

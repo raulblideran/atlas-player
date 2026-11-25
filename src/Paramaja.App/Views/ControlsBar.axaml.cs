@@ -20,18 +20,38 @@ public partial class ControlsBar : OverlayWindow
         Seek.SeekRequested += t => (DataContext as MainViewModel)?.SeekTo(t);
         _items = Pool.Children.Where(c => BarRow.GetItem(c) is not null).ToDictionary(c => BarRow.GetItem(c)!);
         if (Root.ContextFlyout is { } barMenu) WatchMenu(barMenu);
+        // Set from here rather than bound: a self-built 2.0.0-beta.6 showed the item beside the top
+        // bar's download button, so it's decided again each time More opens as well.
+        if (MoreButton.Flyout is Avalonia.Controls.Primitives.PopupFlyoutBase more) more.Opening += (_, _) => ShowDownloadItem();
         DataContextChanged += (_, _) =>
         {
-            if (_vm is not null) _vm.BarLayoutChanged -= ApplyLayout;
+            Unhook();
             _vm = DataContext as MainViewModel;
-            if (_vm is not null) _vm.BarLayoutChanged += ApplyLayout;
+            if (_vm is not null)
+            {
+                _vm.BarLayoutChanged += ApplyLayout;
+                _vm.PropertyChanged += OnVmChanged;
+            }
             ApplyLayout();
+            ShowDownloadItem();
         };
-        Closed += (_, _) =>
-        {
-            if (_vm is not null) _vm.BarLayoutChanged -= ApplyLayout;
-        };
+        Closed += (_, _) => Unhook();
     }
+
+    private void Unhook()
+    {
+        if (_vm is null) return;
+        _vm.BarLayoutChanged -= ApplyLayout;
+        _vm.PropertyChanged -= OnVmChanged;
+    }
+
+    private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(MainViewModel.DownloadInMore) or nameof(MainViewModel.CanDownload) or "" or null) ShowDownloadItem();
+    }
+
+    /// <summary>More's "Download video…": only where nothing else on screen downloads.</summary>
+    private void ShowDownloadItem() => MoreDownloadItem.IsVisible = _vm?.DownloadInMore ?? true;
 
     /// <summary>The group a piece is in ("left", "centre", "right"), or null while it's off the bar.</summary>
     public string? GroupOf(string id) => _items.TryGetValue(id, out var c) ? c.Parent == LeftGroup ? "left"

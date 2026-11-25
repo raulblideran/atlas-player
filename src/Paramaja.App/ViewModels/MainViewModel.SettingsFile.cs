@@ -66,6 +66,7 @@ public sealed partial class MainViewModel
         LoadBarZones();
         OnBarChanged();
         Services.ThemeService.Apply(Settings.Theme);
+        Services.FontService.Apply(Settings.UiFont);
         OnPropertyChanged(string.Empty);
         UpdateAudioBadge();
         UpdateHdrBadge();

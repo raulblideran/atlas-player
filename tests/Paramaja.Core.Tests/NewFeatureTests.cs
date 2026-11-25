@@ -60,6 +60,14 @@ public class QuipTests
     }
 
     [Fact]
+    public void The_new_lines_leave_the_aubergine_alone_and_dont_repeat()
+    {
+        Assert.DoesNotContain(BufferingQuips.All, q => q.Contains("aubergine", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(BufferingQuips.All.Count, BufferingQuips.All.Distinct().Count());
+        Assert.True(BufferingQuips.All.Count >= 15);
+    }
+
+    [Fact]
     public void Never_repeats_back_to_back()
     {
         var last = BufferingQuips.Next();

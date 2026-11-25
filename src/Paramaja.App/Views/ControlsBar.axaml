@@ -332,8 +332,9 @@
                 <MenuItem.Icon><PathIcon Data="{StaticResource IconLink}" /></MenuItem.Icon>
               </MenuItem>
               <Separator />
-              <!-- A web video playing has the top bar's download button: not twice. -->
-              <MenuItem Header="Download video…" Command="{Binding OpenDownloaderCommand}" IsVisible="{Binding !CanDownload}">
+              <!-- Not twice: not while the bar has its Download button, nor while a web video plays (the top
+                   bar's download button is up). Shown or hidden by ControlsBar, from DownloadInMore. -->
+              <MenuItem x:Name="MoreDownloadItem" Header="Download video…" Command="{Binding OpenDownloaderCommand}">
                 <MenuItem.Icon><PathIcon Data="{StaticResource IconDownload}" /></MenuItem.Icon>
               </MenuItem>
               <MenuItem Header="Rip disc…" Command="{Binding OpenRipperCommand}">

@@ -3,6 +3,41 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.7 — 2026-11-25
+
+A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
+Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
+
+- **Thirteen new themes** (Settings → Appearance), 24 in all:
+  - **Graphite Red**: Graphite's greys with red instead of blue.
+  - The looks of other players: **Apple Music** (near-black and pink-red, soft corners),
+    **Spotify** (black and green, pill buttons), **Tidal** (black, white and cyan, sharp edges),
+    **MPC-HC** (the classic light grey toolbars and Windows blue, square corners) and
+    **Windows Media Player** (glossy black and glowing blue, a round play button). Colours and
+    shapes only: no logos, and their own fonts are replaced by Inter.
+  - Seven **gradient palettes**, in the welcome screen, the titles and the seek bar: **Vice City
+    Sunset**, **Golden Hour Escape**, **Neon Nights**, **Tropical Vice**, **Miami Marina** (on
+    light sand), **Vice City by Night** and **Midnight Pursuit**.
+- **New: the interface font.** Settings → Appearance → Text → **Interface font**: any installed
+  font, for every window, menu and bar at once. Titles follow it too, except in themes with a title
+  font of their own (GTA 6, Synthwave…). **Default** goes back to Inter.
+- **Audio files show their codec** in the codec badge: FLAC, ALAC, MP3, AAC, Opus, PCM, DSD,
+  AC-3, TrueHD, DTS… Its tooltip says a little more, with the sample rate ("FLAC, lossless · 96 kHz").
+- **Screenshots of interlaced video are the deinterlaced picture.** Both engines' screenshots come
+  after the deinterlacer, but one that still combs (as reported on Windows) is now deinterlaced
+  with FFmpeg as it's saved, still an uncompressed PNG at full size.
+- **Fixed: screenshots of DVDs weren't saved on Linux.** The Flatpak's libVLC was built without
+  the encoder its screenshots need: Paramaja said "Screenshot saved" and nothing was. It's built
+  in now, and a screenshot the disc player couldn't save says so.
+- **Fixed: a second screenshot of the same paused moment replaced the first** (S, then Shift+S
+  within the same second). The second is now "… (2).png".
+- **Leaving fullscreen goes back to the window you had**: the same size in the same place, or
+  maximized if it was. It always went to a maximized window before.
+- **Fixed: More (⋯) still offered Download video…** with a download button on screen. It's left
+  out while a web video plays (the top bar's button) and whenever the bar has its own **Download**
+  button, and it's checked again each time More opens.
+- **New buffering lines**, still with "Big fast, many speed" and "Bruney".
+
 ## 2.0.0-beta.6 — 2026-11-25
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.

@@ -16,6 +16,7 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
         ThemeService.Apply(ThemeRegistry.Default.Id); // the settings' own theme follows once they're read
+        FontService.Apply("");
     }
 
     /// <summary>
@@ -40,6 +41,7 @@ public partial class App : Application
             var store = new SettingsStore(paths.SettingsFile);
             var settings = store.Load();
             ThemeService.Apply(settings.Theme);
+            FontService.Apply(settings.UiFont);
             var vm = new MainViewModel(settings, store, paths,
                 wid => new PlayerService(settings, paths, wid, ExtraOptions(settings, paths)),
                 new TorrentService(), new AvaloniaDispatcher(),

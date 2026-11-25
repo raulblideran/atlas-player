@@ -49,6 +49,56 @@ public static class CodecLabels
         : Names.TryGetValue(codec.Trim(), out var name) ? name
         : codec.Trim().ToUpperInvariant();
 
+    /// <summary>Audio codecs: the badge's short name, and what the tooltip says about it.</summary>
+    private static readonly Dictionary<string, (string Name, string About)> AudioNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["flac"] = ("FLAC", "FLAC, lossless"),
+        ["alac"] = ("ALAC", "Apple Lossless"),
+        ["mp3"] = ("MP3", "MP3"),
+        ["mp3float"] = ("MP3", "MP3"),
+        ["mp2"] = ("MP2", "MPEG-1 Layer II"),
+        ["mp2float"] = ("MP2", "MPEG-1 Layer II"),
+        ["aac"] = ("AAC", "AAC"),
+        ["aac_latm"] = ("AAC", "AAC"),
+        ["opus"] = ("Opus", "Opus"),
+        ["vorbis"] = ("Vorbis", "Ogg Vorbis"),
+        ["ac3"] = ("AC-3", "Dolby Digital (AC-3)"),
+        ["eac3"] = ("E-AC-3", "Dolby Digital Plus (E-AC-3)"),
+        ["truehd"] = ("TrueHD", "Dolby TrueHD, lossless"),
+        ["mlp"] = ("MLP", "Meridian Lossless Packing"),
+        ["dts"] = ("DTS", "DTS"),
+        ["dca"] = ("DTS", "DTS"),
+        ["wavpack"] = ("WavPack", "WavPack"),
+        ["ape"] = ("APE", "Monkey's Audio, lossless"),
+        ["tta"] = ("TTA", "True Audio, lossless"),
+        ["tak"] = ("TAK", "Tom's lossless Audio Kompressor"),
+        ["wmav1"] = ("WMA", "Windows Media Audio"),
+        ["wmav2"] = ("WMA", "Windows Media Audio"),
+        ["wmapro"] = ("WMA Pro", "Windows Media Audio Professional"),
+        ["wmalossless"] = ("WMA Lossless", "Windows Media Audio Lossless"),
+        ["dst"] = ("DSD", "DSD (DST compressed)"),
+        ["speex"] = ("Speex", "Speex"),
+        ["amrnb"] = ("AMR", "AMR narrowband"),
+        ["amrwb"] = ("AMR-WB", "AMR wideband"),
+    };
+
+    /// <summary>"FLAC" for FFmpeg's "flac", "PCM" for any "pcm_…", "DSD" for "dsd_…"; unknown codecs in capitals; "" for none.</summary>
+    public static string DescribeAudio(string? codec) => AudioInfo(codec).Name;
+
+    /// <summary>A longer name for the tooltip: "FLAC, lossless", "Dolby Digital (AC-3)"…</summary>
+    public static string AboutAudio(string? codec) => AudioInfo(codec).About;
+
+    private static (string Name, string About) AudioInfo(string? codec)
+    {
+        if (string.IsNullOrWhiteSpace(codec)) return ("", "");
+        var c = codec.Trim();
+        if (AudioNames.TryGetValue(c, out var known)) return known;
+        if (c.StartsWith("pcm_", StringComparison.OrdinalIgnoreCase)) return ("PCM", "PCM, uncompressed");
+        if (c.StartsWith("dsd_", StringComparison.OrdinalIgnoreCase)) return ("DSD", "DSD, Direct Stream Digital");
+        if (c.StartsWith("adpcm_", StringComparison.OrdinalIgnoreCase)) return ("ADPCM", "ADPCM");
+        return (c.ToUpperInvariant(), c.ToUpperInvariant());
+    }
+
     /// <summary>
     /// libVLC names codecs by FourCC ("mpgv", "h264"); this gives FFmpeg's name for them, which is
     /// what the rest of the app (and <see cref="Describe"/>) speaks.

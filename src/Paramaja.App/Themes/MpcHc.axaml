@@ -1,0 +1,80 @@
+<!--
+  The "MPC-HC" theme. Media Player Classic's grey Windows toolbars and Windows blue, square corners.
+
+  Every theme defines the same keys (ThemeTests checks it). To add a theme: copy this file,
+  change the values, and add one line to Services/ThemeRegistry.cs. Views use these keys only
+  through DynamicResource, so a theme switches live.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Grounds: the player, windows, raised groups and menus, hovered rows, lines -->
+  <SolidColorBrush x:Key="ThemeBg" Color="#F0F0F0" />
+  <SolidColorBrush x:Key="ThemeSurface" Color="#F0F0F0" />
+  <SolidColorBrush x:Key="ThemeRaised" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="ThemeHover" Color="#E5F1FB" />
+  <SolidColorBrush x:Key="ThemeStroke" Color="#ADADAD" />
+  <SolidColorBrush x:Key="ThemeNavSelected" Color="#CCE8FF" />
+  <SolidColorBrush x:Key="ThemeFlyout" Color="#FAF9F9F9" />
+  <!-- Text -->
+  <SolidColorBrush x:Key="ThemeText" Color="#000000" />
+  <SolidColorBrush x:Key="ThemeTextMuted" Color="#505050" />
+  <!-- Accent (buttons, selection), its text, and the status colours -->
+  <SolidColorBrush x:Key="ThemeAccent" Color="#0063B1" />
+  <SolidColorBrush x:Key="ThemeAccentHover" Color="#0078D7" />
+  <SolidColorBrush x:Key="ThemeOnAccent" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="ThemeHighlight" Color="#00508F" />
+  <SolidColorBrush x:Key="ThemePositive" Color="#0E6B0E" />
+  <!-- The bars over the video -->
+  <SolidColorBrush x:Key="ThemeBarText" Color="#000000" />
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimTop">
+    <GradientStop Offset="0" Color="#F0F0F0F0" />
+    <GradientStop Offset="0.6" Color="#D9F0F0F0" />
+    <GradientStop Offset="1" Color="#00F0F0F0" />
+  </LinearGradientBrush>
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimBottom">
+    <GradientStop Offset="0" Color="#00F0F0F0" />
+    <GradientStop Offset="0.35" Color="#D9F0F0F0" />
+    <GradientStop Offset="1" Color="#F7F0F0F0" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="ThemeBarButtonHover" Color="#1F000000" />
+  <SolidColorBrush x:Key="ThemeBarButtonPressed" Color="#550063B1" />
+  <SolidColorBrush x:Key="ThemeBadge" Color="#1F000000" />
+  <SolidColorBrush x:Key="ThemeBadgeHdr" Color="#400063B1" />
+  <SolidColorBrush x:Key="ThemeBadgeText" Color="#000000" />
+  <!-- The seek bar -->
+  <SolidColorBrush x:Key="ThemeSeekTrack" Color="#33000000" />
+  <SolidColorBrush x:Key="ThemeSeekBuffered" Color="#59000000" />
+  <SolidColorBrush x:Key="ThemeSeekProgress" Color="#0063B1" />
+  <SolidColorBrush x:Key="ThemeSeekThumb" Color="#0063B1" />
+  <SolidColorBrush x:Key="ThemeSeekLabel" Color="#FAFFFFFF" />
+  <SolidColorBrush x:Key="ThemeSeekLabelText" Color="#000000" />
+  <!-- The welcome screen and titles -->
+  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeWelcome">
+    <GradientStop Offset="0" Color="#FAFAFA" />
+    <GradientStop Offset="1" Color="#E3E3E3" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="ThemeTitle" Color="#000000" />
+  <!-- Shape: small (badges, swatches), controls (buttons, fields), large (groups, menus), bar buttons -->
+  <CornerRadius x:Key="ThemeRadiusSmall">0</CornerRadius>
+  <CornerRadius x:Key="ThemeRadiusControl">2</CornerRadius>
+  <CornerRadius x:Key="ThemeRadiusLarge">2</CornerRadius>
+  <CornerRadius x:Key="ThemeRadiusIconButton">2</CornerRadius>
+  <!-- Titles' type (body text is the interface font in every theme) -->
+  <FontFamily x:Key="ThemeHeadingFont">fonts:Inter#Inter</FontFamily>
+  <FontWeight x:Key="ThemeHeadingWeight">SemiBold</FontWeight>
+  <x:Double x:Key="ThemeHeadingSizeHero">34</x:Double>
+  <x:Double x:Key="ThemeHeadingSizePage">24</x:Double>
+  <x:Double x:Key="ThemeHeadingSizeDialog">20</x:Double>
+  <!-- Fluent's own controls (switches, sliders, drop-downs) follow these -->
+  <Color x:Key="ThemePaletteAccent">#0063B1</Color>
+  <Color x:Key="ThemePaletteRegionColor">#F0F0F0</Color>
+  <Color x:Key="ThemePaletteAltHigh">#F0F0F0</Color>
+  <Color x:Key="ThemePaletteChromeLow">#F0F0F0</Color>
+  <Color x:Key="ThemePaletteChromeMedium">#FFFFFF</Color>
+  <Color x:Key="ThemePaletteChromeMediumLow">#FFFFFF</Color>
+  <Color x:Key="ThemePaletteBaseHigh">#000000</Color>
+  <!-- Fluent's switch knob, on the accent: the accent's own text colour -->
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOn" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPointerOver" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="ToggleSwitchKnobFillOnPressed" Color="#FFFFFF" />
+</ResourceDictionary>

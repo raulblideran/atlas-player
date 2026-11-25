@@ -51,6 +51,34 @@ public sealed partial class MainViewModel
 
     public string ThemeDescription => ThemeRegistry.Find(Settings.Theme).Description;
 
+    // ---- The interface font ----------------------------------------------------------------
+
+    public const string DefaultUiFontLabel = "Default (Inter)";
+
+    private IReadOnlyList<string>? _uiFonts;
+
+    /// <summary>The fonts installed, the default (Inter) first.</summary>
+    public IReadOnlyList<string> UiFonts => _uiFonts ??= LoadFonts(DefaultUiFontLabel, Settings.UiFont);
+
+    /// <summary>The interface's font; changing it changes every open window at once.</summary>
+    public string UiFontChoice
+    {
+        get => Settings.UiFont.Length == 0 ? DefaultUiFontLabel : Settings.UiFont;
+        set
+        {
+            var font = value is null or DefaultUiFontLabel ? "" : value.Trim();
+            if (font == Settings.UiFont) return;
+            Settings.UiFont = font;
+            FontService.Apply(font);
+            OnPropertyChanged();
+            SaveSettings();
+        }
+    }
+
+    /// <summary>Settings → Appearance's "Default" button next to the font.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void ResetUiFont() => UiFontChoice = DefaultUiFontLabel;
+
     // ---- The controls bar: Simple, Everything or the user's own arrangement --------------------
 
     /// <summary>0 Simple, 1 Everything, 2 Custom (arranged in the editor below it).</summary>
@@ -91,6 +119,11 @@ public sealed partial class MainViewModel
     public bool FullscreenInMore => !OnBar("fullscreen");
     /// <summary>Not for audio alone: there is no picture to save.</summary>
     public bool ScreenshotInMore => !OnBar("screenshot") && !IsAudioOnly;
+    /// <summary>
+    /// More's "Download video…": not while the bar has its own Download button, nor while a web
+    /// video plays (the top bar's download button is up then).
+    /// </summary>
+    public bool DownloadInMore => !OnBar("download") && !CanDownload;
     /// <summary>The playback part of More has anything in it (its separator shows with it).</summary>
     public bool HasPlaybackInMore => StopInMore || PrevFrameInMore || NextFrameInMore || PrevChapterInMore || NextChapterInMore
         || PrevFileInMore || NextFileInMore || MuteInMore || DiscMenuInMore || FullscreenInMore || ScreenshotInMore;

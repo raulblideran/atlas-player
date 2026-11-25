@@ -59,6 +59,21 @@
                 </c:SettingRow>
               </StackPanel>
             </Border>
+
+            <TextBlock Classes="group" Text="Text" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Interface font"
+                              Description="The font of every window, menu and bar. Titles follow it too, except in themes with a title font of their own.">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox x:Name="UiFont" ItemsSource="{Binding UiFonts}" SelectedItem="{Binding UiFontChoice}" Width="240"
+                              MaxDropDownHeight="360" />
+                    <Button x:Name="ResetUiFont" Classes="ghost" Content="Default" Command="{Binding ResetUiFontCommand}"
+                            ToolTip.Tip="Back to Inter, Paramaja's own font" />
+                  </StackPanel>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
           </StackPanel>
         </ScrollViewer>
       </TabItem>

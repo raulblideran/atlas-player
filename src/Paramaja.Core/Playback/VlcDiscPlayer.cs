@@ -744,8 +744,11 @@ public sealed partial class VlcDiscPlayer : IPlayer
     public string Screenshot(bool includeSubtitles)
     {
         Directory.CreateDirectory(_paths.Screenshots);
-        var file = Path.Combine(_paths.Screenshots, PlayerService.ScreenshotFileName(State.Title, State.Position, DateTime.Now));
-        if (!_mp.TakeSnapshot(0, file, 0, 0)) throw new MpvException("the disc player couldn't take a screenshot");
+        var file = PlayerService.ScreenshotPath(_paths.Screenshots, State.Title, State.Position, DateTime.Now);
+        // libVLC answers before it knows whether the picture could be saved (it says why only in
+        // its log): the file is the proof.
+        if (!_mp.TakeSnapshot(0, file, 0, 0) || !File.Exists(file)) throw new MpvException("the disc player couldn't save the screenshot");
+        if (State.DeinterlaceActive) _ = Task.Run(() => InterlacedScreenshots.DeinterlaceIfCombed(file));
         return file;
     }
 

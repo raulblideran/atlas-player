@@ -191,6 +191,8 @@ public sealed class PlayerSettings
     /// <summary>The look of the app (ThemeRegistry in the app); an id it doesn't know falls back to the default.</summary>
     public string Theme { get; set; } = DefaultTheme;
     public const string DefaultTheme = "paramaja";
+    /// <summary>The interface's font family (an installed font's name); empty for the default, Inter.</summary>
+    public string UiFont { get; set; } = "";
 
     // Playback
     public int SeekSeconds { get; set; } = 5;
@@ -276,5 +278,6 @@ public sealed class PlayerSettings
         NormalizeBar();
         GamutMapping = string.IsNullOrWhiteSpace(GamutMapping) ? "perceptual" : GamutMapping;
         Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme.Trim().ToLowerInvariant();
+        UiFont = UiFont?.Trim() ?? "";
     }
 }

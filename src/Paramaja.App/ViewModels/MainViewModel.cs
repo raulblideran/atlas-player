@@ -329,7 +329,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 if (s.EofReached && IsTorrent) StepTorrentFile(1);
                 break;
             case "media-title": MediaTitle = s.Title ?? ""; break;
-            case "video-format" or "video-codec": UpdateCodecBadge(); break;
+            case "video-format" or "video-codec" or "audio-codec-name": UpdateCodecBadge(); break;
             case "stereo-channel": OnPropertyChanged(nameof(StereoChannelIndex)); break;
             case "hwdec-current": UpdateVideoBadges(); break;
             case "video-params/gamma" or "video-params/primaries": UpdateHdrBadge(); break;
@@ -344,6 +344,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             case "audio-params/channel-count" or "audio-out-params/channel-count" or "audio-params/samplerate"
                 or "audio-out-params/samplerate":
                 UpdateAudioBadge();
+                if (IsAudioOnly) UpdateCodecBadge(); // its tooltip has the rate
                 OnPropertyChanged(nameof(IsSurroundAudio));
                 OnPropertyChanged(nameof(IsStereoAudio));
                 break;
@@ -486,10 +487,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             InputKind.AudioCd when playing => ("CD", "Audio CD · 44.1 kHz / 16-bit"),
             InputKind.Sacd when playing => ("SACD", SacdTip()),
             InputKind.Dvd when codec.Length > 0 => ("DVD", !string.IsNullOrEmpty(s?.VideoCodec) ? s.VideoCodec! : $"DVD ({codec})"),
-            // A song's cover isn't a video: no codec badge for it.
-            _ when IsAudioOnly => ("", ""),
+            // A song's cover isn't a video: the badge is the audio's codec.
+            _ when IsAudioOnly => AudioCodecBadge(s),
             _ => (codec, !string.IsNullOrEmpty(s?.VideoCodec) ? s.VideoCodec! : codec),
         };
+    }
+
+    /// <summary>An audio file's badge, "FLAC", and its tooltip, "FLAC, lossless · 96 kHz".</summary>
+    internal static (string Badge, string Tip) AudioCodecBadge(PlayerState? s)
+    {
+        var name = CodecLabels.DescribeAudio(s?.AudioCodec);
+        if (name.Length == 0) return ("", "");
+        var about = CodecLabels.AboutAudio(s!.AudioCodec);
+        return (name, s.SourceSampleRate is { } rate ? $"{about} · {RateLabel(rate)}" : about);
     }
 
     private string SacdTip()

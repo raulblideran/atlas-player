@@ -69,6 +69,8 @@ public sealed class PlayerState
     public string? Path { get; set; }
     public string? HwdecCurrent { get; set; }
     public string? VideoCodec { get; set; }
+    /// <summary>FFmpeg's name for the audio's codec ("flac", "aac"…), for an audio file's codec badge.</summary>
+    public string? AudioCodec { get; set; }
     public string? VideoFormat { get; set; }
     public string? Transfer { get; set; }
     public string? Primaries { get; set; }

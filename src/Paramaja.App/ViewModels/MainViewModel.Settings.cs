@@ -448,18 +448,19 @@ public sealed partial class MainViewModel
     private IReadOnlyList<string>? _subtitleFonts;
 
     /// <summary>The fonts installed (as the system lists them), the default first.</summary>
-    public IReadOnlyList<string> SubtitleFonts => _subtitleFonts ??= LoadFonts();
+    public IReadOnlyList<string> SubtitleFonts => _subtitleFonts ??= LoadFonts(DefaultFontLabel, Settings.SubtitleFont);
 
-    private IReadOnlyList<string> LoadFonts()
+    /// <summary>The fonts installed (as the system lists them), <paramref name="defaultLabel"/> first.</summary>
+    private static IReadOnlyList<string> LoadFonts(string defaultLabel, string chosen)
     {
         var names = new List<string>();
         try { names.AddRange(Avalonia.Media.FontManager.Current.SystemFonts.Select(f => f.Name)); }
         catch (Exception e) when (e is InvalidOperationException or NullReferenceException) { } // no font manager (headless)
         names = names.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase)
             .Order(StringComparer.OrdinalIgnoreCase).ToList();
-        if (Settings.SubtitleFont.Length > 0 && !names.Contains(Settings.SubtitleFont, StringComparer.OrdinalIgnoreCase))
-            names.Add(Settings.SubtitleFont); // a font from another machine, still chosen
-        return [DefaultFontLabel, .. names];
+        if (chosen.Length > 0 && !names.Contains(chosen, StringComparer.OrdinalIgnoreCase))
+            names.Add(chosen); // a font from another machine, still chosen
+        return [defaultLabel, .. names];
     }
 
     /// <summary>The font picked in the list; <see cref="DefaultFontLabel"/> is mpv's own.</summary>

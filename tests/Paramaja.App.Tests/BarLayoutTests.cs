@@ -248,7 +248,7 @@ public class BarLayoutTests
 
     private static (SettingsWindow Window, BarEditor Editor) ShowEditor(Rig r)
     {
-        var w = new SettingsWindow(SettingsSection.ControlsBar) { DataContext = r.Vm, Height = 1400 };
+        var w = new SettingsWindow(SettingsSection.ControlsBar) { DataContext = r.Vm, Height = 1900 }; // the whole editor in sight, below 24 themes
         w.Show();
         Dispatcher.UIThread.RunJobs();
         return (w, w.FindControl<BarEditor>("BarEditor")!);

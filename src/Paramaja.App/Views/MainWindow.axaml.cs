@@ -275,12 +275,40 @@ public partial class MainWindow : Window
         if (!_bottom.IsVisible) _bottom.Show(this);
     }
 
-    private void SetFullscreen(bool? on)
+    /// <summary>The window as it was before fullscreen: maximized, or a window of this place and size.</summary>
+    internal (WindowState State, PixelPoint Position, Size Size)? BeforeFullscreen { get; private set; }
+
+    internal void SetFullscreen(bool? on)
     {
         var fs = on ?? WindowState != WindowState.FullScreen;
-        if (!fs && WindowState != WindowState.FullScreen) return;
-        // Leaving fullscreen goes back to a maximized window, not a small one.
-        WindowState = fs ? WindowState.FullScreen : WindowState.Maximized;
+        if (fs == (WindowState == WindowState.FullScreen)) return;
+        if (fs)
+        {
+            BeforeFullscreen = (WindowState == WindowState.Maximized ? WindowState.Maximized : WindowState.Normal, Position, ClientSize);
+            WindowState = WindowState.FullScreen;
+            return;
+        }
+        // Leaving fullscreen goes back to the window it came from: maximized, or the same size in the same place.
+        var before = BeforeFullscreen ?? (WindowState.Maximized, Position, ClientSize);
+        WindowState = before.State;
+        if (before.State != WindowState.Normal) return;
+        RestoreBounds(before.Position, before.Size);
+        // X11 window managers may still be applying the fullscreen geometry as the state
+        // changes, and leave a screen-sized window: put the bounds back once that's done.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (WindowState == WindowState.Normal) RestoreBounds(before.Position, before.Size);
+        }, DispatcherPriority.Background);
+    }
+
+    private void RestoreBounds(PixelPoint position, Size size)
+    {
+        if (double.IsFinite(size.Width) && double.IsFinite(size.Height) && size.Width > 0 && size.Height > 0)
+        {
+            Width = size.Width;
+            Height = size.Height;
+        }
+        Position = position;
     }
 
     private readonly HashSet<Key> _shortcutKeys = [];

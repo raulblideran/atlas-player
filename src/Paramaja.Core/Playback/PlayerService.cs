@@ -152,7 +152,7 @@ public sealed class PlayerService : IPlayer
                      "video-params/h", "track-list/count", "chapter", "chapter-list/count", "current-edition", "playlist-count", "playlist-pos" })
             _mpv.ObserveLong(p);
         foreach (var p in new[] { "media-title", "path", "hwdec-current", "video-codec", "video-params/gamma",
-                     "video-params/primaries", "deinterlace", "vf", "video-format", "current-vo" })
+                     "video-params/primaries", "deinterlace", "vf", "video-format", "current-vo", "audio-codec-name" })
             _mpv.ObserveString(p);
     }
 
@@ -249,6 +249,7 @@ public sealed class PlayerService : IPlayer
             case "vf": s.VideoFilters = value as string; break;
             case "video-format": s.VideoFormat = value as string; break;
             case "current-vo": s.CurrentVo = value as string; break;
+            case "audio-codec-name": s.AudioCodec = value as string; break;
             default: return;
         }
         StateChanged?.Invoke(name);
@@ -272,6 +273,7 @@ public sealed class PlayerService : IPlayer
             if (ToInt(live) != known) OnProperty(name, live);
         }
         if (_mpv.GetDouble("duration") is { } duration && Math.Abs(duration - State.Duration) > 0.001) OnProperty("duration", duration);
+        if (_mpv.GetString("audio-codec-name") is var codec && codec != State.AudioCodec) OnProperty("audio-codec-name", codec);
     }
 
     // ---- Commands -------------------------------------------------------------------------
@@ -420,8 +422,10 @@ public sealed class PlayerService : IPlayer
     public string Screenshot(bool includeSubtitles)
     {
         Directory.CreateDirectory(_paths.Screenshots);
-        var file = Path.Combine(_paths.Screenshots, ScreenshotFileName(State.Title, State.Position, DateTime.Now));
+        var file = ScreenshotPath(_paths.Screenshots, State.Title, State.Position, DateTime.Now);
         _mpv.Command("screenshot-to-file", file, includeSubtitles ? "subtitles" : "video");
+        // mpv's screenshot is the deinterlaced frame; checked anyway (InterlacedScreenshots), off the UI's thread.
+        if (State.DeinterlaceActive) _ = Task.Run(() => InterlacedScreenshots.DeinterlaceIfCombed(file));
         return file;
     }
 
@@ -433,6 +437,18 @@ public sealed class PlayerService : IPlayer
         if (name.Length > 80) name = name[..80];
         var t = TimeSpan.FromSeconds(Math.Max(0, position));
         return $"{name}_{(int)t.TotalHours:00}-{t.Minutes:00}-{t.Seconds:00}.{t.Milliseconds:000}_{now:yyyyMMdd-HHmmss}.png";
+    }
+
+    /// <summary>
+    /// Where a new screenshot goes: never over an earlier one (two of the same paused frame in the
+    /// same second, with and without subtitles, would otherwise share a name).
+    /// </summary>
+    internal static string ScreenshotPath(string folder, string? title, double position, DateTime now)
+    {
+        var file = Path.Combine(folder, ScreenshotFileName(title, position, now));
+        var stem = Path.Combine(folder, Path.GetFileNameWithoutExtension(file));
+        for (var n = 2; File.Exists(file); n++) file = $"{stem} ({n}).png";
+        return file;
     }
 
     // ---- Live settings --------------------------------------------------------------------
