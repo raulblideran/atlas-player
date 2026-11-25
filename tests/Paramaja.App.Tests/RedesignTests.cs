@@ -77,6 +77,26 @@ public class RedesignTests
     }
 
     [AvaloniaFact]
+    public async Task More_has_no_download_while_the_top_bar_offers_one()
+    {
+        // A yt-dlp to find (it's never run here).
+        var app = Path.Combine(Path.GetTempPath(), "paramaja-app-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(app);
+        File.WriteAllText(Path.Combine(app, OperatingSystem.IsWindows() ? "yt-dlp.exe" : "yt-dlp"), "");
+        using var r = new Rig(ytdlp: new YtDlp(app));
+        var bar = new ControlsBar { DataContext = r.Vm, Width = 1280 };
+        bar.Show();
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(Item(bar, "Download video…").IsVisible); // nothing playing: More is the way in
+        await r.Vm.OpenInputAsync("https://youtube.com/watch?v=abc");
+        Playing(r);
+        Assert.True(r.Vm.CanDownload); // the top bar's download button is up
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(Item(bar, "Download video…").IsVisible);
+        bar.Close();
+    }
+
+    [AvaloniaFact]
     public void More_offers_only_what_applies_and_what_the_bar_doesnt_show()
     {
         using var r = new Rig();

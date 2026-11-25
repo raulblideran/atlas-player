@@ -198,7 +198,6 @@ public sealed class PlayerSettings
     public bool ResumePlayback { get; set; }
 
     // Torrents
-    public bool ClearTorrentCacheOnExit { get; set; } = true;
     public int TorrentMetadataTimeoutSeconds { get; set; } = 90;
     public int TorrentListenPort { get; set; }
     public bool TorrentUpnp { get; set; } = true;

@@ -205,11 +205,12 @@ public sealed partial class VlcDiscPlayer : IPlayer
         _mp.ESSelected += (_, _) => Later(RefreshTracks);
         _mp.Vout += (_, e) => Later(() =>
         {
-            uint w = 0, h = 0;
-            if (e.Count > 0 && _mp.Size(0, ref w, ref h))
+            if (e.Count > 0 && PictureSize() is var (w, h))
             {
+                // Both before either is told, so the resolution badge never sees half a size.
+                State.VideoHeight = (int)h;
                 Set("video-params/w", () => State.VideoWidth = (int)w);
-                Set("video-params/h", () => State.VideoHeight = (int)h);
+                Set("video-params/h", () => { });
                 Set("video-params/aspect", () => State.DisplayAspect = DisplayAspect(w, h));
             }
             Set("video-format", () => State.VideoFormat = VideoCodec());
@@ -219,6 +220,21 @@ public sealed partial class VlcDiscPlayer : IPlayer
         });
         _mp.Muted += (_, _) => Set("mute", () => State.IsMuted = true);
         _mp.Unmuted += (_, _) => Set("mute", () => State.IsMuted = false);
+    }
+
+    /// <summary>
+    /// The picture's size, once the video output knows it: as it starts (a DVD's menu or title),
+    /// libVLC answers 0×0 for a moment, which showed as a "0p" badge. Null if it never says.
+    /// </summary>
+    private (uint W, uint H)? PictureSize()
+    {
+        for (var attempt = 0; attempt < 20; attempt++)
+        {
+            uint w = 0, h = 0;
+            if (_mp.Size(0, ref w, ref h) && w > 0 && h > 0) return (w, h);
+            Thread.Sleep(100);
+        }
+        return null;
     }
 
     private void Set(string name, Action update)

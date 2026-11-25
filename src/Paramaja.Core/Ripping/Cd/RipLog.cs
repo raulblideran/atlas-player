@@ -61,6 +61,8 @@ public sealed class RipLog
         L($"Utilize accurate stream : {(disc.Features.AccurateStream ? "Yes" : "No (the drive doesn't state it)")}");
         L("Defeat audio cache      : Yes");
         L("Make use of C2 pointers : No");
+        if (tracks.Count < toc.AudioTrackCount)
+            L($"Range                   : Selected tracks {string.Join(", ", tracks.Select(t => t.Tags.Number.ToString(inv)))} (no cue sheet)");
         L();
         var offsetText = source switch
         {

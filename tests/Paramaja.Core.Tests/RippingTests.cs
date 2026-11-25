@@ -501,6 +501,79 @@ public class CdRipTests
     }
 
     [Fact]
+    public async Task Tracks_ripped_on_their_own_join_the_album_folder_with_a_log_and_no_cue()
+    {
+        var disc = TestDisc.Audio(900);
+        var toc = TestDisc.Toc(300, 300, 300);
+        using var drive = new ImageCdDrive(new MemoryStream(disc), toc);
+        var root = TestEnvironment.TempDir();
+        var ripper = new CdRipper(new HttpClient(), Path.Combine(root, "cache"));
+        // The whole disc once, for its AccurateRip checksums: a pressing gives each track its own confidence.
+        var whole = await ripper.RipAsync(drive, Disc(drive, toc), new CdRipOptions
+        {
+            Tags = Tags(toc), Format = CdRipFormat.Wav, OutputRoot = Path.Combine(root, "whole"), Offset = 0,
+        });
+        var pressing = new AccurateRipPressing(whole.Tracks.Select((t, i) => new AccurateRipTrack(10 + i, t.Read.Copy.AccurateRipV1, 0)).ToList());
+        var known = Disc(drive, toc) with { AccurateRip = [pressing] };
+        var output = Path.Combine(root, "some");
+
+        var cover = new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 };
+        var second = await ripper.RipAsync(drive, known, new CdRipOptions
+        {
+            Tags = Tags(toc), Format = CdRipFormat.Wav, OutputRoot = output, Offset = 0, Tracks = [2], Cover = cover,
+        });
+        var folder = Path.Combine(output, "Test Artist", "Test - Album (1991)");
+        Assert.Equal(folder, second.Folder);
+        Assert.Equal(["02 - Guest - Song 2.wav"], second.Tracks.Select(t => Path.GetFileName(t.File)));
+        Assert.Equal(whole.Tracks[1].Read.Copy.Crc32, second.Tracks[0].Read.Copy.Crc32);
+        // Checked against track 2's entry, not the first one.
+        Assert.True(second.Tracks[0].AccurateRip.Accurate);
+        Assert.Equal(11, second.Tracks[0].AccurateRip.Confidence);
+        Assert.Null(second.CuePath);
+        Assert.Empty(Directory.GetFiles(folder, "*.cue"));
+        var log = File.ReadAllText(second.LogPath);
+        Assert.Contains("Range                   : Selected tracks 2 (no cue sheet)", log);
+        Assert.Contains("Track  2", log);
+        Assert.DoesNotContain("Track  1\r\n", log);
+        Assert.Contains("All tracks accurately ripped", log);
+
+        // Later, two more of the album's tracks: the same folder, the cover and the first rip kept.
+        File.WriteAllBytes(Path.Combine(folder, "cover.jpg"), [1, 2, 3]);
+        var third = await ripper.RipAsync(drive, known, new CdRipOptions
+        {
+            Tags = Tags(toc), Format = CdRipFormat.Wav, OutputRoot = output, Offset = 0, Tracks = [1, 3], Cover = cover,
+        });
+        Assert.Equal(folder, third.Folder);
+        Assert.Equal(["01 - Song 1.wav", "03 - Song 3.wav"], third.Tracks.Select(t => Path.GetFileName(t.File)));
+        Assert.Equal([10, 12], third.Tracks.Select(t => t.AccurateRip.Confidence));
+        Assert.True(File.Exists(Path.Combine(folder, "02 - Guest - Song 2.wav")));
+        Assert.Equal([1, 2, 3], File.ReadAllBytes(Path.Combine(folder, "cover.jpg")));
+        Assert.NotEqual(second.LogPath, third.LogPath);
+        Assert.True(File.Exists(second.LogPath));
+        Assert.Contains("Selected tracks 1, 3", File.ReadAllText(third.LogPath));
+    }
+
+    [Fact]
+    public async Task A_cancelled_rip_of_a_few_tracks_keeps_what_the_album_folder_had()
+    {
+        var disc = TestDisc.Audio(3000);
+        var toc = TestDisc.Toc(1000, 1000, 1000);
+        using var drive = TestDisc.Drive(disc, toc);
+        var root = TestEnvironment.TempDir();
+        var folder = Path.Combine(root, "Test Artist", "Test - Album (1991)");
+        Directory.CreateDirectory(folder);
+        File.WriteAllBytes(Path.Combine(folder, "01 - Song 1.wav"), [1]);
+        File.WriteAllBytes(Path.Combine(folder, "cover.jpg"), [2]);
+        using var cts = new CancellationTokenSource();
+        var progress = new Inline(p => { if (p.Track == 2) cts.Cancel(); });
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => new CdRipper(new HttpClient(), root).RipAsync(drive, Disc(drive, toc),
+            new CdRipOptions { Tags = Tags(toc), Format = CdRipFormat.Wav, OutputRoot = root, Offset = 0, Tracks = [2, 3], Cover = [9] },
+            progress, cts.Token));
+        Assert.Equal(["01 - Song 1.wav", "cover.jpg"], Directory.GetFiles(folder).Select(Path.GetFileName).Order());
+        Assert.Equal([2], File.ReadAllBytes(Path.Combine(folder, "cover.jpg")));
+    }
+
+    [Fact]
     public async Task Flac_tracks_are_level_8_with_their_tags()
     {
         if (FlacEncoder.Find() is not { } flac) return; // no encoder on this machine

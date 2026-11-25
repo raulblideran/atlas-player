@@ -43,7 +43,6 @@ public class SettingsTests
             DisplayFps = 144,
             PreferHighPerformanceGpu = false,
             Volume = 77,
-            ClearTorrentCacheOnExit = false,
         };
         store.Save(s);
         var loaded = store.Load();
@@ -54,7 +53,6 @@ public class SettingsTests
         Assert.Equal(144, loaded.DisplayFps);
         Assert.False(loaded.PreferHighPerformanceGpu);
         Assert.Equal(77, loaded.Volume);
-        Assert.False(loaded.ClearTorrentCacheOnExit);
     }
 
     [Fact]

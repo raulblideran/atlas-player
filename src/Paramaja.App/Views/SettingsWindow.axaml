@@ -382,18 +382,6 @@
             <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding YtDlpStatus}"
                        IsVisible="{Binding YtDlpStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-            <TextBlock Classes="group" Text="Torrents" />
-            <Border Classes="rows">
-              <StackPanel>
-                <c:SettingRow Title="Delete downloaded data on closing"
-                              Description="Only the file you watch is downloaded, around where you are in it. Off: it stays in the cache folder.">
-                  <ToggleSwitch x:Name="ClearCacheSwitch" IsChecked="{Binding ClearTorrentCacheOnExit}" />
-                </c:SettingRow>
-                <c:SettingRow Title="Cache folder" Description="The 'cache' folder next to the app.">
-                  <Button Classes="ghost" Content="Open folder" Command="{Binding OpenCacheFolderCommand}" />
-                </c:SettingRow>
-              </StackPanel>
-            </Border>
           </StackPanel>
         </ScrollViewer>
       </TabItem>

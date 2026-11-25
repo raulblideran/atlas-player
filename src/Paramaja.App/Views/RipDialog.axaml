@@ -43,7 +43,7 @@
           <TextBlock Classes="dialog" Text="Rip Disc" />
         </StackPanel>
         <TextBlock Classes="note" FontSize="13.5"
-                   Text="Audio CDs: read securely (test and copy, every block until two reads agree), checked against AccurateRip, tagged from MusicBrainz and saved as FLAC (level 8) or WAV, with a cue sheet and a log. DVDs: the VIDEO_TS folder as it is, decrypted, or a title (or chosen chapters of it) as an MKV with every track and the chapters, its video copied as it is or encoded with x264 or x265 to look the same in less space." />
+                   Text="Audio CDs (the whole disc or the tracks you tick): read securely (test and copy, every block until two reads agree), checked against AccurateRip, tagged from MusicBrainz and saved as FLAC (level 8) or WAV, with a cue sheet and a log. DVDs: the VIDEO_TS folder as it is, decrypted, or a title (or chosen chapters of it) as an MKV with every track and the chapters, its video copied as it is or encoded with x264 or x265 to look the same in less space." />
 
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
           <TextBlock Text="Drive" VerticalAlignment="Center" />
@@ -95,14 +95,22 @@
             </Border>
           </Grid>
           <TextBlock Classes="group" Text="Tracks" />
+          <!-- The whole disc, or only the tracks ticked. -->
+          <Grid x:Name="TrackOptions" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+            <TextBlock x:Name="TracksSummary" Text="{Binding TracksSummary}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Classes="ghost" Content="All" Command="{Binding AllTracksCommand}" />
+            <Button Grid.Column="2" Classes="ghost" Content="None" Command="{Binding NoTracksCommand}" />
+          </Grid>
           <ScrollViewer MaxHeight="240">
             <ItemsControl x:Name="Tracks" ItemsSource="{Binding Tracks}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:RipTrackRow">
-                  <Grid ColumnDefinitions="34,*,200" ColumnSpacing="8" Margin="0,2">
-                    <TextBlock Text="{Binding Number, StringFormat='{}{0:00}'}" VerticalAlignment="Center" Classes="muted" />
-                    <TextBox Grid.Column="1" Text="{Binding Title}" />
-                    <TextBox Grid.Column="2" Text="{Binding Artist}" />
+                  <Grid ColumnDefinitions="Auto,34,*,200" ColumnSpacing="8" Margin="0,2">
+                    <CheckBox IsChecked="{Binding IsChecked}" VerticalAlignment="Center" MinWidth="0"
+                              ToolTip.Tip="Rip this track" AutomationProperties.Name="{Binding Number, StringFormat='Rip track {0}'}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Number, StringFormat='{}{0:00}'}" VerticalAlignment="Center" Classes="muted" />
+                    <TextBox Grid.Column="2" Text="{Binding Title}" />
+                    <TextBox Grid.Column="3" Text="{Binding Artist}" />
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -126,7 +134,7 @@
             <Button Grid.Column="2" Classes="ghost" Content="Change…" Click="OnPickCdFolder" />
           </Grid>
           <TextBlock Classes="note"
-                     Text="Each album goes in Artist / Album (Year), with its cue sheet, its log and cover.jpg. The log uses rip logs' layout and scores itself as tracker log checkers would, but it's Paramaja's: those checkers only accept EAC's, XLD's and whipper's own logs." />
+                     Text="Each album goes in Artist / Album (Year), with its cue sheet, its log and cover.jpg; tracks ripped on their own join the album's folder, with a log of their own. The log uses rip logs' layout and scores itself as tracker log checkers would, but it's Paramaja's: those checkers only accept EAC's, XLD's and whipper's own logs." />
         </StackPanel>
 
         <!-- DVD -->

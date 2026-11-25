@@ -79,6 +79,47 @@ public class RipDialogTests
     }
 
     [Fact]
+    public async Task Only_the_tracks_ticked_are_ripped()
+    {
+        using var r = new Rig();
+        var vm = Dialog(r, Cd);
+        await Until(() => vm.IsCd);
+        Assert.All(vm.Tracks, t => Assert.True(t.IsChecked));
+        Assert.Equal("All 3 tracks · 0:12", vm.TracksSummary); // 300 sectors (4 s) each
+        Assert.Null(vm.CheckedTracks);
+
+        vm.NoTracksCommand.Execute(null);
+        Assert.Equal("No tracks ticked", vm.TracksSummary);
+        Assert.False(vm.StartCommand.CanExecute(null));
+        vm.Tracks[1].IsChecked = true;
+        Assert.True(vm.StartCommand.CanExecute(null));
+        Assert.StartsWith("Track 2 of 3 · 0:04", vm.TracksSummary);
+        Assert.Equal([2], vm.CheckedTracks);
+
+        vm.StartCommand.Execute(null);
+        await Until(() => !r.Vm.IsRipping && r.Vm.RipResult.Length > 0);
+        Assert.StartsWith("Ripped track 2 of 3", r.Vm.RipResult);
+        var folder = Path.Combine(r.Paths.Music, "Test Artist", "Test Album");
+        Assert.Equal(["02 - Two.wav", "Test Artist - Test Album.log"], Directory.GetFiles(folder).Select(Path.GetFileName).Order());
+        vm.Dispose();
+    }
+
+    [Fact]
+    public async Task All_ticks_every_track_again()
+    {
+        using var r = new Rig();
+        var vm = Dialog(r, Cd);
+        await Until(() => vm.IsCd);
+        vm.Tracks[0].IsChecked = false;
+        vm.Tracks[2].IsChecked = false;
+        Assert.StartsWith("Track 2 of 3", vm.TracksSummary);
+        vm.AllTracksCommand.Execute(null);
+        Assert.Null(vm.CheckedTracks);
+        Assert.Equal("All 3 tracks · 0:12", vm.TracksSummary);
+        vm.Dispose();
+    }
+
+    [Fact]
     public async Task A_dvd_offers_its_titles_with_the_longest_first_picked()
     {
         using var r = new Rig();

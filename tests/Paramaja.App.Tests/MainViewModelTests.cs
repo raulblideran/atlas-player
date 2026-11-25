@@ -549,7 +549,7 @@ public class TorrentTests
         using var r = new Rig();
         await r.Vm.OpenInputAsync(Magnet);
         r.Vm.RefreshTorrentStats();
-        Assert.Equal("↓ 3.5 MiB/s · 7 peers · 50% downloaded", r.Vm.TorrentStatus);
+        Assert.Equal("↓ 3.5 MiB/s · 7 peers · 50% buffered", r.Vm.TorrentStatus);
     }
 
     [Fact]
@@ -564,13 +564,15 @@ public class TorrentTests
     }
 
     [Fact]
-    public async Task Keeping_the_cache_does_not_delete_files()
+    public async Task Closing_a_torrent_always_deletes_what_it_fetched()
     {
-        using var r = new Rig(new PlayerSettings { ClearTorrentCacheOnExit = false });
+        // Torrents are played, never kept: there's no setting to keep their data.
+        using var r = new Rig();
         await r.Vm.OpenInputAsync(Magnet);
         r.Vm.HandleKey("Ctrl+s");
-        Assert.Contains("Remove 1 False", r.Torrents.Calls);
+        Assert.Contains("Remove 1 True", r.Torrents.Calls);
         Assert.Contains("Stop", r.Player.Calls);
+        Assert.Null(typeof(PlayerSettings).GetProperty("ClearTorrentCacheOnExit"));
     }
 
     [Fact]
@@ -594,16 +596,6 @@ public class TorrentTests
         Directory.CreateDirectory(Path.Combine(r.Paths.TorrentCache, "old-torrent"));
         await r.Vm.OpenInputAsync(Magnet);
         Assert.Empty(Directory.EnumerateFileSystemEntries(r.Paths.TorrentCache));
-    }
-
-    [Fact]
-    public void Dispose_keeps_cache_when_asked()
-    {
-        using var r = new Rig(new PlayerSettings { ClearTorrentCacheOnExit = false });
-        Directory.CreateDirectory(r.Paths.TorrentCache);
-        File.WriteAllText(Path.Combine(r.Paths.TorrentCache, "keep"), "x");
-        r.Vm.Dispose();
-        Assert.True(File.Exists(Path.Combine(r.Paths.TorrentCache, "keep")));
     }
 }
 
@@ -708,8 +700,38 @@ public class StateTests
     [InlineData(1920, 800, "1080p")]
     [InlineData(1280, 720, "720p")]
     [InlineData(720, 480, "480p")]
+    [InlineData(0, 0, "")]
+    [InlineData(720, 0, "")]
     public void Resolution_labels(int w, int h, string expected) =>
         Assert.Equal(expected, MainViewModel.ResolutionLabel(w, h));
+
+    [Theory]
+    [InlineData(720, 576, "576i")]
+    [InlineData(720, 480, "480i")]
+    [InlineData(1920, 1080, "1080i")]
+    [InlineData(0, 0, "")]
+    public void Interlaced_resolutions_count_fields(int w, int h, string expected) =>
+        Assert.Equal(expected, MainViewModel.ResolutionLabel(w, h, interlaced: true));
+
+    [Fact]
+    public void A_dvd_shows_576i_and_never_0p()
+    {
+        using var r = new Rig();
+        var s = r.Player.State;
+        s.IsIdle = false; s.HasVideo = true;
+        r.Player.RaiseState("idle-active");
+        // libVLC's 0×0 as the picture starts: no badge.
+        s.VideoWidth = 0; s.VideoHeight = 0;
+        r.Player.RaiseState("video-params/w");
+        Assert.Equal("", r.Vm.ResolutionBadge);
+        s.VideoWidth = 720; s.VideoHeight = 576;
+        r.Player.RaiseState("video-params/w");
+        Assert.Equal("576p", r.Vm.ResolutionBadge);
+        // Interlacing found after the size: the badge follows.
+        s.SourceInterlaced = true; s.DeinterlaceActive = true;
+        r.Player.RaiseState("deinterlace-active");
+        Assert.Equal("576i", r.Vm.ResolutionBadge);
+    }
 
     [Fact]
     public void Tracks_are_split_with_an_off_option_for_subtitles()

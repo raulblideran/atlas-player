@@ -3,6 +3,27 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.6 — 2026-11-25
+
+A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
+Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
+
+- **New: rip single tracks of an Audio CD.** Rip Disc lists the tracks with a tick box each (with
+  **All** and **None**, and a summary such as "2 of 14 tracks · 9:41"). The whole disc is ripped as
+  before. Tracks ripped on their own go in the album's folder, beside any ripped earlier, with a log
+  of their own (it lists the tracks it covers) and no cue sheet, since a cue sheet of a few tracks
+  doesn't describe the disc. Each track is still checked against its own AccurateRip entry, and the
+  cover already in the folder is kept.
+- **Fixed: a DVD's resolution badge read "0p".** libVLC says 0×0 for a moment as a DVD's picture
+  starts (its menu, then each title); Paramaja now waits for the real size. Interlaced video now
+  shows as **576i** / **480i** / **1080i**, as it's broadcast and stored, rather than "p".
+- **More (⋯) no longer offers Download video… while the top bar's download button is up** (a
+  YouTube or other site video playing). It's still there the rest of the time.
+- **Torrents only play.** The "Delete downloaded data on closing" switch and the "Cache folder"
+  button are gone from Settings → Streaming and downloads: what a torrent fetches is always deleted
+  when it closes and when Paramaja exits. The top bar says how much is **buffered**. A settings file
+  from an earlier version that kept the data still loads; the setting is just ignored.
+
 ## 2.0.0-beta.5 — 2026-11-24
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.

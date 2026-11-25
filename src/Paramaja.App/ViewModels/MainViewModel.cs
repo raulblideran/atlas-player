@@ -57,7 +57,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     // ---- Observable state -----------------------------------------------------------------
 
-    [ObservableProperty] private bool _isIdle = true;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(CanDownload))] private bool _isIdle = true;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowPlayIcon), nameof(ShowPauseIcon))]
     private bool _isPaused;
@@ -387,6 +387,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
               + (s.DeinterlaceActive ? $". {s.DeinterlaceFilter} makes a frame of each field." : ". Deinterlacing is off for this video.");
         OnPropertyChanged(nameof(IsInterlacedVideo));
         OnPropertyChanged(nameof(Deinterlacing));
+        UpdateVideoBadges(); // "576i": interlacing can be found after the size is known
     }
 
     /// <summary>The playing video is HDR: only then does the HDR / tonemapping menu apply.</summary>
@@ -425,8 +426,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         var s = _player?.State;
         var picture = s is not null && !IsAudioOnly;
-        ResolutionBadge = picture ? ResolutionLabel(s!.VideoWidth, s.VideoHeight) : "";
-        DecoderBadge = !picture || string.IsNullOrEmpty(s!.HwdecCurrent) && s.VideoWidth is null ? ""
+        ResolutionBadge = picture ? ResolutionLabel(s!.VideoWidth, s.VideoHeight, s.SourceInterlaced) : "";
+        DecoderBadge = !picture || string.IsNullOrEmpty(s!.HwdecCurrent) && s.VideoWidth is null or 0 ? ""
             : s.IsHardwareDecoding ? $"HW · {s.HwdecCurrent}" : "SW";
     }
 
@@ -498,15 +499,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return $"Super Audio CD · DSD64 (2.8 MHz){name}";
     }
 
-    internal static string ResolutionLabel(int? w, int? h) => (w, h) switch
+    /// <summary>
+    /// "1080p", "720p", "4K"; an interlaced video's lines are fields, so "576i" (a DVD), "1080i".
+    /// No size yet (libVLC says 0×0 as a picture starts) is no badge rather than "0p".
+    /// </summary>
+    internal static string ResolutionLabel(int? w, int? h, bool interlaced = false)
     {
-        (null, _) or (_, null) => "",
-        ( >= 3800, _) or (_, >= 2100) => "4K",
-        ( >= 2500, _) or (_, >= 1400) => "1440p",
-        ( >= 1900, _) or (_, >= 1000) => "1080p",
-        ( >= 1260, _) or (_, >= 700) => "720p",
-        _ => $"{h}p",
-    };
+        var scan = interlaced ? "i" : "p";
+        return (w, h) switch
+        {
+            (null or <= 0, _) or (_, null or <= 0) => "",
+            ( >= 3800, _) or (_, >= 2100) => "4K",
+            ( >= 2500, _) or (_, >= 1400) => "1440" + scan,
+            ( >= 1900, _) or (_, >= 1000) => "1080" + scan,
+            ( >= 1260, _) or (_, >= 700) => "720" + scan,
+            _ => $"{h}{scan}",
+        };
+    }
 
     private void SyncTracks()
     {
@@ -688,7 +697,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (_torrents.IsStarted) return;
         // Leftovers from a crash or a killed process would otherwise pile up.
-        if (Settings.ClearTorrentCacheOnExit) ClearTorrentCache();
+        ClearTorrentCache();
         _torrents.Start(new TorrentEngineConfig
         {
             CacheDir = _paths.TorrentCache,
@@ -793,7 +802,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void CloseTorrent()
     {
         if (_torrent is null) return;
-        try { _torrents.Remove(_torrent.Id, deleteFiles: Settings.ClearTorrentCacheOnExit); }
+        // Torrents are played, never kept: what was fetched goes with them.
+        try { _torrents.Remove(_torrent.Id, deleteFiles: true); }
         catch (TorrentException) { }
         _torrent = null;
         IsTorrent = false;
@@ -814,7 +824,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             var pct = len > 0 ? 100.0 * file / len : 0;
             TorrentStatus = s.Error is { } err
                 ? $"Torrent error: {err}"
-                : $"↓ {s.DownloadMiBps:0.0} MiB/s · {s.PeersLive} peers · {pct:0}% downloaded";
+                : $"↓ {s.DownloadMiBps:0.0} MiB/s · {s.PeersLive} peers · {pct:0}% buffered";
         }
         catch (TorrentException) { }
     }
@@ -1062,7 +1072,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         SaveSettings();
     }
 
-    [RelayCommand] private void OpenCacheFolder() => Dialogs?.OpenFolder(_paths.TorrentCache);
 
     internal string DescribeProfile(RenderProfile p) =>
         Settings.RenderQuality == RenderQuality.Auto ? $"Auto is using {p}" : $"Using {p}";
@@ -1496,7 +1505,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _discPlayer?.Dispose();
         _player = null;
         _torrents.Dispose();
-        if (Settings.ClearTorrentCacheOnExit) ClearTorrentCache();
+        ClearTorrentCache();
     }
 
     internal void ClearTorrentCache()

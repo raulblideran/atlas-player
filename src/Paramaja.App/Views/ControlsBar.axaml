@@ -332,7 +332,8 @@
                 <MenuItem.Icon><PathIcon Data="{StaticResource IconLink}" /></MenuItem.Icon>
               </MenuItem>
               <Separator />
-              <MenuItem Header="Download video…" Command="{Binding OpenDownloaderCommand}">
+              <!-- A web video playing has the top bar's download button: not twice. -->
+              <MenuItem Header="Download video…" Command="{Binding OpenDownloaderCommand}" IsVisible="{Binding !CanDownload}">
                 <MenuItem.Icon><PathIcon Data="{StaticResource IconDownload}" /></MenuItem.Icon>
               </MenuItem>
               <MenuItem Header="Rip disc…" Command="{Binding OpenRipperCommand}">

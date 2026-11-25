@@ -11,12 +11,14 @@ namespace Paramaja.App.ViewModels;
 
 public enum RipDiscKind { None, Cd, Dvd }
 
-/// <summary>A track's tags as the rip window lets them be edited.</summary>
-public sealed partial class RipTrackRow(int number, string title, string artist) : ObservableObject
+/// <summary>A track's tags as the rip window lets them be edited, and whether it's ripped.</summary>
+public sealed partial class RipTrackRow(int number, string title, string artist, TimeSpan? length = null) : ObservableObject
 {
     public int Number { get; } = number;
+    public TimeSpan? Length { get; } = length;
     [ObservableProperty] private string _title = title;
     [ObservableProperty] private string _artist = artist;
+    [ObservableProperty] private bool _isChecked = true;
 }
 
 /// <summary>A chapter of the DVD title to rip, ticked or not.</summary>
@@ -110,6 +112,50 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _discNote = "";
 
     public bool HasFlac => Flac is not null;
+
+    /// <summary>"All 14 tracks · 77:12", "3 of 14 tracks · 12:34".</summary>
+    public string TracksSummary
+    {
+        get
+        {
+            var picked = Tracks.Where(t => t.IsChecked).ToList();
+            if (picked.Count == 0) return "No tracks ticked";
+            var count = picked.Count == Tracks.Count ? $"All {Tracks.Count} tracks"
+                : picked.Count == 1 ? $"Track {picked[0].Number} of {Tracks.Count}"
+                : $"{picked.Count} of {Tracks.Count} tracks";
+            var length = picked.All(t => t.Length is not null) ? $" · {Duration(TimeSpan.FromTicks(picked.Sum(t => t.Length!.Value.Ticks)))}" : "";
+            var some = picked.Count < Tracks.Count ? ", in the album's folder with a log (no cue sheet)" : "";
+            return count + length + some;
+        }
+    }
+
+    /// <summary>The tracks ticked; null when every one is (the whole disc).</summary>
+    internal IReadOnlyList<int>? CheckedTracks => Tracks.All(t => t.IsChecked) ? null : Tracks.Where(t => t.IsChecked).Select(t => t.Number).ToList();
+
+    [RelayCommand]
+    private void AllTracks()
+    {
+        foreach (var t in Tracks) t.IsChecked = true;
+    }
+
+    [RelayCommand]
+    private void NoTracks()
+    {
+        foreach (var t in Tracks) t.IsChecked = false;
+    }
+
+    private void OnTrackChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(RipTrackRow.IsChecked)) return;
+        OnPropertyChanged(nameof(TracksSummary));
+        StartCommand.NotifyCanExecuteChanged();
+    }
+
+    private void ClearTracks()
+    {
+        foreach (var t in Tracks) t.PropertyChanged -= OnTrackChanged;
+        Tracks.Clear();
+    }
     /// <summary>Releases to choose from: several, or only similar discs (none preselected).</summary>
     public bool HasReleases => Releases.Count > 1 || Releases.Any(r => !r.ExactDisc);
 
@@ -287,7 +333,8 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         _disc = null;
         _dvd = null;
         Releases.Clear();
-        Tracks.Clear();
+        ClearTracks();
+        OnPropertyChanged(nameof(TracksSummary));
         Titles.Clear();
         SelectedTitle = null;
         Cover = null;
@@ -352,8 +399,19 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         Album = tags.Album;
         Date = tags.Date ?? "";
         Genre = tags.Genre ?? "";
-        Tracks.Clear();
-        foreach (var t in tags.Tracks) Tracks.Add(new RipTrackRow(t.Number, t.Title, t.Artist));
+        // Another release's tags keep the tracks ticked as they were.
+        var unticked = Tracks.Where(t => !t.IsChecked).Select(t => t.Number).ToHashSet();
+        ClearTracks();
+        foreach (var t in tags.Tracks)
+        {
+            TimeSpan? length = _disc?.Toc.AudioTracks.FirstOrDefault(a => a.Number == t.Number) is { } track
+                ? TimeSpan.FromSeconds(_disc.Toc.Sectors(track) / (double)CdToc.SectorsPerSecond) : null;
+            var row = new RipTrackRow(t.Number, t.Title, t.Artist, length) { IsChecked = !unticked.Contains(t.Number) };
+            row.PropertyChanged += OnTrackChanged;
+            Tracks.Add(row);
+        }
+        OnPropertyChanged(nameof(TracksSummary));
+        StartCommand.NotifyCanExecuteChanged();
         _ = LoadCoverAsync(tags);
     }
 
@@ -428,7 +486,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
 
     private bool CanStart() => !IsBusy && !Main.IsRipping && Kind switch
     {
-        RipDiscKind.Cd => _disc is not null && _drive is not null,
+        RipDiscKind.Cd => _disc is not null && _drive is not null && Tracks.Any(t => t.IsChecked),
         RipDiscKind.Dvd => _dvd is not null && (IsMkv
             ? CanMkv && CanEncode && SelectedTitle is not null && (Chapters.Count == 0 || Chapters.Any(c => c.IsChecked))
             : CanDecrypt && !IsFolderSource),
@@ -450,6 +508,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
                 Offset = Offset,
                 AppVersion = AppInfo.Display,
                 Flac = Flac,
+                Tracks = CheckedTracks,
             });
         }
         else if (Kind == RipDiscKind.Dvd && _dvd is { } dvd && DvdOptions() is { } options)

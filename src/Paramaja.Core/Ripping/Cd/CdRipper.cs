@@ -32,6 +32,8 @@ public sealed record CdRipOptions
     public string AppVersion { get; init; } = "";
     /// <summary>The reference FLAC encoder (flac), when ripping to FLAC.</summary>
     public string? Flac { get; init; }
+    /// <summary>The track numbers to rip; null for every audio track of the disc.</summary>
+    public IReadOnlyList<int>? Tracks { get; init; }
 }
 
 /// <summary>Where the read offset correction came from, as the log says it.</summary>
@@ -39,7 +41,8 @@ public enum OffsetSource { Manual, DriveList, Detected, Unknown }
 
 public sealed record CdTrackResult(TrackTags Tags, string File, int Sectors, int Pregap, TrackRead Read, AccurateRipResult AccurateRip);
 
-public sealed record CdRipResult(string Folder, IReadOnlyList<CdTrackResult> Tracks, string LogPath, string CuePath, int Score,
+/// <param name="CuePath">Null for a rip of some of the tracks: a cue sheet of a few doesn't describe the disc.</param>
+public sealed record CdRipResult(string Folder, IReadOnlyList<CdTrackResult> Tracks, string LogPath, string? CuePath, int Score,
     int Offset, OffsetSource OffsetSource, bool GapsDetected)
 {
     public bool AllAccurate => Tracks.All(t => t.AccurateRip.Accurate);
@@ -49,7 +52,8 @@ public sealed record CdRipResult(string Folder, IReadOnlyList<CdTrackResult> Tra
 /// <summary>
 /// Rips an Audio CD: secure reads (test &amp; copy, offset-corrected), each track checked with
 /// AccurateRip, tagged and saved as FLAC (level 8, verified) or WAV, with a cue sheet, the cover and
-/// a log in the layout rip logs use.
+/// a log in the layout rip logs use. Some of the tracks can be ripped alone: they go in the
+/// album's folder (beside any ripped before), with a log and no cue sheet.
 /// </summary>
 public sealed class CdRipper(HttpClient http, string cacheFolder)
 {
@@ -88,36 +92,47 @@ public sealed class CdRipper(HttpClient http, string cacheFolder)
     {
         if (o.Format == CdRipFormat.Flac && o.Flac is null) throw new InvalidOperationException("the FLAC encoder (flac) isn't installed");
         var toc = disc.Toc;
+        // Every audio track keeps its place on the disc (AccurateRip's entries, TRACKTOTAL), ripped or not.
         var audio = toc.AudioTracks.ToList();
+        var picked = audio.Select((t, i) => (Track: t, Index: i))
+            .Where(x => o.Tracks is null || o.Tracks.Contains(x.Track.Number)).ToList();
+        if (picked.Count == 0) throw new InvalidOperationException("no tracks to rip");
+        var whole = picked.Count == audio.Count;
         var tags = o.Tags;
         var written = new List<string>();
         var folderName = RipNames.Safe(tags.Year is { } y ? $"{tags.Album} ({y})" : tags.Album)
                          + (tags.DiscTotal > 1 ? $" (CD {tags.DiscNumber})" : "");
-        var folder = RipNames.NewFolder(Path.Combine(o.OutputRoot, RipNames.Safe(tags.AlbumArtist)), folderName);
+        var artistFolder = Path.Combine(o.OutputRoot, RipNames.Safe(tags.AlbumArtist));
+        // A whole disc gets a folder of its own; a few tracks join the album's (ripped a few at a time).
+        var folder = whole ? RipNames.NewFolder(artistFolder, folderName) : Path.Combine(artistFolder, folderName);
         Directory.CreateDirectory(folder);
         try
         {
-            progress?.Report(new RipProgress("Reading the disc", 0, audio.Count, 0));
+            progress?.Report(new RipProgress("Reading the disc", 0, picked.Count, 0));
             var (offset, source) = await Task.Run(() => ReadOffset(drive, disc, o, progress, ct), ct).ConfigureAwait(false);
-            progress?.Report(new RipProgress("Finding the gaps between tracks", 0, audio.Count, 0));
+            progress?.Report(new RipProgress("Finding the gaps between tracks", 0, picked.Count, 0));
             var gaps = await Task.Run(() => GapDetector.Detect(drive, toc, ct), ct).ConfigureAwait(false);
-            var isrcs = await Task.Run(() => audio.ToDictionary(t => t.Number, t => drive.ReadIsrc(t.Number)), ct).ConfigureAwait(false);
+            var isrcs = await Task.Run(() => picked.ToDictionary(x => x.Track.Number, x => drive.ReadIsrc(x.Track.Number)), ct).ConfigureAwait(false);
 
             string? cover = null;
             if (o.Cover is { Length: > 0 } image)
             {
                 cover = Path.Combine(folder, "cover.jpg");
-                await File.WriteAllBytesAsync(cover, image, ct).ConfigureAwait(false);
-                written.Add(cover);
+                // An earlier rip of the album's other tracks left its cover: keep it.
+                if (!File.Exists(cover))
+                {
+                    written.Add(cover);
+                    await File.WriteAllBytesAsync(cover, image, ct).ConfigureAwait(false);
+                }
             }
 
             var reader = new SecureReader(drive, toc, offset);
-            var totalSectors = audio.Sum(toc.Sectors);
+            var totalSectors = picked.Sum(x => toc.Sectors(x.Track));
             long doneSectors = 0;
             var results = new List<CdTrackResult>();
             var encodes = new List<Task>();
             var extension = o.Format == CdRipFormat.Flac ? ".flac" : ".wav";
-            foreach (var (track, index) in audio.Select((t, i) => (t, i)))
+            foreach (var ((track, index), n) in picked.Select((x, n) => (x, n)))
             {
                 ct.ThrowIfCancellationRequested();
                 var tt = tags.Tracks.FirstOrDefault(x => x.Number == track.Number) ?? new TrackTags(track.Number, $"Track {track.Number:00}", tags.AlbumArtist);
@@ -130,7 +145,7 @@ public sealed class CdRipper(HttpClient http, string cacheFolder)
                 if (wav != file) written.Add(file);
                 var sectors = toc.Sectors(track);
                 var trackProgress = new Progress<ReadProgress>(p => progress?.Report(new RipProgress(
-                    p.Rereads > 0 ? "Re-reading" : p.Pass == ReadPass.Test ? "Test" : "Copy", index + 1, audio.Count,
+                    p.Rereads > 0 ? "Re-reading" : p.Pass == ReadPass.Test ? "Test" : "Copy", n + 1, picked.Count,
                     (doneSectors + sectors * ((p.Pass == ReadPass.Test ? 0 : 1) + p.Fraction) / 2) / totalSectors, p.Speed, p.Rereads)));
                 var read = await Task.Run(() =>
                 {
@@ -156,16 +171,20 @@ public sealed class CdRipper(HttpClient http, string cacheFolder)
                     }, ct));
                 }
             }
-            progress?.Report(new RipProgress("Encoding", audio.Count, audio.Count, 1));
+            progress?.Report(new RipProgress("Encoding", picked.Count, picked.Count, 1));
             await Task.WhenAll(encodes).ConfigureAwait(false);
 
             var baseName = RipNames.Safe($"{tags.AlbumArtist} - {tags.Album}");
-            var cuePath = RipNames.NewFile(folder, baseName, ".cue");
-            var comment = $"Paramaja {o.AppVersion}".Trim();
-            var cue = CueWriter.Write(tags, results.Select(r => new CueWriter.Entry(r.Tags, Path.GetFileName(r.File), r.Sectors, r.Pregap,
-                toc[r.Tags.Number].PreEmphasis)).ToList(), disc.Mcn, toc.FreedbId, comment);
-            written.Add(cuePath);
-            await File.WriteAllTextAsync(cuePath, cue, new System.Text.UTF8Encoding(true), ct).ConfigureAwait(false);
+            string? cuePath = null;
+            if (whole)
+            {
+                cuePath = RipNames.NewFile(folder, baseName, ".cue");
+                var comment = $"Paramaja {o.AppVersion}".Trim();
+                var cue = CueWriter.Write(tags, results.Select(r => new CueWriter.Entry(r.Tags, Path.GetFileName(r.File), r.Sectors, r.Pregap,
+                    toc[r.Tags.Number].PreEmphasis)).ToList(), disc.Mcn, toc.FreedbId, comment);
+                written.Add(cuePath);
+                await File.WriteAllTextAsync(cuePath, cue, new System.Text.UTF8Encoding(true), ct).ConfigureAwait(false);
+            }
 
             var log = new RipLog(disc, tags, o, results, offset, source, gaps, DateTime.Now);
             var logPath = RipNames.NewFile(folder, baseName, ".log");

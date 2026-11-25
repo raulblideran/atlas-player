@@ -35,7 +35,7 @@ paramaja/
 4. **Subtitles**: embedded tracks (ASS/SRT/PGS/VobSub), external file drag-drop or auto-load, track menu, delay, size and position.
 5. **Modern UI**: dark fluent theme, auto-hiding overlay controls, seek bar with hover time, track menus, settings panel, drag-and-drop, and a torrent buffering/peer status panel.
 6. **Optional downmix**: setting *Audio output: Original / Stereo downmix*. Stereo sets `audio-channels=stereo` with a proper downmix matrix (center/LFE retained, no normalisation). It is off by default.
-7. **Magnet streaming (priority)**: paste a magnet (Ctrl+V or dialog). Rust resolves metadata, lists files, picks the largest video (or the user picks), prioritises sequentially and serves `http://127.0.0.1:<port>/stream/<id>/<file>`, which mpv opens. Seeking re-prioritises pieces. The status panel shows peers, speed and buffer. Data is cached in `./cache`, with a "clear on exit" option.
+7. **Magnet streaming (priority)**: paste a magnet (Ctrl+V or dialog). Rust resolves metadata, lists files, picks the largest video (or the user picks), prioritises sequentially and serves `http://127.0.0.1:<port>/stream/<id>/<file>`, which mpv opens. Seeking re-prioritises pieces. The status panel shows peers, speed and buffer. Data is cached in `./cache` while it plays and always deleted: torrents are streamed, never kept (2.0.0-beta.6).
 8. **Uncompressed PNG screenshots**: `screenshot-format=png`, `screenshot-png-compression=0`, high bit depth, saved to `./Screenshots`. One hotkey for the video only and one for video + subs.
 9. **Frame step**: `.` steps forward one frame, `,` steps back one frame (`frame-back-step`), and arrows seek ±5s.
 10. **Rust + Avalonia**: as above.
@@ -77,7 +77,7 @@ paramaja/
 - [x] Localhost HTTP server with Range support; streaming reader that blocks/prioritises pieces at the read position
 - [x] C ABI (JSON in/out): `nt_init`, `nt_add`, `nt_select`, `nt_stats`, `nt_remove`, `nt_shutdown`, `nt_free_string`; magnets also honour `x.pe` peer hints
 - [x] C# interop + `TorrentService`; magnet dialog in UI; buffering/peers/speed panel
-- [x] Cache cleanup options (on exit / keep)
+- [x] Cache cleanup (always: the keep option was removed in 2.0.0-beta.6)
 - [x] Rust unit tests (magnet parsing, file selection, range handling)
 
 ### Phase 4 — Feature polish
@@ -141,7 +141,7 @@ paramaja/
 - [x] CD / SACD badges; audio badge by the downmix switch, with rates and the device's fold-down in its tooltip; discs honour the downmix switch
 - [x] Chapter buttons only with chapters (cleared on each file, on a disc's stop, while idle)
 - [x] Fullscreen pointer hidden 3 s after the mouse last moved (blank X cursor on the video surfaces on Linux)
-- [x] CD ripper: SG_IO / SPTI, test & copy with cache defeat and re-reads, AccurateRip v1/v2 and drive offsets, gaps from the Q sub-channel, MusicBrainz + Cover Art Archive, FLAC -8 / WAV, cue sheet, log with a score
+- [x] CD ripper: SG_IO / SPTI, test & copy with cache defeat and re-reads, AccurateRip v1/v2 and drive offsets, gaps from the Q sub-channel, MusicBrainz + Cover Art Archive, FLAC -8 / WAV, cue sheet, log with a score; single tracks (2.0.0-beta.6)
 - [x] Verified on the Dangerous rip's audio through a simulated +48 drive: EAC's CRCs, all tracks accurate
 - [x] DVD ripper: VIDEO_TS decrypted (libdvdread + libdvdcss; Windows DLLs cross-built), one title to MKV (FFmpeg's dvdvideo reader, LPCM → FLAC); verified lossless on a DVD image
 - [ ] A real CD and a real (CSS) DVD in a drive, on Linux and Windows

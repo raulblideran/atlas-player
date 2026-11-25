@@ -72,7 +72,13 @@ public sealed partial class MainViewModel
                     : r.AllAccurate ? "all accurately ripped (AccurateRip)"
                     : $"{r.Tracks.Count(t => t.AccurateRip.Accurate)} of {r.Tracks.Count} accurately ripped";
                 var errors = r.AllOk ? "" : $", {r.Tracks.Count(t => !t.Read.Ok)} with errors";
-                return (r.Folder, $"Ripped {r.Tracks.Count} tracks to {r.Folder}: {accurate}{errors}. Log score {r.Score}%.");
+                var all = disc.Toc.AudioTrackCount;
+                var count = r.Tracks.Count == all ? $"{all} tracks"
+                    : r.Tracks.Count == 1 ? $"track {r.Tracks[0].Tags.Number} of {all}"
+                    : $"{r.Tracks.Count} of {all} tracks";
+                var verdict = r.Tracks.Count == 1 && disc.AccurateRip.Count > 0
+                    ? (r.AllAccurate ? "accurately ripped (AccurateRip)" : "not verified as accurate") : accurate;
+                return (r.Folder, $"Ripped {count} to {r.Folder}: {verdict}{errors}. Log score {r.Score}%.");
             }
             finally
             {

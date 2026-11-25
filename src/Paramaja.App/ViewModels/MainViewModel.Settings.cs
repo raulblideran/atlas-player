@@ -604,18 +604,6 @@ public sealed partial class MainViewModel
         }
     }
 
-    public bool ClearTorrentCacheOnExit
-    {
-        get => Settings.ClearTorrentCacheOnExit;
-        set
-        {
-            if (Settings.ClearTorrentCacheOnExit == value) return;
-            Settings.ClearTorrentCacheOnExit = value;
-            OnPropertyChanged();
-            SaveSettings();
-        }
-    }
-
     public int SeekSeconds
     {
         get => Settings.SeekSeconds;
