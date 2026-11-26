@@ -69,6 +69,8 @@ public class UiScreenshots
                 Save(bar, folder, $"{id}-bar-simple");
                 r.Vm.BarLayoutIndex = 1;
                 Save(bar, folder, $"{id}-bar-everything");
+                r.Vm.BarLayoutIndex = 2;
+                Save(bar, folder, $"{id}-bar-classic");
                 // An arrangement of one's own: the title and the time left on the left, a divider, the clock.
                 r.Settings.BarLeft = ["title", "separator", "elapsed", "remaining"];
                 r.Settings.BarCentre = ["prevfile", "play", "nextfile"];

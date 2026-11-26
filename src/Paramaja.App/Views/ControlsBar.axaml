@@ -7,7 +7,8 @@
                  x:DataType="vm:MainViewModel"
                  Title="Paramaja controls" Height="118">
   <Panel>
-    <Border x:Name="Root" Background="{DynamicResource ThemeBarScrimBottom}" Padding="24,14,24,12">
+    <Border x:Name="Root" Background="{DynamicResource ThemeBarScrimBottom}" BorderBrush="{DynamicResource ThemeStroke}" BorderThickness="0,1,0,0"
+            Padding="24,14,24,12">
       <Border.ContextFlyout>
         <MenuFlyout Placement="Pointer">
           <MenuItem Header="Customize bar…" Command="{Binding CustomizeBarCommand}"

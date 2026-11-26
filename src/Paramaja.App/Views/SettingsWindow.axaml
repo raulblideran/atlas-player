@@ -50,6 +50,7 @@
                   <ComboBox x:Name="BarLayout" SelectedIndex="{Binding BarLayoutIndex}" Width="220">
                     <ComboBoxItem Content="Simple (default)" />
                     <ComboBoxItem Content="Everything" />
+                    <ComboBoxItem Content="MPC-HC" />
                     <ComboBoxItem Content="Custom" />
                   </ComboBox>
                 </c:SettingRow>

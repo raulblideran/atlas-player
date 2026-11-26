@@ -147,6 +147,13 @@ public sealed class PlayerSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public List<string>? HiddenControls { get; set; }
 
+    /// <summary>
+    /// The bar as it was before the MPC-HC theme gave it MPC-HC's layout, to put back when another
+    /// theme is picked while the bar is still that layout. Null when there's nothing to put back.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public SavedBar? BarBeforeClassic { get; set; }
+
     /// <summary>2.0.0's Simple bar (show-or-hide ids), and the one before it, which left the frame steps off too.</summary>
     private static readonly string[] SimpleBarHidden = ["stop", "chapters", "screenshot", "download", "openlink", "open"];
     private static readonly string[] SimpleBarHidden200 = ["frames", "stop", "chapters", "screenshot", "download", "openlink", "open"];
@@ -185,6 +192,12 @@ public sealed class PlayerSettings
         if (!seen.Contains(BarItems.Play)) BarCentre.Insert(BarCentre.Count / 2, BarItems.Play);
         if (!seen.Contains(BarItems.More)) BarRight.Add(BarItems.More);
         if (!seen.Contains(BarItems.Settings)) BarRight.Add(BarItems.Settings);
+        if (BarBeforeClassic is { } saved)
+        {
+            // Only pieces it knows; putting it back makes it whole (NormalizeBar again).
+            static List<string> Known(List<string>? ids) => [.. (ids ?? []).Where(id => BarItems.Find(id) is not null)];
+            (saved.Left, saved.Centre, saved.Right) = (Known(saved.Left), Known(saved.Centre), Known(saved.Right));
+        }
     }
 
     // Appearance
@@ -222,6 +235,7 @@ public sealed class PlayerSettings
             if (!p.CanWrite || !p.CanRead || MachineSettings.Contains(p.Name)) continue;
             var value = p.GetValue(other);
             if (value is List<string> list) value = list.ToList();
+            if (value is SavedBar bar) value = new SavedBar { Left = [.. bar.Left], Centre = [.. bar.Centre], Right = [.. bar.Right] };
             p.SetValue(this, value);
         }
         Normalize();
@@ -280,4 +294,12 @@ public sealed class PlayerSettings
         Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme.Trim().ToLowerInvariant();
         UiFont = UiFont?.Trim() ?? "";
     }
+}
+
+/// <summary>A controls bar arrangement kept aside (<see cref="PlayerSettings.BarBeforeClassic"/>).</summary>
+public sealed class SavedBar
+{
+    public List<string> Left { get; set; } = [];
+    public List<string> Centre { get; set; } = [];
+    public List<string> Right { get; set; } = [];
 }

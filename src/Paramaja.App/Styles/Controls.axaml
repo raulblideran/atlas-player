@@ -206,32 +206,35 @@
     <Setter Property="ToolTip.Placement" Value="Bottom" />
     <Setter Property="ToolTip.VerticalOffset" Value="6" />
   </Style>
+  <!-- Glyphs set their colour here: Fluent's PathIcon would otherwise wear the body text's, not the bar's -->
   <Style Selector="Button.icon PathIcon">
     <Setter Property="Width" Value="20" />
     <Setter Property="Height" Value="20" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeBarText}" />
   </Style>
   <Style Selector="Button.big PathIcon">
     <Setter Property="Width" Value="28" />
     <Setter Property="Height" Value="28" />
   </Style>
-  <!-- Play, the one filled button on the bar -->
+  <!-- Play, the bar's main button: filled in the accent, or however the theme's ThemePlay keys say -->
   <Style Selector="Button.play">
-    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
-    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+    <Setter Property="Background" Value="{DynamicResource ThemePlay}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnPlay}" />
     <Setter Property="Padding" Value="9" />
     <Setter Property="Margin" Value="8,0" />
   </Style>
   <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource ThemeAccentHover}" />
-    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+    <Setter Property="Background" Value="{DynamicResource ThemePlayHover}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnPlay}" />
   </Style>
   <Style Selector="Button.play:pressed /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource ThemeAccent}" />
-    <Setter Property="Foreground" Value="{DynamicResource ThemeOnAccent}" />
+    <Setter Property="Background" Value="{DynamicResource ThemePlay}" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnPlay}" />
   </Style>
   <Style Selector="Button.play PathIcon">
     <Setter Property="Width" Value="24" />
     <Setter Property="Height" Value="24" />
+    <Setter Property="Foreground" Value="{DynamicResource ThemeOnPlay}" />
   </Style>
 
   <Style Selector="PathIcon.spin">

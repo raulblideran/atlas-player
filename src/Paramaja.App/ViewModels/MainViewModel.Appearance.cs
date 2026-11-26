@@ -41,11 +41,41 @@ public sealed partial class MainViewModel
         set
         {
             if (value is null || value.Id == Settings.Theme) return;
+            var from = Settings.Theme;
             Settings.Theme = value.Id;
             ThemeService.Apply(value.Id);
+            BarFollowsTheme(from, value.Id);
             OnPropertyChanged();
             OnPropertyChanged(nameof(ThemeDescription));
             SaveSettings();
+        }
+    }
+
+    /// <summary>The theme whose bar layout comes with it: MPC-HC's toolbar (BarItems.Classic).</summary>
+    public const string ClassicThemeId = "mpc-hc";
+
+    /// <summary>
+    /// Picking MPC-HC gives the bar MPC-HC's layout, keeping the bar it had; picking another theme
+    /// puts that back, unless the bar was rearranged in between (then it's the user's, and stays).
+    /// Only a theme picked here: starting up or importing a settings file leaves the bar alone.
+    /// </summary>
+    private void BarFollowsTheme(string from, string to)
+    {
+        if (to == ClassicThemeId && from != ClassicThemeId)
+        {
+            if (!BarItems.Classic.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight))
+                Settings.BarBeforeClassic = new SavedBar { Left = [.. Settings.BarLeft], Centre = [.. Settings.BarCentre], Right = [.. Settings.BarRight] };
+            ApplyBarPreset(BarItems.Classic);
+        }
+        else if (from == ClassicThemeId && to != ClassicThemeId)
+        {
+            var saved = Settings.BarBeforeClassic;
+            Settings.BarBeforeClassic = null;
+            if (saved is null || !BarItems.Classic.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight)) return;
+            Settings.BarLeft = [.. saved.Left];
+            Settings.BarCentre = [.. saved.Centre];
+            Settings.BarRight = [.. saved.Right];
+            ReloadBar();
         }
     }
 
@@ -81,19 +111,21 @@ public sealed partial class MainViewModel
 
     // ---- The controls bar: Simple, Everything or the user's own arrangement --------------------
 
-    /// <summary>0 Simple, 1 Everything, 2 Custom (arranged in the editor below it).</summary>
+    /// <summary>0 Simple, 1 Everything, 2 MPC-HC, 3 Custom (arranged in the editor below it).</summary>
     public int BarLayoutIndex
     {
         get
         {
             if (BarItems.Simple.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight)) return 0;
-            return BarItems.Everything.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight) ? 1 : 2;
+            if (BarItems.Everything.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight)) return 1;
+            return BarItems.Classic.SameAs(Settings.BarLeft, Settings.BarCentre, Settings.BarRight) ? 2 : 3;
         }
         set
         {
             if (value == BarLayoutIndex) return;
             if (value == 0) UseSimpleBar();
             else if (value == 1) UseEverythingBar();
+            else if (value == 2) UseClassicBar();
             // Custom: arranged piece by piece, below.
         }
     }
@@ -102,6 +134,7 @@ public sealed partial class MainViewModel
     {
         0 => "Play, volume, the track and video menus, fullscreen and settings. The rest is in More (⋯).",
         1 => "Every button that applies to what's playing. More (⋯) also has the open actions.",
+        2 => "Media Player Classic's toolbar: play and stop, the skip and frame buttons on the left, the menus and volume on the right.",
         _ => "Your own arrangement, below. What you leave off the bar is in More (⋯) where it fits.",
     };
 

@@ -301,6 +301,9 @@ public sealed partial class MainViewModel
     /// <summary>The Simple bar: what it leaves off goes to the More menu.</summary>
     [RelayCommand] private void UseSimpleBar() => ApplyBarPreset(BarItems.Simple);
 
+    /// <summary>Media Player Classic's bar (what the MPC-HC theme brings along).</summary>
+    [RelayCommand] private void UseClassicBar() => ApplyBarPreset(BarItems.Classic);
+
     /// <summary>Right-click on the bar: Settings, at the bar editor.</summary>
     [RelayCommand]
     private async Task CustomizeBar()

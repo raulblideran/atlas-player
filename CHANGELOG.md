@@ -3,6 +3,30 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.8 — 2026-11-26
+
+- Describe this release
+
+## 2.0.0-beta.8 — 2026-11-26
+
+A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
+Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
+
+- **Solid bars, in every theme.** The title bar and the controls bar no longer fade into the
+  picture (a light theme left a white haze over the top and bottom of the video). Each is now a
+  solid bar in its theme's colour with a thin line against the video, and still hides on its own.
+- **MPC-HC looks more like Media Player Classic:** a plain black Play glyph instead of a filled
+  button, Windows 7's light-blue boxes on hover, flat grey badges, a sunken grey seek track and a
+  flat welcome screen.
+- **New bar layout: MPC-HC.** Settings → Appearance → Controls bar → Layout → **MPC-HC**: play and
+  stop, the skip and frame buttons on the left, the menus and the volume on the right, like Media
+  Player Classic's toolbar. **Choosing the MPC-HC theme brings it along**; choosing another theme
+  puts your previous bar back, unless you rearranged the bar in between (then your arrangement stays).
+  It works with any theme too.
+- **Fixed: Play's glyph ignored its theme's colour.** It took the body text's colour, so
+  some themes drew a dark glyph on a dark button or a white one on a bright button. It now uses
+  the theme's colour for text on its accent, which is checked for contrast.
+
 ## 2.0.0-beta.7 — 2026-11-25
 
 A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.

@@ -24,20 +24,16 @@
   <SolidColorBrush x:Key="ThemeOnAccent" Color="#FFFFFF" />
   <SolidColorBrush x:Key="ThemeHighlight" Color="#62D8D2" />
   <SolidColorBrush x:Key="ThemePositive" Color="#6FD39A" />
-  <!-- The bars over the video -->
+  <!-- The bars over the video: solid grounds (a line in ThemeStroke parts them from the picture) -->
   <SolidColorBrush x:Key="ThemeBarText" Color="#EAF5F9" />
-  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimTop">
-    <GradientStop Offset="0" Color="#F2050D15" />
-    <GradientStop Offset="0.6" Color="#B3050D15" />
-    <GradientStop Offset="1" Color="#00050D15" />
-  </LinearGradientBrush>
-  <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimBottom">
-    <GradientStop Offset="0" Color="#00050D15" />
-    <GradientStop Offset="0.35" Color="#B3050D15" />
-    <GradientStop Offset="1" Color="#F2050D15" />
-  </LinearGradientBrush>
+  <SolidColorBrush x:Key="ThemeBarScrimTop" Color="#050D15" />
+  <SolidColorBrush x:Key="ThemeBarScrimBottom" Color="#050D15" />
   <SolidColorBrush x:Key="ThemeBarButtonHover" Color="#33FFFFFF" />
   <SolidColorBrush x:Key="ThemeBarButtonPressed" Color="#550A7A7C" />
+  <!-- Play, the bar's main button: its ground, hovered, and its glyph -->
+  <SolidColorBrush x:Key="ThemePlay" Color="#0A7A7C" />
+  <SolidColorBrush x:Key="ThemePlayHover" Color="#0D8B8D" />
+  <SolidColorBrush x:Key="ThemeOnPlay" Color="#FFFFFF" />
   <SolidColorBrush x:Key="ThemeBadge" Color="#2EFFFFFF" />
   <SolidColorBrush x:Key="ThemeBadgeHdr" Color="#660A7A7C" />
   <SolidColorBrush x:Key="ThemeBadgeText" Color="#E8F4F8" />

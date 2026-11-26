@@ -129,15 +129,15 @@ public class RedesignTests
         Assert.Equal(BarItems.Everything.Right, r.Settings.BarRight);
         Assert.Equal(BarItems.Everything.Centre, r.Vm.BarZones[1].Slots.Select(s => s.Id));
         Bar.Off(r.Vm, "screenshot");
-        Assert.Equal(2, r.Vm.BarLayoutIndex);
-        r.Vm.BarLayoutIndex = 2; // choosing Custom itself changes nothing
+        Assert.Equal(3, r.Vm.BarLayoutIndex);
+        r.Vm.BarLayoutIndex = 3; // choosing Custom itself changes nothing
         Assert.DoesNotContain("screenshot", r.Settings.BarRight);
         r.Vm.BarLayoutIndex = 0;
         Assert.True(BarItems.Simple.SameAs(r.Settings.BarLeft, r.Settings.BarCentre, r.Settings.BarRight));
         Assert.Equal(BarItems.Simple.Right, r.Vm.BarZones[2].Slots.Select(s => s.Id));
         // Only the order changed: still Custom.
         Bar.Move(r.Vm, "fullscreen", BarZoneKind.Right, 0);
-        Assert.Equal(2, r.Vm.BarLayoutIndex);
+        Assert.Equal(3, r.Vm.BarLayoutIndex);
         Assert.Contains("\"fullscreen\"", File.ReadAllText(r.Store.FilePath)); // saved
     }
 
@@ -153,7 +153,7 @@ public class RedesignTests
         Assert.Equal(BarItems.Everything.Centre, r.Settings.BarCentre);
         Bar.Off(r.Vm, "stop");
         Dispatcher.UIThread.RunJobs();
-        Assert.Equal(2, layout.SelectedIndex);
+        Assert.Equal(3, layout.SelectedIndex);
         w.Close();
     }
 

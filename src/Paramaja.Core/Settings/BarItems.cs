@@ -63,6 +63,16 @@ public static class BarItems
     /// <summary>The default: play, volume, the track and video menus, fullscreen and settings.</summary>
     public static readonly BarLayout Simple = Everything.Without(SimpleLeavesOff);
 
+    /// <summary>
+    /// Media Player Classic's toolbar: play and stop, the skip and frame buttons on the left, the
+    /// menus and the volume on the right, nothing in the middle and no badges. The MPC-HC theme
+    /// brings it along (the app's SelectedTheme); it's a preset of its own too.
+    /// </summary>
+    public static readonly BarLayout Classic = new(
+        [Play, "stop", Separator, "prevfile", "prevchapter", "nextchapter", "nextfile", Separator, "prevframe", "nextframe"],
+        [],
+        ["subtitles", "audio", "video", Separator, More, Settings, "fullscreen", Separator, "mute", "volume"]);
+
     /// <summary>The ids of 2.0.0's show-or-hide list (settings version 6 and before) as the pieces they are now.</summary>
     public static IEnumerable<string> Expand(string oldId) => oldId switch
     {
