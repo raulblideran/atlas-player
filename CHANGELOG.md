@@ -3,7 +3,10 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## Unreleased
+## 2.0.0-beta.11 — 2026-11-26
+
+A **beta** of 2.0.0, and the first under its new name. Tried on Linux, not yet on Windows.
+QTGMC is new and hasn't been through a full rip on either system yet: please report how it goes.
 
 - **The app is now Atlas Player,** with a new icon (a strongman holding up a planet with a play
   symbol on it, in a gold coin) and a new default theme, **Atlas**: gold on deep navy, dark.
