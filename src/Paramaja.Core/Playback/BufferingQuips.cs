@@ -5,8 +5,8 @@ public static class BufferingQuips
 {
     public static readonly IReadOnlyList<string> All =
     [
-        "Big fast, many speed",
-        "Bruney",
+        "Big fast, many speed…",
+        "Bruney…",
         "Bribing the router with cookies…",
         "Teaching the bytes to queue politely…",
         "Waking up the server. It's not a morning person…",

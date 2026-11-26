@@ -327,12 +327,13 @@ public class Prompt10MiscTests
         Assert.True(vm.StartCommand.CanExecute(null));
         Assert.Equal([1, 2, 3, 4], vm.DvdOptions()!.Chapters); // every one, as its own file
 
-        // A title of one chapter has nothing to choose; nor has the VIDEO_TS copy.
-        vm.SelectedTitle = vm.Titles[0];
+        // A title of one chapter has nothing to choose; nor has the VIDEO_TS copy (no titles step at all).
+        vm.SelectedTitleRow = vm.TitleRows[0];
         Assert.False(vm.ShowChapters);
-        vm.SelectedTitle = vm.Titles[1];
-        vm.DvdModeIndex = 1;
-        Assert.False(vm.ShowChapters);
+        vm.SelectedTitleRow = vm.TitleRows[1];
+        vm.DvdModeIndex = 2;
+        Assert.DoesNotContain(RipStep.DvdTitles, vm.Steps);
+        Assert.Equal(DvdRipMode.Decrypt, vm.DvdOptions()!.Mode);
         Assert.Null(vm.DvdOptions()!.Chapters);
     }
 }

@@ -41,7 +41,8 @@ public class VersionTests
     {
         var version = ProjectVersion(Root);
         var changelog = File.ReadAllText(Path.Combine(Root, "CHANGELOG.md"));
-        Assert.Equal(version, Regex.Match(changelog, @"^## (\S+)", RegexOptions.Multiline).Groups[1].Value);
+        // Changes not released yet sit above, under "## Unreleased".
+        Assert.Equal(version, Regex.Match(changelog, @"^## (?!Unreleased\b)(\S+)", RegexOptions.Multiline).Groups[1].Value);
         var meta = XDocument.Load(Path.Combine(Root, "packaging", "io.github.raulblideran.Paramaja.metainfo.xml"));
         Assert.Equal(version, meta.Root!.Element("releases")!.Elements("release").First().Attribute("version")!.Value);
     }

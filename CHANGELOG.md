@@ -3,6 +3,44 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## Unreleased
+
+- **Rip Disc is a step-by-step window.** It recognises the disc (an Audio CD, or a DVD from a
+  drive, an `.iso` or a VIDEO_TS folder, as before), and each step shows only what applies to it.
+  The steps are shown at the top; Back and Next move between them, and Rip is on the last.
+  - **Audio CD:** Source → Tracks (the tags and tracks, as before) → Format (FLAC level 8 or WAV)
+    → **Cue sheet** → Rip. The cue sheet is now a choice: ticked for a whole disc, not for a few
+    tracks or a single one, and a few tracks can have one of their own. The log scores the same
+    with or without one.
+  - **DVD:** Source → **Rip mode** → **Titles** → Format → Rip. The mode is **Full DVD** (MKVs), the
+    new **Audio only**, or the **whole disc backup** (the VIDEO_TS folder, decrypted, as before;
+    it skips straight to Rip).
+- **Several titles in one rip.** Tick the titles you want; each becomes its own file. For each
+  title: the chapters you tick, one file or one per chapter, as before.
+- **Choose a title's audio tracks.** Each title lists its tracks as "English, AC-3, 5.1", all
+  ticked; at least one has to be. In an MKV each track ticked is a stream of its own.
+- **Audio only (new):** a DVD's sound as **FLAC** (level 8) or **WAV**: one file per title or one
+  per chapter, and a file for each audio track ticked (FLAC and WAV hold one track each), in
+  Music → the disc's name. AC-3 and DTS are decoded to 24-bit, LPCM keeps its bits. Where a track
+  has gaps (stretches with no audio packets at all: The One's AC-3 lacks 68 s of chapter 2) they
+  become silence, so a file is as long as its title or chapter and stays in time with it.
+- **MKV audio:** **as on the disc** (AC-3 and DTS copied, LPCM as FLAC, as before), **FLAC** or
+  **AAC** (160 kb/s a channel), for every track ticked.
+- **Every channel is kept** (stereo, 5.1, 7.1) in FLAC, AAC and WAV. Nothing is mixed down unless
+  you tick **Mix down to stereo** (for converted audio only).
+- **QTGMC (new),** besides BWDIF, for x264 and x265 encodes of interlaced video: havsfunc's QTGMC
+  through VapourSynth, which now comes with both builds for ripping only (playback keeps BWDIF).
+  Its preset (Medium to Placebo, Slower by default) is chosen in the rip; the encoder settings are
+  BWDIF's. On Windows it needs the VC++ runtime, which the zip brings along.
+- **Frame rate:** a frame per field (50p, 59.94p for NTSC: the default, as before) or the disc's
+  own rate (25p, 29.97p), with either deinterlacer.
+- **In fullscreen the bars and the pointer hide after 2 seconds,** down from 2.5 (bars) and 3
+  (pointer). In a window the bars still wait 2.5 s.
+- The welcome screen says what **Open disc** (CD, DVD, BluRay) and **Rip disc** (CD, DVD, Audio
+  from DVD) take. Two buffering lines trail off: "Bruney…", "Big fast, many speed…".
+- Clearer descriptions in Open Disc, Open Link (now titled like the others) and Download Video,
+  and on each step of Rip Disc.
+
 ## 2.0.0-beta.10 — 2026-11-26
 
 - Describe this release

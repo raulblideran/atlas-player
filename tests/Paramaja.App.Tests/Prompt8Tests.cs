@@ -112,7 +112,7 @@ public class Prompt8ViewModelTests
     }
 
     [Fact]
-    public void In_fullscreen_the_pointer_hides_after_3_seconds_even_paused()
+    public void In_fullscreen_the_pointer_hides_after_2_seconds_even_paused()
     {
         using var r = new Rig();
         Play(r.Player);
@@ -121,16 +121,16 @@ public class Prompt8ViewModelTests
         r.Player.State.IsPaused = true;
         r.Player.RaiseState("pause");
         var now = DateTime.UtcNow;
-        r.Vm.TickAutoHide(now + TimeSpan.FromSeconds(2.5));
+        r.Vm.TickAutoHide(now + TimeSpan.FromSeconds(1.5));
         Assert.False(r.Vm.IsCursorHidden);
-        r.Vm.TickAutoHide(now + TimeSpan.FromSeconds(3.2));
+        r.Vm.TickAutoHide(now + TimeSpan.FromSeconds(2.2));
         Assert.True(r.Vm.IsCursorHidden);
         Assert.Equal("SetCursorHidden True", r.Player.Calls.Last(c => c.StartsWith("SetCursorHidden")));
         Assert.True(r.Vm.ControlsVisible); // paused: the controls stay, the pointer goes
 
         // A key shows the controls, not the pointer; moving the mouse does.
         r.Vm.HandleKey("RIGHT");
-        r.Vm.TickAutoHide(DateTime.UtcNow + TimeSpan.FromSeconds(3.2));
+        r.Vm.TickAutoHide(DateTime.UtcNow + TimeSpan.FromSeconds(2.2));
         Assert.True(r.Vm.IsCursorHidden);
         r.Vm.NotifyPointerMoved();
         Assert.False(r.Vm.IsCursorHidden);

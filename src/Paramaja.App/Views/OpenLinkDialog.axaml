@@ -3,7 +3,7 @@
         xmlns:vm="using:Paramaja.App.ViewModels"
         x:Class="Paramaja.App.Views.OpenLinkDialog"
         x:DataType="vm:OpenLinkDialogViewModel"
-        Title="Open link" Icon="/Assets/paramaja.ico"
+        Title="Open Link" Icon="/Assets/paramaja.ico"
         Width="620" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
   <DockPanel>
@@ -16,10 +16,10 @@
     <StackPanel Margin="24,22,24,20" Spacing="12">
       <StackPanel Orientation="Horizontal" Spacing="12">
         <PathIcon Classes="title" Data="{StaticResource IconLink}" />
-        <TextBlock Classes="dialog" Text="Open a link" />
+        <TextBlock Classes="dialog" Text="Open Link" />
       </StackPanel>
       <TextBlock Classes="note" FontSize="13.5"
-                 Text="A magnet link, a MEGA file link, a YouTube (or other site) link, or a video's own address. It starts once a few seconds are loaded." />
+                 Text="Paste a magnet link, a MEGA file link, a YouTube (or other video site) link or a direct link to a video. Playback starts once the first few seconds have loaded." />
       <TextBox x:Name="Input" Text="{Binding Text}" Watermark="magnet:?…   https://mega.nz/file/…   https://youtube.com/watch?v=…" AcceptsReturn="False"
                TextWrapping="Wrap" MaxHeight="120" />
       <TextBlock Text="{Binding Hint}" Classes="status" />

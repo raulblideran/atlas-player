@@ -8,8 +8,70 @@ namespace Paramaja.Core.Ripping.Dvd;
 /// <summary>An audio stream as a title set's IFO describes it.</summary>
 public sealed record DvdAudio(string Codec, int Channels, string? Language)
 {
+    /// <summary>Its number in the title set (0-7): the stream's MPEG id is its codec's base plus this.</summary>
+    public int Number { get; init; }
+
     public string Label => $"{Codec} {(Channels == 6 ? "5.1" : Channels == 2 ? "stereo" : Channels == 1 ? "mono" : $"{Channels}ch")}"
                            + (Language is null ? "" : $" [{Language}]");
+
+    /// <summary>"English, AC-3, 5.1", "Unknown language, LPCM, stereo".</summary>
+    public string Description => $"{LanguageName(Language) ?? "Unknown language"}, {Codec}, {Layout(Channels)}";
+
+    /// <summary>For a file's name: "English AC-3 5.1".</summary>
+    public string FileLabel => $"{LanguageName(Language) ?? "Track " + (Number + 1)} {Codec} {Layout(Channels)}";
+
+    /// <summary>
+    /// The stream's id in the VOBs (FFmpeg's stream id): AC-3 0x80+n, DTS 0x88+n, LPCM 0xA0+n,
+    /// MPEG 0xC0+n; null for a coding that has none.
+    /// </summary>
+    public int? StreamId => Codec switch
+    {
+        "AC-3" => 0x80 + Number,
+        "DTS" => 0x88 + Number,
+        "LPCM" => 0xA0 + Number,
+        "MPEG" => 0xC0 + Number,
+        _ => null,
+    };
+
+    /// <summary>The usual name of a channel count: mono, stereo, 5.1, 7.1, else "N channels".</summary>
+    public static string Layout(int channels) => channels switch
+    {
+        1 => "mono",
+        2 => "stereo",
+        3 => "2.1",
+        6 => "5.1",
+        8 => "7.1",
+        _ => $"{channels} channels",
+    };
+
+    /// <summary>
+    /// An ISO 639-1 code's English name ("en" English). The common ones are listed, as the app may
+    /// run without culture data; others come from the system, else the code itself.
+    /// </summary>
+    public static string? LanguageName(string? code)
+    {
+        if (code is not { Length: 2 }) return null;
+        if (Languages.TryGetValue(code, out var name)) return name;
+        try
+        {
+            var culture = CultureInfo.GetCultureInfo(code);
+            if (!culture.EnglishName.StartsWith("Unknown", StringComparison.Ordinal) && culture.EnglishName != code) return culture.EnglishName;
+        }
+        catch (CultureNotFoundException) { }
+        return code;
+    }
+
+    private static readonly Dictionary<string, string> Languages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["en"] = "English", ["fr"] = "French", ["de"] = "German", ["es"] = "Spanish", ["it"] = "Italian", ["pt"] = "Portuguese",
+        ["nl"] = "Dutch", ["sv"] = "Swedish", ["da"] = "Danish", ["no"] = "Norwegian", ["fi"] = "Finnish", ["is"] = "Icelandic",
+        ["pl"] = "Polish", ["cs"] = "Czech", ["sk"] = "Slovak", ["hu"] = "Hungarian", ["ro"] = "Romanian", ["bg"] = "Bulgarian",
+        ["el"] = "Greek", ["tr"] = "Turkish", ["ru"] = "Russian", ["uk"] = "Ukrainian", ["sr"] = "Serbian", ["hr"] = "Croatian",
+        ["sl"] = "Slovenian", ["et"] = "Estonian", ["lv"] = "Latvian", ["lt"] = "Lithuanian", ["he"] = "Hebrew", ["iw"] = "Hebrew",
+        ["ar"] = "Arabic", ["fa"] = "Persian", ["hi"] = "Hindi", ["th"] = "Thai", ["vi"] = "Vietnamese", ["id"] = "Indonesian",
+        ["ms"] = "Malay", ["zh"] = "Chinese", ["ja"] = "Japanese", ["ko"] = "Korean", ["ca"] = "Catalan", ["eu"] = "Basque",
+        ["gl"] = "Galician", ["ga"] = "Irish", ["cy"] = "Welsh", ["la"] = "Latin",
+    };
 }
 
 /// <summary>A title of the DVD: the main film, an extra, a menu loop…</summary>
@@ -241,7 +303,7 @@ public sealed class DvdInfo
         {
             var a = vts.AsSpan(0x204 + 8 * i, 8);
             var codec = (a[0] >> 5) switch { 0 => "AC-3", 2 => "MPEG", 3 => "MPEG", 4 => "LPCM", 6 => "DTS", _ => "audio" };
-            list.Add(new DvdAudio(codec, (a[1] & 0x07) + 1, Language(a[0] & 0x0C, a[2..4])));
+            list.Add(new DvdAudio(codec, (a[1] & 0x07) + 1, Language(a[0] & 0x0C, a[2..4])) { Number = i });
         }
         return list;
     }

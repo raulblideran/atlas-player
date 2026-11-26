@@ -114,7 +114,7 @@ public sealed partial class VlcDiscPlayer : IPlayer
         _vlc = new LibVLC([
             "--no-video-title-show",   // the app shows the title itself
             "--sub-source=marq",       // on-screen messages (ShowText)
-            "--mouse-hide-timeout=3000", // over its video the pointer hides after 3 s (MainViewModel.CursorHideDelay)
+            "--mouse-hide-timeout=2000", // over its video the pointer hides after 2 s (MainViewModel.CursorHideDelay)
             // Paramaja's libVLC runs BWDIF for this mode (see DeinterlaceModeName below); -1
             // deinterlaces only what the disc flags as interlaced.
             "--deinterlace-mode=" + DeinterlaceModeName,

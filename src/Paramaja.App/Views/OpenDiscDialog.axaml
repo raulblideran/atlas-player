@@ -21,7 +21,7 @@
         <TextBlock Classes="dialog" Text="Open Disc" />
       </StackPanel>
       <TextBlock Classes="note" FontSize="13.5"
-                 Text="A DVD or Blu-ray plays with its menus, an Audio CD track by track: from a drive, a disc folder or a disc image. Store-bought DVDs work; encrypted Blu-rays don't." />
+                 Text="Play a CD, DVD or Blu-ray from a drive, a disc folder or a disc image. DVDs and Blu-rays open on their menus; an Audio CD plays track by track. Store-bought DVDs play; encrypted Blu-rays don't." />
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock Classes="group" Text="Drives" Margin="2,6,0,4" />
         <Button Grid.Column="1" Classes="ghost" Content="Refresh" Click="OnRefresh" ToolTip.Tip="After putting a disc in" Padding="10,5" />
@@ -40,7 +40,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <TextBlock x:Name="NoDrives" Classes="note" Margin="0,4" Text="No CD, DVD or Blu-ray drive found. A disc folder or image still plays." IsVisible="False" />
+          <TextBlock x:Name="NoDrives" Classes="note" Margin="0,4" Text="No CD, DVD or Blu-ray drive found. You can still open a disc folder or a disc image below." IsVisible="False" />
         </StackPanel>
       </Border>
     </StackPanel>

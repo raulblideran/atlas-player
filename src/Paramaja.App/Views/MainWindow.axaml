@@ -48,7 +48,7 @@
               <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                 <PathIcon Data="{StaticResource IconDisc}" />
                 <TextBlock Grid.Column="1" Text="Open disc…" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="2" Classes="shortcut" Text="DVD, Blu-ray, CD" />
+                <TextBlock Grid.Column="2" Classes="shortcut" Text="CD, DVD, BluRay" />
               </Grid>
             </Button>
             <Button x:Name="OpenLinkButton" Classes="action" Command="{Binding OpenLinkCommand}"
@@ -73,7 +73,7 @@
               <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                 <PathIcon Data="{StaticResource IconRip}" />
                 <TextBlock Grid.Column="1" Text="Rip disc…" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="2" Classes="shortcut" Text="CD to FLAC, DVD to MKV" />
+                <TextBlock Grid.Column="2" Classes="shortcut" Text="CD, DVD, Audio from DVD" />
               </Grid>
             </Button>
           </StackPanel>

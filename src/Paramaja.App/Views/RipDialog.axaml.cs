@@ -31,14 +31,10 @@ public partial class RipDialog : Window
         if (await PickFolder("A DVD's VIDEO_TS folder (or the folder it's in)") is { } path) Vm?.UseDvdSource(path);
     }
 
-    private async void OnPickCdFolder(object? sender, RoutedEventArgs e)
+    private async void OnPickSaveFolder(object? sender, RoutedEventArgs e)
     {
-        if (Vm is { } vm && await PickFolder("Save ripped CDs in") is { } path) vm.CdFolder = path;
-    }
-
-    private async void OnPickDvdOutput(object? sender, RoutedEventArgs e)
-    {
-        if (Vm is { } vm && await PickFolder("Save ripped DVDs in") is { } path) vm.DvdFolder = path;
+        if (Vm is { } vm && await PickFolder(vm.IsCd ? "Save ripped CDs in" : vm.IsAudioOnly ? "Save the DVD's audio in" : "Save ripped DVDs in") is { } path)
+            vm.SaveFolder = path;
     }
 
     private async Task<string?> PickFolder(string title)
@@ -52,9 +48,14 @@ public partial class RipDialog : Window
         if (Vm is { } vm) vm.DvdModeIndex = 0;
     }
 
-    private void OnDecryptMode(object? sender, RoutedEventArgs e)
+    private void OnAudioOnlyMode(object? sender, RoutedEventArgs e)
     {
         if (Vm is { } vm) vm.DvdModeIndex = 1;
+    }
+
+    private void OnDecryptMode(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is { } vm) vm.DvdModeIndex = 2;
     }
 
     private void OnOneFile(object? sender, RoutedEventArgs e)
@@ -71,6 +72,20 @@ public partial class RipDialog : Window
     {
         base.OnOpened(e);
         FitToScreen();
+        if (Vm is { } vm) vm.PropertyChanged += OnStepChanged;
+    }
+
+    /// <summary>
+    /// The steps differ in height: the window keeps the tallest it has been, so moving between
+    /// them doesn't make it jump up and down (within what the screen allows).
+    /// </summary>
+    private void OnStepChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(RipDialogViewModel.StepIndex)) return;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (Bounds.Height > MinHeight) MinHeight = Math.Min(Bounds.Height, MaxHeight);
+        }, DispatcherPriority.Background);
     }
 
     /// <summary>
@@ -83,6 +98,8 @@ public partial class RipDialog : Window
         if (screen is null) return;
         var fit = RipDialogLayout.Fit(screen.WorkingArea, screen.Scaling, Width);
         MaxHeight = fit.Height;
+        // Steps differ in height: the window keeps one size across them, unless the screen is too small.
+        MinHeight = Math.Min(MinHeight, fit.Height);
         Width = fit.Width;
         // Once it has shrunk to fit: centred over the player at its first size, it may hang off the screen.
         Dispatcher.UIThread.Post(() =>
@@ -100,6 +117,7 @@ public partial class RipDialog : Window
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
+        if (Vm is { } vm) vm.PropertyChanged -= OnStepChanged;
         Vm?.Dispose();
     }
 }

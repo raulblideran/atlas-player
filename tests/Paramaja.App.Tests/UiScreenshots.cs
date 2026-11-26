@@ -118,6 +118,36 @@ public class UiScreenshots
                 rip.Show();
                 Save(rip, folder, $"{id}-rip");
                 rip.Close();
+
+                // Every step of the rip window: a DVD's (MKV, then audio only) and a CD's.
+                var dvdVm = RipDialogTests.Dialog(r, RipDialogTests.Dvd);
+                var dvd = new RipDialog { DataContext = dvdVm };
+                dvd.Show();
+                foreach (var mode in new[] { 0, 1 })
+                {
+                    dvdVm.StepIndex = 0;
+                    dvdVm.DvdModeIndex = mode;
+                    for (var step = 0; step < dvdVm.Steps.Count; step++)
+                    {
+                        dvdVm.StepIndex = step;
+                        Dispatcher.UIThread.RunJobs();
+                        Save(dvd, folder, $"{id}-rip-dvd{(mode == 1 ? "-audio" : "")}-{step + 1}-{dvdVm.CurrentStep}");
+                    }
+                }
+                dvd.Close();
+                var cdVm = new ViewModels.RipDialogViewModel(r.Vm, [new OpticalDrive("/dev/sr0", "sr0", "Audio CD")], "/dev/sr0",
+                    _ => RipDialogTests.CdDrive(), flac: "/usr/bin/flac", online: false);
+                for (var i = 0; i < 200 && !cdVm.IsCd; i++) { Thread.Sleep(10); Dispatcher.UIThread.RunJobs(); }
+                var cd = new RipDialog { DataContext = cdVm };
+                cd.Show();
+                for (var step = 0; step < cdVm.Steps.Count; step++)
+                {
+                    cdVm.StepIndex = step;
+                    Dispatcher.UIThread.RunJobs();
+                    Save(cd, folder, $"{id}-rip-cd-{step + 1}-{cdVm.CurrentStep}");
+                }
+                cd.Close();
+                cdVm.Dispose();
             }
         }
         finally

@@ -86,6 +86,31 @@ public class PackagingTests
     }
 
     [Fact]
+    public void Qtgmc_comes_with_both_builds_where_the_ripper_looks()
+    {
+        var m = Manifest;
+        // Flatpak: VapourSynth's wheel, havsfunc r33 and the plugins QTGMC needs, in /app/lib/vapoursynth (Qtgmc.Find).
+        Assert.True(m.IndexOf("- name: vapoursynth", StringComparison.Ordinal) < m.IndexOf("- name: bestsource", StringComparison.Ordinal));
+        Assert.True(m.IndexOf("- name: ffmpeg", StringComparison.Ordinal) < m.IndexOf("- name: bestsource", StringComparison.Ordinal));
+        Assert.True(m.IndexOf("- name: bestsource", StringComparison.Ordinal) < m.IndexOf("- name: paramaja\n", StringComparison.Ordinal));
+        Assert.Contains("python3 -m zipfile -e vapoursynth.whl /app/lib/vapoursynth/python/", m);
+        Assert.Contains("havsfunc/r33/havsfunc.py", m);
+        foreach (var plugin in new[] { "libmvtools.so", "libvsznedi3.so", "libremovegrain.so", "nnedi3_weights.bin" })
+            Assert.Contains(plugin, m);
+        Assert.Contains("build/libbestsource.so /app/lib/vapoursynth/plugins/", m);
+        // Every file it fetches is pinned too.
+        var lines = m.Split('\n').Select(l => l.Trim()).ToList();
+        for (var i = 0; i < lines.Count; i++)
+            if (lines[i] == "- type: file")
+                Assert.StartsWith("sha256: ", lines[i + 2]);
+        // Windows: the same, in a "vapoursynth" folder next to Paramaja.exe, checked by the publish script.
+        var fetch = File.ReadAllText(Path.Combine(Root, "build", "fetch-libs.sh"));
+        Assert.Contains("VSDIR=\"$OUT/vapoursynth\"", fetch);
+        Assert.Matches("VS_WHEEL_SHA256=[0-9a-f]{64}", fetch);
+        Assert.Contains("BestSource.dll", File.ReadAllText(Path.Combine(Root, "build", "publish-win.sh")));
+    }
+
+    [Fact]
     public void Wrapper_launches_the_folder_the_app_is_published_to()
     {
         var wrapper = Read(Path.Combine("flatpak", "paramaja.sh"));

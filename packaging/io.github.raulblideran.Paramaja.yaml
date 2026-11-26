@@ -58,6 +58,9 @@ cleanup:
   - /bin/luajit*
   - '*.a'
   - '*.la'
+  # VapourSynth's headers were for building BestSource.
+  - /lib/vapoursynth/python/vapoursynth/include
+  - /lib/vapoursynth/python/vapoursynth/pkgconfig
 
 modules:
   # ---- mpv's X11 backend requires XPresent; the runtime does not ship it ---
@@ -371,6 +374,99 @@ modules:
           - src/Paramaja.Core/bin
           - src/Paramaja.Core/obj
           - tests
+
+  # ---- QTGMC, for DVD rips only (playback keeps BWDIF) --------------------
+  # VapourSynth's own Python module (the manylinux wheel: the core, its filters and vspipe), run
+  # by the runtime's python3; havsfunc r33 (its last release with QTGMC) and the scripts it
+  # imports; and the plugins QTGMC needs. mvtools, znedi3 and RemoveGrain are the builds
+  # VapourSynth's package index (vsrepo) lists, self-contained (libc and libstdc++ only);
+  # BestSource, which reads the title's copy, is built here against this FFmpeg rather than
+  # taken as its 80 MB prebuilt (FFmpeg linked in). Everything goes in /app/lib/vapoursynth,
+  # where the app looks (Paramaja.Core/Ripping/Dvd/Qtgmc.cs); its script loads the plugins by
+  # path, so nothing relies on autoloading.
+  - name: vapoursynth
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/vapoursynth/python/mvsfunc /app/lib/vapoursynth/plugins
+      - python3 -m zipfile -e vapoursynth.whl /app/lib/vapoursynth/python/
+      - rm -f /app/lib/vapoursynth/python/vapoursynth/*.pyi
+      - install -Dm644 havsfunc.py adjust.py -t /app/lib/vapoursynth/python/
+      - install -Dm644 mvsfunc.py -t /app/lib/vapoursynth/python/mvsfunc/
+      - install -Dm644 mvsfunc-init.py /app/lib/vapoursynth/python/mvsfunc/__init__.py
+      - install -Dm644 mvsfunc-metadata.py /app/lib/vapoursynth/python/mvsfunc/_metadata.py
+      - install -Dm755 mvtools/libmvtools.so znedi3/libvsznedi3.so removegrain/libremovegrain.so -t /app/lib/vapoursynth/plugins/
+      # znedi3 looks for its weights next to itself.
+      - install -Dm644 nnedi3_weights.bin -t /app/lib/vapoursynth/plugins/
+      - python3 -c "import sys; sys.path.insert(0, '/app/lib/vapoursynth/python'); import vapoursynth as vs; print(vs.core.version())"
+    sources:
+      - type: file
+        url: https://files.pythonhosted.org/packages/3c/30/55b464fe29960af3e8e8254eb236f5e3164c28a6ce66f9706f5d5567ddd4/vapoursynth-82-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+        sha256: 9bd85641d3655c06ff90c73042204fbcf6db7bd26f8ae9d60a7ee17acf534f2e
+        dest-filename: vapoursynth.whl
+      - type: file
+        url: https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/havsfunc/r33/havsfunc.py
+        sha256: 4da2839544b1ce9382db670b069dc358228251d147dad91f740a860840e04924
+      - type: file
+        url: https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/mvsfunc/865c7486ca860d323754ec4774bc4cca540a7076/mvsfunc/mvsfunc.py
+        sha256: 1adeb385d19bac1f8c541b655d1f98a38e18c9a0065d4483c25184c22908a984
+      - type: file
+        url: https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/mvsfunc/865c7486ca860d323754ec4774bc4cca540a7076/mvsfunc/__init__.py
+        sha256: a08e2bc2d1b255ffa373ef52a63506da6a926e72a4d115aaabe5e95272016d89
+        dest-filename: mvsfunc-init.py
+      - type: file
+        url: https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/mvsfunc/865c7486ca860d323754ec4774bc4cca540a7076/mvsfunc/_metadata.py
+        sha256: 654d75ba830a969d5940e1d6a18a7801a0a8b9860fd9aa85688f954ee0d5bd53
+        dest-filename: mvsfunc-metadata.py
+      - type: file
+        url: https://raw.githubusercontent.com/dubhatervapoursynth/vapoursynth-adjust/a3af7cb57cb37747b0667346375536e65b1fed17/adjust.py
+        sha256: 22b25995ef37e6d003c2999e51e80d1570376413db9067f703fe4fcef4600bfa
+      - type: file
+        url: https://raw.githubusercontent.com/dubhatervapoursynth/vapoursynth-nnedi3/82993ff21cf569776fc1a7e5bb60235c00bbeea3/src/nnedi3_weights.bin
+        sha256: 27f382430435bb7613deb1c52f3c79c300c9869812cfe29079432a9c82251d42
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/com.nodame.mvtools/v24/linux-glibc-x86_64/2024-09-30T17.05.16%2B00.00Z/MVTools-v24-linux-glibc-x86_64.zip
+        sha256: a3e96cad752d09f05109ff72e3072300be7fe195b3045c7cf70c53227038c834
+        strip-components: 0
+        dest: mvtools
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/xxx.abc.znedi3/3bd542a/linux-glibc-x86_64/2026-01-10T23.46.05%2B00.00Z/ZNEDI3-3bd542a-linux-glibc-x86_64.zip
+        sha256: 4d30d49cb57ad61c94d61f4b226eb281611b9ed58a8e49fef911f23aa01a58ae
+        strip-components: 0
+        dest: znedi3
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/com.vapoursynth.removegrainvs/git-89ca38a/linux-glibc-x86_64/2024-10-09T22.47.43%2B00.00Z/RemoveGrain-git-89ca38a-linux-glibc-x86_64.zip
+        sha256: 280774257c3d2385a832f2e6b3e594cdd6e4946456c059ef86fc263f7032e4be
+        strip-components: 0
+        dest: removegrain
+
+  # BestSource R23 (FFmpeg 9 and up), the plugin only: no AviSynth interface, no GPU decoding.
+  # Built with meson from its wheel (the SDK has none); libp2p, which its wrap would fetch from
+  # git HEAD, is pinned here instead.
+  - name: bestsource
+    buildsystem: simple
+    build-options:
+      env:
+        PYTHONPATH: /app/lib/vapoursynth/python
+    build-commands:
+      - python3 -m zipfile -e meson.whl meson-pkg
+      - cp -r subprojects/packagefiles/libp2p/. subprojects/libp2p/
+      - PYTHONPATH=$PWD/meson-pkg:$PYTHONPATH python3 -m mesonbuild.mesonmain setup build --prefix=/app --buildtype=release
+        --wrap-mode=nodownload -Denable_plugin=true -Denable_avisynth=false -Denable_gpu=disabled
+      - ninja -C build
+      - install -Dm755 build/libbestsource.so /app/lib/vapoursynth/plugins/libbestsource.so
+    sources:
+      - type: git
+        url: https://github.com/vapoursynth/bestsource.git
+        tag: R23
+        commit: bca32dac44794d93f3e580f9573c58c4a0e7671f
+      - type: git
+        url: https://github.com/sekrit-twc/libp2p.git
+        commit: 869fa993041f9f3af7d9ac8b10158920c6ddce66
+        dest: subprojects/libp2p
+      - type: file
+        url: https://files.pythonhosted.org/packages/57/99/36cd25f9598eef70db97577440a70a360af505f6f01c2338a18d1556079c/meson-1.12.1-py3-none-any.whl
+        sha256: 930bc7542cbd9f57009e182fd014eba48cf1a0180a7b9006d2d32d8f168d8b02
+        dest-filename: meson.whl
 
   # ---- the application (C# / Avalonia) -----------------------------------
   # Published self-contained, so the .NET runtime travels with the app rather

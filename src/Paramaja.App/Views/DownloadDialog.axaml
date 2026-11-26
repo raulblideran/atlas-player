@@ -22,7 +22,7 @@
         <TextBlock Classes="dialog" Text="Download Video" />
       </StackPanel>
       <TextBlock Classes="note" FontSize="13.5"
-                 Text="Paste a YouTube (or other site) link and its qualities appear. The video is saved to your Downloads folder with the best audio merged in, or choose the audio only." />
+                 Text="Paste a YouTube (or other video site) link to see the qualities on offer. The video is saved to your Downloads folder with the best audio track merged in, or you can save the audio only." />
       <TextBox x:Name="Input" Text="{Binding Url}" Watermark="https://youtube.com/watch?v=…" AcceptsReturn="False" />
       <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsChecking}" />
       <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"

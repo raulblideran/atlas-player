@@ -27,7 +27,10 @@ dotnet publish "$ROOT/src/Paramaja.App" -c Release -r win-x64 --self-contained t
 # A zip without these doesn't play anything (beta.2 and beta.3 shipped without them).
 for f in Paramaja.exe libmpv-2.dll paramaja_torrent.dll libvlc/libvlc.dll libvlc/libvlccore.dll \
          libvlc/plugins/access/libdvdnav_plugin.dll ffmpeg.exe ffprobe.exe yt-dlp.exe qjs.exe \
-         flac.exe libFLAC.dll libdvdread-8.dll libdvdcss-2.dll; do
+         flac.exe libFLAC.dll libdvdread-8.dll libdvdcss-2.dll \
+         vapoursynth/python.exe vapoursynth/Lib/site-packages/vapoursynth/vapoursynth.pyd vapoursynth/Lib/site-packages/havsfunc.py \
+         vapoursynth/plugins/libmvtools.dll vapoursynth/plugins/vsznedi3.dll vapoursynth/plugins/nnedi3_weights.bin \
+         vapoursynth/plugins/RemoveGrainVS.dll vapoursynth/plugins/BestSource.dll; do
   [ -f "$STAGE/$f" ] || { echo "::error::$f is missing from the published folder" >&2; exit 1; }
 done
 

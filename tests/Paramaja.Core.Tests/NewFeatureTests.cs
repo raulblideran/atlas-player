@@ -55,8 +55,8 @@ public class QuipTests
     [Fact]
     public void Includes_the_requested_lines()
     {
-        Assert.Contains("Big fast, many speed", BufferingQuips.All);
-        Assert.Contains("Bruney", BufferingQuips.All);
+        Assert.Contains("Big fast, many speed…", BufferingQuips.All);
+        Assert.Contains("Bruney…", BufferingQuips.All);
     }
 
     [Fact]

@@ -62,7 +62,10 @@ public sealed class RipLog
         L("Defeat audio cache      : Yes");
         L("Make use of C2 pointers : No");
         if (tracks.Count < toc.AudioTrackCount)
-            L($"Range                   : Selected tracks {string.Join(", ", tracks.Select(t => t.Tags.Number.ToString(inv)))} (no cue sheet)");
+            L($"Range                   : Selected tracks {string.Join(", ", tracks.Select(t => t.Tags.Number.ToString(inv)))}"
+              + (o.CueFor(false) ? " (cue sheet of these tracks)" : " (no cue sheet)"));
+        else if (!o.CueFor(true))
+            L("Range                   : Whole disc (no cue sheet)");
         L();
         var offsetText = source switch
         {

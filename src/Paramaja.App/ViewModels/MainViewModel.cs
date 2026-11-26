@@ -1295,10 +1295,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     // ---- Auto-hiding controls -------------------------------------------------------------
 
+    /// <summary>In a window the bars hide this long after the last activity.</summary>
     public static readonly TimeSpan ControlsHideDelay = TimeSpan.FromSeconds(2.5);
 
+    /// <summary>
+    /// In fullscreen the bars hide this long after the last activity, and the pointer this long
+    /// after it last moved, paused or not.
+    /// </summary>
+    public static readonly TimeSpan FullscreenHideDelay = TimeSpan.FromSeconds(2);
+
     /// <summary>In fullscreen the pointer hides this long after it last moved, paused or not.</summary>
-    public static readonly TimeSpan CursorHideDelay = TimeSpan.FromSeconds(3);
+    public static readonly TimeSpan CursorHideDelay = FullscreenHideDelay;
+
+    /// <summary>How long the bars wait before hiding, in a window or in fullscreen.</summary>
+    internal TimeSpan HideDelay => IsFullscreen ? FullscreenHideDelay : ControlsHideDelay;
     private DateTime _lastPointerMove = DateTime.UtcNow;
 
     /// <summary>
@@ -1336,7 +1346,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     partial void OnIsCursorHiddenChanged(bool value) => _player?.SetCursorHidden(value);
 
     /// <summary>
-    /// Whether the pointer is hidden. In fullscreen: 3 s after it last moved, whether the video
+    /// Whether the pointer is hidden. In fullscreen: 2 s after it last moved, whether the video
     /// plays or is paused, but never while a menu is open or the pointer is on the bars (or on
     /// the welcome screen); only moving it brings it back. In a window it goes with the controls.
     /// </summary>
@@ -1415,7 +1425,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (ControlsVisible && _player is { } p && p.State.Position != Position) ShowPosition();
         var keepVisible = IsIdle || IsPaused || IsPointerOverControls || IsResolving || IsBuffering || IsStartingStream || IsMenuOpen;
         if (keepVisible) ControlsVisible = true;
-        else if (utcNow - _lastActivity > ControlsHideDelay) ControlsVisible = false;
+        else if (utcNow - _lastActivity > HideDelay) ControlsVisible = false;
         UpdateCursor(utcNow);
     }
 

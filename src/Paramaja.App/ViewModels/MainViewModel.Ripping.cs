@@ -86,14 +86,16 @@ public sealed partial class MainViewModel
             }
         });
 
-    public Task StartDvdRipAsync(DvdInfo info, DvdRipOptions options) =>
+    public Task StartDvdRipAsync(DvdInfo info, DvdRipOptions options) => StartDvdRipAsync(info, [options]);
+
+    /// <summary>Rips a DVD's titles, one job each (or its VIDEO_TS folder), as one rip with one progress bar.</summary>
+    public Task StartDvdRipAsync(DvdInfo info, IReadOnlyList<DvdRipOptions> jobs) =>
         RunRipAsync("DVD", async (progress, ct) =>
         {
-            var r = options.Mode == DvdRipMode.Mkv
-                ? await DvdRipper.RemuxAsync(info, options, progress, ct)
-                : await DvdRipper.BackupAsync(info, options, progress, ct);
+            var r = await DvdRipper.RipAsync(info, jobs, progress, ct);
             var problems = r.Problems.Count(p => !p.Contains("left out", StringComparison.Ordinal));
-            return (r.Output, $"Saved to {r.Output}" + (problems == 0 ? "." : $": {problems} file(s) had unreadable parts (see its log)."));
+            var what = jobs.Count > 1 ? $"Ripped {jobs.Count} titles to {r.Output}" : $"Saved to {r.Output}";
+            return (r.Output, what + (problems == 0 ? "." : $": {problems} file(s) had unreadable parts (see its log)."));
         });
 
     private async Task RunRipAsync(string what, Func<IProgress<RipProgress>, CancellationToken, Task<(string Output, string Summary)>> rip)

@@ -34,6 +34,14 @@ public sealed record CdRipOptions
     public string? Flac { get; init; }
     /// <summary>The track numbers to rip; null for every audio track of the disc.</summary>
     public IReadOnlyList<int>? Tracks { get; init; }
+    /// <summary>
+    /// Write a cue sheet (of the tracks ripped); null writes one for a whole disc only, as a cue
+    /// sheet of one track says nothing its file doesn't.
+    /// </summary>
+    public bool? WriteCue { get; init; }
+
+    /// <summary>Whether this rip writes a cue sheet.</summary>
+    public bool CueFor(bool wholeDisc) => WriteCue ?? wholeDisc;
 }
 
 /// <summary>Where the read offset correction came from, as the log says it.</summary>
@@ -41,7 +49,7 @@ public enum OffsetSource { Manual, DriveList, Detected, Unknown }
 
 public sealed record CdTrackResult(TrackTags Tags, string File, int Sectors, int Pregap, TrackRead Read, AccurateRipResult AccurateRip);
 
-/// <param name="CuePath">Null for a rip of some of the tracks: a cue sheet of a few doesn't describe the disc.</param>
+/// <param name="CuePath">Null when no cue sheet was asked for (by default, a rip of some of the tracks).</param>
 public sealed record CdRipResult(string Folder, IReadOnlyList<CdTrackResult> Tracks, string LogPath, string? CuePath, int Score,
     int Offset, OffsetSource OffsetSource, bool GapsDetected)
 {
@@ -176,7 +184,7 @@ public sealed class CdRipper(HttpClient http, string cacheFolder)
 
             var baseName = RipNames.Safe($"{tags.AlbumArtist} - {tags.Album}");
             string? cuePath = null;
-            if (whole)
+            if (o.CueFor(whole))
             {
                 cuePath = RipNames.NewFile(folder, baseName, ".cue");
                 var comment = $"Paramaja {o.AppVersion}".Trim();

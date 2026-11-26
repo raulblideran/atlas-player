@@ -177,7 +177,7 @@ public class Prompt9RipDialogTests
         var vm = RipDialogTests.Dialog(r, RipDialogTests.Dvd);
         Assert.True(vm.ShowDecrypt);
         var folder = Directory.CreateDirectory(Path.Combine(r.Root, "CONCERT", "VIDEO_TS")).FullName;
-        vm.DvdModeIndex = 1;
+        vm.DvdModeIndex = 2;
         vm.UseDvdSource(folder);
         Assert.True(vm.IsFolderSource);
         Assert.False(vm.ShowDecrypt);
@@ -203,9 +203,12 @@ public class Prompt9RipDialogTests
         Assert.Equal(DvdVideo.X265, vm.DvdOptions()!.Video);
         Assert.Contains("50 frames a second", vm.MkvNote);
         Assert.True(vm.StartCommand.CanExecute(null));
-        // The VIDEO_TS copy has no video to encode.
+        // The VIDEO_TS copy has no video to encode, nor has an audio rip.
+        vm.DvdModeIndex = 2;
+        Assert.Equal(DvdVideo.Copy, vm.DvdOptions()!.Video);
         vm.DvdModeIndex = 1;
         Assert.Equal(DvdVideo.Copy, vm.DvdOptions()!.Video);
+        Assert.Equal(DvdRipMode.AudioOnly, vm.DvdOptions()!.Mode);
     }
 
     [Fact]
@@ -254,17 +257,28 @@ public class Prompt9RipDialogTests
         var vm = RipDialogTests.Dialog(r, RipDialogTests.Dvd);
         var w = new RipDialog { DataContext = vm };
         w.Show();
+        w.MinHeight = 0;
         w.MaxHeight = 360;
+        // The format step, the DVD's tallest: Source, Rip mode, Titles, Format.
+        vm.StepIndex = 3;
+        Assert.Equal(RipStep.DvdFormat, vm.CurrentStep);
         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         var form = w.FindControl<ScrollViewer>("Form")!;
-        var start = w.FindControl<Button>("StartButton")!;
-        Assert.DoesNotContain(form, start.GetVisualAncestors());
+        var next = w.FindControl<Button>("NextButton")!;
+        Assert.DoesNotContain(form, next.GetVisualAncestors());
         Assert.True(w.ClientSize.Height <= 360);
-        var bottom = start.TranslatePoint(new Point(0, start.Bounds.Height), w)!.Value.Y;
-        Assert.True(bottom <= w.ClientSize.Height, $"the Rip button ends at {bottom}, below the window's {w.ClientSize.Height}");
+        var bottom = next.TranslatePoint(new Point(0, next.Bounds.Height), w)!.Value.Y;
+        Assert.True(bottom <= w.ClientSize.Height, $"the Next button ends at {bottom}, below the window's {w.ClientSize.Height}");
         Assert.True(form.Extent.Height > form.Viewport.Height);
-        Assert.True(w.FindControl<ComboBox>("VideoCodec")!.IsVisible);
+        Assert.True(w.FindControl<ComboBox>("VideoCodec")!.IsEffectivelyVisible);
         Assert.NotNull(w.CaptureRenderedFrame());
+        // The last step: the Rip button, in view too.
+        vm.NextCommand.Execute(null);
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        var start = w.FindControl<Button>("StartButton")!;
+        Assert.True(start.IsEffectivelyVisible);
+        Assert.False(next.IsEffectivelyVisible);
+        Assert.True(start.TranslatePoint(new Point(0, start.Bounds.Height), w)!.Value.Y <= w.ClientSize.Height);
         w.Close();
     }
 
