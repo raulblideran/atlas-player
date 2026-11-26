@@ -92,7 +92,10 @@ public class PackagingTests
         // Flatpak: VapourSynth's wheel, havsfunc r33 and the plugins QTGMC needs, in /app/lib/vapoursynth (Qtgmc.Find).
         Assert.True(m.IndexOf("- name: vapoursynth", StringComparison.Ordinal) < m.IndexOf("- name: bestsource", StringComparison.Ordinal));
         Assert.True(m.IndexOf("- name: ffmpeg", StringComparison.Ordinal) < m.IndexOf("- name: bestsource", StringComparison.Ordinal));
-        Assert.True(m.IndexOf("- name: bestsource", StringComparison.Ordinal) < m.IndexOf("- name: paramaja\n", StringComparison.Ordinal));
+        // The app's own module, whatever the checkout's line endings (CRLF on Windows).
+        var app = Regex.Match(m, @"^  - name: paramaja\r?$", RegexOptions.Multiline);
+        Assert.True(app.Success);
+        Assert.True(m.IndexOf("- name: bestsource", StringComparison.Ordinal) < app.Index);
         Assert.Contains("python3 -m zipfile -e vapoursynth.whl /app/lib/vapoursynth/python/", m);
         Assert.Contains("havsfunc/r33/havsfunc.py", m);
         foreach (var plugin in new[] { "libmvtools.so", "libvsznedi3.so", "libremovegrain.so", "nnedi3_weights.bin" })
