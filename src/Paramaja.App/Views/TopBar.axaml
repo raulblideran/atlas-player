@@ -5,7 +5,8 @@
                  x:Class="Paramaja.App.Views.TopBar"
                  x:DataType="vm:MainViewModel"
                  Title="Paramaja title" Height="72">
-  <Border Background="{DynamicResource ThemeBarScrimTop}" BorderBrush="{DynamicResource ThemeBarEdge}" BorderThickness="0,0,0,1"
+  <!-- Its height and padding follow the theme (TopBar.axaml.cs): room for a fade, or a solid bar's snug fit -->
+  <Border x:Name="Ground" Background="{DynamicResource ThemeBarScrimTop}" BorderBrush="{DynamicResource ThemeBarEdge}" BorderThickness="0,0,0,1"
           Padding="24,14,24,18">
     <Grid ColumnDefinitions="*,Auto,Auto">
       <StackPanel Spacing="2">

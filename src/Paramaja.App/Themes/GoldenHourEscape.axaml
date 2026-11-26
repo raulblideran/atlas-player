@@ -24,17 +24,17 @@
   <SolidColorBrush x:Key="ThemeOnAccent" Color="#1E0E0A" />
   <SolidColorBrush x:Key="ThemeHighlight" Color="#F9C46B" />
   <SolidColorBrush x:Key="ThemePositive" Color="#F6A6B8" />
-  <!-- The bars over the video: a light fade into the picture (75% at the edge), no line -->
+  <!-- The bars over the video: they fade into the picture, with no line -->
   <SolidColorBrush x:Key="ThemeBarText" Color="#F2F4F6" />
   <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimTop">
-    <GradientStop Offset="0" Color="#BF101724" />
-    <GradientStop Offset="0.5" Color="#66101724" />
+    <GradientStop Offset="0" Color="#F2101724" />
+    <GradientStop Offset="0.6" Color="#B3101724" />
     <GradientStop Offset="1" Color="#00101724" />
   </LinearGradientBrush>
   <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%" x:Key="ThemeBarScrimBottom">
     <GradientStop Offset="0" Color="#00101724" />
-    <GradientStop Offset="0.4" Color="#66101724" />
-    <GradientStop Offset="1" Color="#BF101724" />
+    <GradientStop Offset="0.35" Color="#B3101724" />
+    <GradientStop Offset="1" Color="#F2101724" />
   </LinearGradientBrush>
   <SolidColorBrush x:Key="ThemeBarEdge" Color="#00000000" />
   <SolidColorBrush x:Key="ThemeBarButtonHover" Color="#33FFFFFF" />

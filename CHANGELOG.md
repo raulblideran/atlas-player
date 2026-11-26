@@ -3,6 +3,20 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.10 — 2026-11-26
+
+- Describe this release
+
+## 2.0.0-beta.10 — 2026-11-26
+
+A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
+Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
+
+- **The dark themes' bars fade as they did in beta.7.** Beta.9's lighter fade washed out the
+  themes' colours.
+- **The light themes' title bar is shorter:** 56 px instead of 72. It's solid there, so it
+  doesn't need the room a fade takes, and it covers less of the picture.
+
 ## 2.0.0-beta.9 — 2026-11-26
 
 - Describe this release

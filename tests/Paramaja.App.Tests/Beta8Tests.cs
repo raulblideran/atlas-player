@@ -18,7 +18,7 @@ public class Beta8Tests
     private static ThemeChoice Theme(Rig r, string id) => r.Vm.ThemeChoices.Single(c => c.Id == id);
 
     [AvaloniaFact]
-    public void Light_themes_have_solid_bars_dark_ones_a_light_fade_and_both_read()
+    public void Light_themes_have_solid_bars_dark_ones_a_fade_and_both_read()
     {
         static Color Over(Color top, Color under)
         {
@@ -51,7 +51,7 @@ public class Beta8Tests
                 }
                 var stops = Assert.IsAssignableFrom<IGradientBrush>(d[key]).GradientStops;
                 var densest = stops.MaxBy(g => g.Color.A)!.Color;
-                Assert.InRange(densest.A, 0x80, 0xBF); // a light fade: well under 2.0.0-beta.7's 95%
+                Assert.InRange(densest.A, 0x80, 0xF2); // the fade, as strong as 2.0.0-beta.7's at most
                 Assert.Equal(0, stops.MinBy(g => g.Color.A)!.Color.A); // gone by the picture's side
                 return Over(densest, Color.FromRgb(0x80, 0x80, 0x80));
             }
@@ -98,6 +98,34 @@ public class Beta8Tests
             Assert.Equal(want, ((ISolidColorBrush)play.Foreground!).Color);
             Assert.Equal(want, ((ISolidColorBrush)glyph.Foreground!).Color);
             bar.Close();
+        }
+        finally { ThemeService.Apply(PlayerSettings.DefaultTheme); }
+    }
+
+    [AvaloniaTheory]
+    [InlineData("mpc-hc", TopBar.SolidHeight)]
+    [InlineData("paramaja-light", TopBar.SolidHeight)]
+    [InlineData("graphite", TopBar.FadingHeight)]
+    public void A_light_themes_top_bar_is_shorter_and_still_fits_the_title_and_status(string theme, double height)
+    {
+        try
+        {
+            ThemeService.Apply(PlayerSettings.DefaultTheme);
+            using var r = new Rig();
+            r.Vm.IsIdle = false;
+            r.Vm.MediaTitle = "Scream Live, Cape Town (1997).mp4";
+            var top = new TopBar { DataContext = r.Vm, Width = 1280 };
+            top.Show();
+            ThemeService.Apply(theme); // follows a switch while it's up
+            Dispatcher.UIThread.RunJobs();
+            Assert.Equal(height, TopBar.BarHeight);
+            Assert.Equal(height, top.Height);
+            var ground = top.FindControl<Border>("Ground")!;
+            var content = (Control)ground.Child!;
+            content.Measure(Size.Infinity);
+            var needs = content.DesiredSize.Height + ground.Padding.Top + ground.Padding.Bottom + ground.BorderThickness.Bottom;
+            Assert.True(needs <= height, $"{theme}: the bar needs {needs}, has {height}");
+            top.Close();
         }
         finally { ThemeService.Apply(PlayerSettings.DefaultTheme); }
     }
