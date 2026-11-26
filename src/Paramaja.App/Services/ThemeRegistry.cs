@@ -62,7 +62,7 @@ public static class ThemeRegistry
         "ThemeBg", "ThemeSurface", "ThemeRaised", "ThemeHover", "ThemeStroke", "ThemeNavSelected", "ThemeFlyout",
         "ThemeText", "ThemeTextMuted",
         "ThemeAccent", "ThemeAccentHover", "ThemeOnAccent", "ThemeHighlight", "ThemePositive",
-        "ThemeBarText", "ThemeBarScrimTop", "ThemeBarScrimBottom", "ThemeBarButtonHover", "ThemeBarButtonPressed",
+        "ThemeBarText", "ThemeBarScrimTop", "ThemeBarScrimBottom", "ThemeBarEdge", "ThemeBarButtonHover", "ThemeBarButtonPressed",
         "ThemePlay", "ThemePlayHover", "ThemeOnPlay",
         "ThemeBadge", "ThemeBadgeHdr", "ThemeBadgeText",
         "ThemeSeekTrack", "ThemeSeekBuffered", "ThemeSeekProgress", "ThemeSeekThumb", "ThemeSeekLabel", "ThemeSeekLabelText",

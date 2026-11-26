@@ -18,7 +18,7 @@ public class Beta8Tests
     private static ThemeChoice Theme(Rig r, string id) => r.Vm.ThemeChoices.Single(c => c.Id == id);
 
     [AvaloniaFact]
-    public void Every_theme_has_solid_bars_with_readable_text_and_play()
+    public void Light_themes_have_solid_bars_dark_ones_a_light_fade_and_both_read()
     {
         static Color Over(Color top, Color under)
         {
@@ -40,12 +40,25 @@ public class Beta8Tests
         {
             var d = ThemeService.Load(theme);
             Color C(string key) => Assert.IsAssignableFrom<ISolidColorBrush>(d[key]).Color;
-            foreach (var ground in new[] { "ThemeBarScrimTop", "ThemeBarScrimBottom" })
+            // Where the bar's ground is densest, over a mid-grey picture (a fade's text sits there).
+            Color Ground(string key)
             {
-                Assert.Equal(255, C(ground).A); // no fade into the picture
-                Assert.True(Contrast(C("ThemeBarText"), C(ground)) >= 4.5, $"{theme.Id}: bar text on {ground}");
+                if (theme.Variant == Avalonia.Styling.ThemeVariant.Light)
+                {
+                    var solid = C(key);
+                    Assert.Equal(255, solid.A); // light themes: no white haze over the picture
+                    return solid;
+                }
+                var stops = Assert.IsAssignableFrom<IGradientBrush>(d[key]).GradientStops;
+                var densest = stops.MaxBy(g => g.Color.A)!.Color;
+                Assert.InRange(densest.A, 0x80, 0xBF); // a light fade: well under 2.0.0-beta.7's 95%
+                Assert.Equal(0, stops.MinBy(g => g.Color.A)!.Color.A); // gone by the picture's side
+                return Over(densest, Color.FromRgb(0x80, 0x80, 0x80));
             }
-            var bar = C("ThemeBarScrimBottom");
+            Assert.Equal(theme.Variant == Avalonia.Styling.ThemeVariant.Light, C("ThemeBarEdge").A == 255); // the line only where the bar is solid
+            foreach (var ground in new[] { "ThemeBarScrimTop", "ThemeBarScrimBottom" })
+                Assert.True(Contrast(C("ThemeBarText"), Ground(ground)) >= 4.5, $"{theme.Id}: bar text on {ground}");
+            var bar = Ground("ThemeBarScrimBottom");
             var badge = Over(C("ThemeBadge"), bar);
             Assert.True(Contrast(C("ThemeBadgeText"), badge) >= 4.5, $"{theme.Id}: badge text");
             foreach (var ground in new[] { "ThemePlay", "ThemePlayHover" })

@@ -3,6 +3,21 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.9 — 2026-11-26
+
+- Describe this release
+
+## 2.0.0-beta.9 — 2026-11-26
+
+A **beta** of 2.0.0: the new look is finished and was tried on Linux, but not yet on Windows.
+Please report anything that looks or works wrong there; 2.0.0 follows once it's been tried.
+
+- **The dark themes' bars fade into the picture again, much more lightly.** The fade is now 75%
+  at the window's edge, down from 95%, and 40% halfway, down from 70%, so far less of the picture
+  is dimmed. There's no line between the bar and the picture.
+  The light themes (Paramaja Light, MPC-HC and Miami Marina) keep beta.8's solid bars with a
+  thin line, so there's no white haze over the video.
+
 ## 2.0.0-beta.8 — 2026-11-26
 
 - Describe this release

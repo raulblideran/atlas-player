@@ -24,10 +24,11 @@
   <SolidColorBrush x:Key="ThemeOnAccent" Color="#FFFFFF" />
   <SolidColorBrush x:Key="ThemeHighlight" Color="#7A2C90" />
   <SolidColorBrush x:Key="ThemePositive" Color="#3B7A18" />
-  <!-- The bars over the video: solid grounds (a line in ThemeStroke parts them from the picture) -->
+  <!-- The bars over the video: solid grounds, a line in ThemeBarEdge parting them from the picture -->
   <SolidColorBrush x:Key="ThemeBarText" Color="#1F1726" />
   <SolidColorBrush x:Key="ThemeBarScrimTop" Color="#F4F0F6" />
   <SolidColorBrush x:Key="ThemeBarScrimBottom" Color="#F4F0F6" />
+  <SolidColorBrush x:Key="ThemeBarEdge" Color="#DCD1E3" />
   <SolidColorBrush x:Key="ThemeBarButtonHover" Color="#1F1F1726" />
   <SolidColorBrush x:Key="ThemeBarButtonPressed" Color="#55843C9A" />
   <!-- Play, the bar's main button: its ground, hovered, and its glyph -->
