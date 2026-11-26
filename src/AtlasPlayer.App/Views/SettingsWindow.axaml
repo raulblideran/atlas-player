@@ -1,0 +1,488 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AtlasPlayer.App.ViewModels"
+        xmlns:c="using:AtlasPlayer.App.Controls"
+        xmlns:v="using:AtlasPlayer.App.Views"
+        x:Class="AtlasPlayer.App.Views.SettingsWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Settings — Atlas Player" Icon="/Assets/atlas-player.ico"
+        Width="980" Height="700" MinWidth="720" MinHeight="460"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
+  <!-- Pages in the sidebar; each page is groups of rows (Border.rows), a row being what it is, what it
+       does, and its control (SettingRow). Every switch is named by what it does when on. -->
+  <Panel>
+    <Border Width="268" HorizontalAlignment="Left" Background="{DynamicResource ThemeBg}"
+            BorderBrush="{DynamicResource ThemeStroke}" BorderThickness="0,0,1,0" />
+    <TabControl Classes="nav" TabStripPlacement="Left">
+
+      <!-- ===================================================================== Appearance -->
+      <TabItem x:Name="InterfaceTab" Header="Appearance" Tag="{StaticResource IconPalette}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Appearance" />
+
+            <TextBlock Classes="group" Text="Theme" />
+            <ListBox x:Name="ThemePicker" Classes="themes" ItemsSource="{Binding ThemeChoices}" SelectedItem="{Binding SelectedTheme}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ThemeChoice">
+                  <Border Width="156" Height="92" Background="{Binding Background}" CornerRadius="{Binding Corners}"
+                          BorderBrush="#33808080" BorderThickness="1"
+                          ToolTip.Tip="{Binding Description}" AutomationProperties.Name="{Binding Name}">
+                    <Grid RowDefinitions="*,Auto" Margin="12,10">
+                      <TextBlock Text="{Binding Name}" Foreground="{Binding Title}" FontFamily="{Binding HeadingFont}"
+                                 FontWeight="{Binding HeadingWeight}" FontSize="15" TextWrapping="Wrap" />
+                      <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5">
+                        <Border Width="26" Height="10" CornerRadius="5" Background="{Binding Accent}" />
+                        <Border Width="10" Height="10" CornerRadius="5" Background="{Binding Highlight}" />
+                        <Border Width="10" Height="10" CornerRadius="5" Background="{Binding Positive}" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock Classes="note" Text="{Binding ThemeDescription}" />
+
+            <TextBlock Classes="group" Text="Controls bar" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Layout" Description="{Binding BarLayoutText}">
+                  <ComboBox x:Name="BarLayout" SelectedIndex="{Binding BarLayoutIndex}" Width="220">
+                    <ComboBoxItem Content="Simple (default)" />
+                    <ComboBoxItem Content="Everything" />
+                    <ComboBoxItem Content="MPC-HC" />
+                    <ComboBoxItem Content="Custom" />
+                  </ComboBox>
+                </c:SettingRow>
+                <c:SettingRow Classes="stack" Title="Arrange the bar"
+                              Description="Drag a piece to where you want it on the bar, or off it. A button shows only where it applies, like the chapter buttons with chapters.">
+                  <v:BarEditor x:Name="BarEditor" Margin="0,8,0,0" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Text" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Interface font"
+                              Description="The font of every window, menu and bar. Titles follow it too, except in themes with a title font of their own.">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox x:Name="UiFont" ItemsSource="{Binding UiFonts}" SelectedItem="{Binding UiFontChoice}" Width="240"
+                              MaxDropDownHeight="360" />
+                    <Button x:Name="ResetUiFont" Classes="ghost" Content="Default" Command="{Binding ResetUiFontCommand}"
+                            ToolTip.Tip="Back to Inter, Atlas Player's own font" />
+                  </StackPanel>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Playback -->
+      <TabItem x:Name="PlaybackTab" Header="Playback" Tag="{StaticResource IconPlayCircle}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Playback" />
+
+            <TextBlock Classes="group" Text="Seeking" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Arrow keys jump by" Description="Left and right go back and forward this many seconds.">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumericUpDown x:Name="SeekSecondsBox" Value="{Binding SeekSeconds}" Minimum="1" Maximum="600" Increment="1" FormatString="0" Width="130" />
+                    <TextBlock Text="seconds" VerticalAlignment="Center" Classes="muted" />
+                  </StackPanel>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Screenshots" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Screenshots folder"
+                              Description="S saves the picture, Shift+S with the subtitles: a lossless PNG at the video's own resolution (16-bit for HDR and 10-bit video), in the Screenshots folder next to the app.">
+                  <Button Classes="ghost" Content="Open folder" Command="{Binding OpenScreenshotsFolderCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Video -->
+      <TabItem x:Name="VideoTab" Header="Video" Tag="{StaticResource IconVideo}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Video" />
+
+            <TextBlock Classes="group" Text="The video playing now" />
+            <TextBlock Classes="note" IsVisible="{Binding !HasVideoSwitches}"
+                       Text="Nothing to change for what's playing. An interlaced video (TV, DVD, tape) gets a deinterlacing switch here, and one the graphics card decodes a hardware decoding switch. Both are decided for each video, and switched for that video only." />
+            <Border Classes="rows" IsVisible="{Binding HasVideoSwitches}">
+              <StackPanel>
+                <StackPanel x:Name="DeinterlaceOptions" IsVisible="{Binding IsInterlacedVideo}">
+                  <c:SettingRow Title="Deinterlace (BWDIF)" Description="{Binding DeinterlaceTip}">
+                    <ToggleSwitch x:Name="DeinterlaceSwitch" IsChecked="{Binding Deinterlacing}" />
+                  </c:SettingRow>
+                </StackPanel>
+                <StackPanel x:Name="HardwareOptions" IsVisible="{Binding HardwareDecodingApplies}">
+                  <c:SettingRow Title="Hardware decoding"
+                                Description="The graphics card decodes this video. On by itself for HEVC and AV1, and for anything 1080p and up. Off: the processor does it.">
+                    <ToggleSwitch x:Name="HardwareSwitch" IsChecked="{Binding HardwareDecoding}" />
+                  </c:SettingRow>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" IsVisible="{Binding HasVideoSwitches}"
+                       Text="Interlaced video is deinterlaced by itself: each field becomes a frame, so 50i plays as 50p. D switches it while a video plays." />
+
+            <TextBlock Classes="group" Text="Picture quality" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Rendering quality" Description="{Binding RenderProfileText}">
+                  <ComboBox x:Name="RenderQuality" SelectedIndex="{Binding RenderQualityIndex}" Width="220">
+                    <ComboBoxItem Content="Auto" />
+                    <ComboBoxItem Content="High" />
+                    <ComboBoxItem Content="Balanced (default)" />
+                    <ComboBoxItem Content="Fast" />
+                  </ComboBox>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0"
+                       Text="High is the sharpest and needs a strong graphics card for 4K. Balanced is nearly as sharp for far less work. Fast is the lightest, for laptops and older cards. Auto picks High below 4K and Balanced for 4K, and switches to Fast by itself if frames keep dropping. If 4K stutters while 1080p is fine, choose Balanced or Fast." />
+
+            <TextBlock Classes="group" Text="Smoothness" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Time frames to the display"
+                              Description="Can be a little smoother when the monitor's refresh rate suits the video, but stutters if the rate is wrong. Off (default): frames follow the audio clock, which nothing upsets.">
+                  <ToggleSwitch x:Name="SyncToDisplay" IsChecked="{Binding SyncToDisplay}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Display refresh rate" Description="The rate frames are timed for." IsVisible="{Binding SyncToDisplay}">
+                  <ComboBox x:Name="DisplayFps" SelectedIndex="{Binding DisplayFpsIndex}" Width="240">
+                    <ComboBoxItem Content="The monitor's own (default)" />
+                    <ComboBoxItem Content="60 Hz" />
+                    <ComboBoxItem Content="50 Hz" />
+                    <ComboBoxItem Content="75 Hz" />
+                    <ComboBoxItem Content="120 Hz" />
+                    <ComboBoxItem Content="144 Hz" />
+                  </ComboBox>
+                </c:SettingRow>
+                <c:SettingRow Title="Use the high-performance graphics card" IsVisible="{Binding IsWindows}"
+                              Description="For laptops with two: Windows otherwise gives apps the power-saving one, which can be too slow for 4K or a high refresh rate. Applies from the next start.">
+                  <ToggleSwitch x:Name="HighPerformanceGpu" IsChecked="{Binding PreferHighPerformanceGpu}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="HDR" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="HDR video" Description="{Binding HdrStatusText}">
+                  <ComboBox x:Name="HdrMode" SelectedIndex="{Binding HdrModeIndex}" Width="220">
+                    <ComboBoxItem Content="Auto (default)" />
+                    <ComboBoxItem Content="Always convert to SDR" />
+                    <ComboBoxItem Content="Always send as HDR" />
+                  </ComboBox>
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0"
+                       Text="Auto sends HDR video as it is (passthrough) to a screen in HDR mode, and converts it to SDR (tonemapping) for any other." />
+
+            <TextBlock Classes="group" Text="Converting HDR to SDR" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Tonemapping curve"
+                              Description="mobius (default) keeps colours exact and softens only the highlights. spline is balanced, bt.2446a brighter, bt.2390 the ITU reference, hable filmic.">
+                  <ComboBox x:Name="ToneMappingCurve" Width="160" ItemsSource="{Binding ToneMappingCurves}" SelectedItem="{Binding ToneMapping}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Adapt to each scene"
+                              Description="Measures every frame's brightness. Off: uses the brightness the video declares once for all of it.">
+                  <ToggleSwitch x:Name="HdrDynamicPeak" IsChecked="{Binding HdrDynamicPeak}" />
+                </c:SettingRow>
+                <c:SettingRow Title="{Binding HdrContrastRecovery, StringFormat='Highlight detail: {0:0.00}'}"
+                              Description="Brings back fine detail the conversion flattens in bright areas. 0 is off.">
+                  <Slider x:Name="HdrContrastRecovery" Minimum="0" Maximum="1" Value="{Binding HdrContrastRecovery}" Width="220" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="These apply only while HDR is converted. H switches between converting and passthrough while a video plays." />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Audio -->
+      <TabItem x:Name="AudioTab" Header="Audio" Tag="{StaticResource IconAudio}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Audio" />
+
+            <TextBlock Classes="group" Text="Output" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Exclusive output (bit-perfect)" IsVisible="{Binding IsWindows}"
+                              Description="The player has the audio device to itself, so each file plays at its own rate, up to 192 kHz for DSD and SACDs. Other apps go silent meanwhile. Discs always play shared.">
+                  <ToggleSwitch x:Name="ExclusiveSwitch" IsChecked="{Binding ExclusiveAudio}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Passthrough to an AV receiver"
+                              Description="Sends Dolby and DTS untouched, for the receiver to decode. Such audio can't be downmixed or evened out.">
+                  <ToggleSwitch x:Name="PassthroughSwitch" IsChecked="{Binding AudioPassthrough}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Channels and loudness" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Downmix surround to stereo"
+                              Description="For 5.1 and 7.1 sources only. Off (default): every channel plays.">
+                  <ToggleSwitch x:Name="DownmixSwitch" IsChecked="{Binding DownmixToStereo}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Even out loud and quiet parts"
+                              Description="Dynamic normalization, for late nights. Off (default): the original dynamics.">
+                  <ToggleSwitch x:Name="NormalizeSwitch" IsChecked="{Binding NormalizeAudio}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0"
+                       Text="With these off the audio plays exactly as recorded, at its own sample rate (DSD and SACDs as 192 kHz PCM). For a stereo video the audio menu can also play just the left or right channel." />
+
+            <TextBlock Classes="group" Text="Language" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Preferred audio languages"
+                              Description="Language codes, most wanted first. Empty: the file's default track, a stereo one where there is one.">
+                  <TextBox x:Name="AudioLanguages" Text="{Binding PreferredAudioLanguages}" Watermark="e.g. jpn,eng" Width="200" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Subtitles -->
+      <TabItem x:Name="SubtitlesTab" Header="Subtitles" Tag="{StaticResource IconSubtitles}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Subtitles" />
+
+            <TextBlock Classes="group" Text="Choosing subtitles" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Load subtitle files next to the video"
+                              Description="Files named like the video. Off: only the subtitles inside it.">
+                  <ToggleSwitch x:Name="AutoLoadSubtitles" IsChecked="{Binding AutoLoadExternalSubtitles}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Preferred subtitle languages" Description="Language codes, most wanted first.">
+                  <TextBox x:Name="SubtitleLanguages" Text="{Binding PreferredSubtitleLanguages}" Watermark="e.g. eng,spa" Width="200" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
+            <TextBlock Classes="group" Text="Look" />
+            <Border Classes="rows">
+              <StackPanel>
+                <Border Padding="22,16,22,12">
+                  <c:SubtitlePreview x:Name="SubtitlePreview" Height="96"
+                                     FontName="{Binding SubtitlePreviewFont}" IsBold="{Binding SubtitleBold}" TextColor="{Binding SubtitleColor}"
+                                     OutlineColor="{Binding SubtitleBorderColor}" Outline="{Binding SubtitleBorderSize}" Shadow="{Binding SubtitleShadow}"
+                                     HasBox="{Binding SubtitleBackground}" BoxOpacity="{Binding SubtitleBackgroundOpacity}" Scale="{Binding SubtitleScale}" />
+                </Border>
+                <c:SettingRow Title="Font">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <ComboBox x:Name="SubtitleFont" ItemsSource="{Binding SubtitleFonts}" SelectedItem="{Binding SubtitleFontChoice}" Width="240"
+                              MaxDropDownHeight="360" />
+                    <CheckBox x:Name="SubtitleBold" Content="Bold" IsChecked="{Binding SubtitleBold}" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="{Binding SubtitleSizeText}">
+                  <Slider x:Name="SubtitleSize" Minimum="0.5" Maximum="2.5" Value="{Binding SubtitleScale}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Text colour">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox x:Name="SubtitleColor" ItemsSource="{Binding SubtitleColors}" SelectedItem="{Binding SubtitleColorChoice}" Width="170"
+                              PlaceholderText="Custom">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MainViewModel+ColorChoice">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="#80808080" BorderThickness="1" />
+                            <TextBlock Text="{Binding Name}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding SubtitleColor}" Width="96" ToolTip.Tip="Any colour, as #RRGGBB" AutomationProperties.Name="Text colour code" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Outline colour">
+                  <StackPanel Orientation="Horizontal" Spacing="10">
+                    <ComboBox x:Name="SubtitleBorderColor" ItemsSource="{Binding SubtitleBorderColors}" SelectedItem="{Binding SubtitleBorderColorChoice}"
+                              Width="170" PlaceholderText="Custom">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MainViewModel+ColorChoice">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="14" Height="14" CornerRadius="3" Background="{Binding Brush}" BorderBrush="#80808080" BorderThickness="1" />
+                            <TextBlock Text="{Binding Name}" />
+                          </StackPanel>
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBox Text="{Binding SubtitleBorderColor}" Width="96" ToolTip.Tip="Any colour, as #RRGGBB" AutomationProperties.Name="Outline colour code" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Outline thickness">
+                  <Slider x:Name="SubtitleOutline" Minimum="0" Maximum="6" Value="{Binding SubtitleBorderSize}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Shadow">
+                  <Slider x:Name="SubtitleShadow" Minimum="0" Maximum="4" Value="{Binding SubtitleShadow}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Box behind the text" Description="Like TV subtitles. The slider sets how dark the box is.">
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Slider Minimum="0.1" Maximum="1" Value="{Binding SubtitleBackgroundOpacity}" Width="120" IsEnabled="{Binding SubtitleBackground}"
+                            VerticalAlignment="Center" AutomationProperties.Name="Box darkness" />
+                    <ToggleSwitch x:Name="SubtitleBackground" IsChecked="{Binding SubtitleBackground}" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Height" Description="0 is the bottom. Raise them above a letterbox or burnt-in captions.">
+                  <Slider x:Name="SubtitleRaise" Minimum="0" Maximum="40" Value="{Binding SubtitleRaise}" Width="240" />
+                </c:SettingRow>
+                <c:SettingRow Title="Restyle styled subtitles (ASS)"
+                              Description="ASS subtitles, common for anime, have their own fonts and colours. Off (default): they keep them.">
+                  <ToggleSwitch x:Name="SubtitleStyleAss" IsChecked="{Binding SubtitleStyleAss}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <Grid ColumnDefinitions="*,Auto" Margin="2,10,0,0" ColumnSpacing="12">
+              <TextBlock Classes="note" Text="{Binding SubtitleLookText}" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Classes="ghost" Content="Back to the default look" Command="{Binding ResetSubtitleStyleCommand}" />
+            </Grid>
+            <TextBlock Classes="note" Margin="2,10,0,0"
+                       Text="The look applies to text subtitles (SRT, WebVTT, embedded text) at once, the playing video too. Picture subtitles (DVD, Blu-ray, PGS, VobSub) can't be restyled; on files their size still changes." />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Streaming -->
+      <TabItem x:Name="StreamingTab" Header="Streaming and downloads" Tag="{StaticResource IconWeb}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Streaming and downloads" />
+
+            <TextBlock Classes="group" Text="YouTube and other sites" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Starting quality"
+                              Description="YouTube videos start in this quality; other sites play their best. The video menu changes it for one video.">
+                  <ComboBox x:Name="StreamQualityDefault" SelectedIndex="{Binding StreamQualityIndex}" Width="220">
+                    <ComboBoxItem Content="Best available (default)" />
+                    <ComboBoxItem Content="Up to 2160p (4K)" />
+                    <ComboBoxItem Content="Up to 1440p" />
+                    <ComboBoxItem Content="Up to 1080p" />
+                    <ComboBoxItem Content="Up to 720p" />
+                    <ComboBoxItem Content="Up to 480p" />
+                    <ComboBoxItem Content="Up to 360p" />
+                  </ComboBox>
+                </c:SettingRow>
+                <c:SettingRow Title="YouTube support (yt-dlp)"
+                              Description="Plays links from YouTube and about 1,800 other sites. Sites change often: if one stops playing, update.">
+                  <Button x:Name="UpdateYtDlpButton" Classes="ghost" Content="Update" Command="{Binding UpdateYtDlpCommand}" IsEnabled="{Binding HasYtDlp}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Downloads folder" Description="Where Download Video saves.">
+                  <Button Classes="ghost" Content="Open folder" Command="{Binding OpenDownloadsFolderCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding YtDlpStatus}"
+                       IsVisible="{Binding YtDlpStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Backup and logs -->
+      <TabItem x:Name="DeveloperTab" Header="Backup and logs" Tag="{StaticResource IconWrench}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Backup and logs" />
+
+            <TextBlock Classes="group" Text="Settings file" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Export settings" Description="Every setting in one file, to take to another install or PC.">
+                  <Button x:Name="ExportSettingsButton" Classes="ghost" Content="Export…" Click="OnExportSettings" />
+                </c:SettingRow>
+                <c:SettingRow Title="Import settings"
+                              Description="Or drop the file on the player; an old install's settings.json works too. This PC's graphics card, refresh rate and audio device choices stay as they are.">
+                  <Button x:Name="ImportSettingsButton" Classes="ghost" Content="Import…" Click="OnImportSettings" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding SettingsFileStatus}"
+                       IsVisible="{Binding SettingsFileStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <TextBlock Classes="group" Text="Troubleshooting" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Classes="stack" Title="Playback log"
+                              Description="Play the video that lags, then create a log: every second's playback statistics since it started, the machine, and how the video is played. Send it to whoever helps you.">
+                  <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Left">
+                    <Button x:Name="CreateLogButton" Content="Create log" Command="{Binding CreateLogCommand}" Classes="accent" />
+                    <Button Classes="ghost" Content="Open logs folder" Command="{Binding OpenLogsFolderCommand}" />
+                  </StackPanel>
+                </c:SettingRow>
+                <c:SettingRow Title="Statistics over the video" Description="Live numbers: dropped frames, decoder, bit rate.">
+                  <Button Classes="ghost" Content="Statistics overlay (I)" Command="{Binding ToggleStatsCommand}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Diagnostics" Description="While the problem video plays: copies the machine, the video and why it's struggling.">
+                  <Button Classes="ghost" Content="Copy diagnostics (Ctrl+I)" Command="{Binding CopyDiagnosticsCommand}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+            <TextBlock Classes="note" Margin="2,8,0,0" Text="{Binding LogStatus}"
+                       IsVisible="{Binding LogStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== Shortcuts -->
+      <TabItem x:Name="ShortcutsTab" Header="Shortcuts" Tag="{StaticResource IconKeyboard}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Classes="page" Text="Shortcuts" />
+            <TextBlock Classes="note" Margin="2,0,0,12" Text="They work whether or not their button is on the bar." />
+            <Border Classes="rows" Padding="22,10">
+              <ItemsControl ItemsSource="{Binding Shortcuts}" x:Name="ShortcutList" />
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- ===================================================================== About -->
+      <TabItem x:Name="AboutTab" Header="About" Tag="{StaticResource IconInfo}">
+        <ScrollViewer>
+          <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left" Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,8">
+              <Image Source="/Assets/atlas-player-256.png" Width="72" Height="72" />
+              <StackPanel VerticalAlignment="Center" Spacing="4">
+                <TextBlock Classes="page" Text="Atlas Player" Margin="0" />
+                <TextBlock x:Name="VersionText" Text="{Binding AppVersion, StringFormat='Version {0}'}" Classes="muted" />
+              </StackPanel>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <Button Classes="ghost" Content="Copy version" Click="OnCopyVersion" />
+              <TextBlock Classes="note" VerticalAlignment="Center" Width="460"
+                         Text="Include it when you report a problem: the part in brackets is the exact build." />
+            </StackPanel>
+            <TextBlock Classes="group" Text="Licence" />
+            <TextBlock Classes="note"
+                       Text="GPL-3.0-or-later. Built on mpv, FFmpeg, libplacebo, libVLC, librqbit, Avalonia, yt-dlp and QuickJS-NG. Icons from Material Design Icons (Apache-2.0). Theme title fonts Black Ops One, Anton, Rye, Audiowide and Creepster are under the SIL Open Font License. CHANGELOG.txt next to the app lists what changed in each version." />
+            <TextBlock Classes="note" Text="github.com/raulblideran/atlas-player" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </Panel>
+</Window>

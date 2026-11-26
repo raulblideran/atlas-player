@@ -1,0 +1,24 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AtlasPlayer.App.ViewModels"
+        xmlns:c="using:AtlasPlayer.App.Controls"
+        x:Class="AtlasPlayer.App.Views.ToastWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Atlas Player message" SizeToContent="WidthAndHeight">
+  <!-- A message over the video, in the theme's colours: the volume as an icon, a level and the
+       percentage; anything else as a line of text. -->
+  <Border x:Name="Card" Classes="toast" IsHitTestVisible="False">
+    <Panel>
+      <StackPanel x:Name="VolumeToast" Orientation="Horizontal" Spacing="12" IsVisible="{Binding ToastIsVolume}">
+        <Panel VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource IconVolume}" IsVisible="{Binding !ToastIsMuted}" />
+          <PathIcon Data="{StaticResource IconMute}" IsVisible="{Binding ToastIsMuted}" />
+        </Panel>
+        <c:LevelBar x:Name="VolumeLevel" Width="150" Height="6" VerticalAlignment="Center" Value="{Binding ToastLevel}"
+                    Mark="{x:Static vm:MainViewModel.ToastUnityLevel}" IsVisible="{Binding !ToastIsMuted}" />
+        <TextBlock x:Name="VolumeText" Classes="toast-value" Text="{Binding ToastText}" />
+      </StackPanel>
+      <TextBlock x:Name="MessageText" Classes="toast-text" Text="{Binding ToastText}" IsVisible="{Binding !ToastIsVolume}" />
+    </Panel>
+  </Border>
+</Window>

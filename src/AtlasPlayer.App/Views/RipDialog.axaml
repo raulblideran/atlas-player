@@ -1,0 +1,345 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AtlasPlayer.App.ViewModels"
+        xmlns:s="using:AtlasPlayer.App.Services"
+        xmlns:cd="using:AtlasPlayer.Core.Ripping.Cd"
+        x:Class="AtlasPlayer.App.Views.RipDialog"
+        x:DataType="vm:RipDialogViewModel"
+        Title="Rip Disc" Icon="/Assets/atlas-player.ico"
+        Width="760" MinHeight="560" SizeToContent="Height" MaxHeight="900" CanResize="False"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
+  <Window.Styles>
+    <Style Selector="TextBlock.step">
+      <Setter Property="Foreground" Value="{DynamicResource ThemeTextMuted}" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.step.done">
+      <Setter Property="Foreground" Value="{DynamicResource ThemeText}" />
+    </Style>
+    <Style Selector="TextBlock.step.current">
+      <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+  </Window.Styles>
+  <!-- One step at a time. The form scrolls when the window is fitted to a smaller screen
+       (RipDialogLayout); the rip's progress and the buttons below it always stay in view. -->
+  <DockPanel>
+    <Border Classes="footer" DockPanel.Dock="Bottom">
+      <StackPanel x:Name="Actions" Spacing="10">
+        <StackPanel Spacing="6" IsVisible="{Binding Main.IsRipping}">
+          <ProgressBar Minimum="0" Maximum="1" Value="{Binding Main.RipFraction}" />
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock Text="{Binding Main.RipStatus}" VerticalAlignment="Center" Classes="progress" />
+            <Button Grid.Column="1" Classes="ghost" Content="Cancel rip" Command="{Binding Main.CancelRipCommand}" />
+          </Grid>
+          <TextBlock Classes="note"
+                     Text="You can close this window: the rip carries on, with its progress at the top of the player." />
+        </StackPanel>
+        <TextBlock x:Name="RipResult" Text="{Binding Main.RipResult}" FontSize="12" TextWrapping="Wrap"
+                   IsVisible="{Binding Main.RipResult, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <Button Classes="ghost" Content="Open folder" Command="{Binding Main.OpenRipFolderCommand}"
+                  IsVisible="{Binding Main.LastRipFolder, Converter={x:Static ObjectConverters.IsNotNull}}" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+            <Button Classes="ghost" Content="Close" Click="OnClose" IsCancel="True" />
+            <Button x:Name="BackButton" Classes="ghost" Content="Back" Command="{Binding BackCommand}" IsVisible="{Binding ShowBack}" />
+            <Button x:Name="NextButton" Classes="accent" Content="Next" Command="{Binding NextCommand}" IsVisible="{Binding ShowNext}"
+                    IsDefault="{Binding ShowNext}" />
+            <Button x:Name="StartButton" Classes="accent" Content="Rip" Command="{Binding StartCommand}" IsVisible="{Binding IsLastStep}"
+                    IsDefault="{Binding IsLastStep}" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <StackPanel DockPanel.Dock="Top" Margin="24,22,24,0" Spacing="10">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <PathIcon Classes="title" Data="{StaticResource IconDisc}" />
+        <TextBlock Classes="dialog" Text="Rip Disc" />
+      </StackPanel>
+      <!-- The steps of this rip: they follow the disc and, for a DVD, what it's ripped to. -->
+      <ItemsControl x:Name="StepStrip" ItemsSource="{Binding StepItems}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" Spacing="18" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:RipStepItem">
+            <TextBlock Classes="step" Classes.current="{Binding IsCurrent}" Classes.done="{Binding IsDone}" Text="{Binding Text}" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <Border Height="1" Background="{DynamicResource ThemeStroke}" />
+      <TextBlock x:Name="StepTitle" Classes="group" Text="{Binding StepTitle}" Margin="0,4,0,0" />
+      <TextBlock x:Name="StepNote" Classes="note" FontSize="13" Text="{Binding StepNote}" />
+    </StackPanel>
+
+    <ScrollViewer x:Name="Form">
+      <StackPanel Margin="24,12,24,16" Spacing="12">
+
+        <!-- 1. The disc -->
+        <StackPanel x:Name="SourceStep" Spacing="10" IsVisible="{Binding OnSource}">
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <TextBlock Text="Drive" VerticalAlignment="Center" />
+            <ComboBox x:Name="DriveList" Grid.Column="1" HorizontalAlignment="Stretch" ItemsSource="{Binding Drives}"
+                      SelectedItem="{Binding SelectedDrive}" IsEnabled="{Binding HasDrives}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="s:OpticalDrive">
+                  <TextBlock Text="{Binding Description}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+              <Button Classes="ghost" Content="DVD image…" Click="OnPickDvdImage" ToolTip.Tip="A DVD-Video image (.iso), to rip like a disc" />
+              <Button Classes="ghost" Content="DVD folder…" Click="OnPickDvdFolder" ToolTip.Tip="A VIDEO_TS folder, or the folder it's in" />
+            </StackPanel>
+          </Grid>
+          <TextBlock Classes="muted" FontSize="12" Text="No CD or DVD drive found: open a DVD image or folder instead." IsVisible="{Binding !HasDrives}" />
+          <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+          <TextBlock Text="{Binding Message}" Classes="status" TextWrapping="Wrap"
+                     IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <TextBlock x:Name="DiscNote" Classes="note" Text="{Binding DiscNote}" FontWeight="SemiBold"
+                     IsVisible="{Binding DiscNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          <TextBlock Classes="note" Text="{Binding Source}" IsVisible="{Binding IsDvd}" />
+        </StackPanel>
+
+        <!-- CD 2. Tags and tracks -->
+        <StackPanel x:Name="CdTracksStep" Spacing="10" IsVisible="{Binding OnCdTracks}">
+          <TextBlock Classes="note" Text="{Binding DiscNote}" />
+          <ComboBox x:Name="Releases" HorizontalAlignment="Stretch" ItemsSource="{Binding Releases}" SelectedItem="{Binding SelectedRelease}"
+                    IsVisible="{Binding HasReleases}" ToolTip.Tip="MusicBrainz knows this disc in several releases">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="cd:AlbumTags">
+                <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+              <TextBlock Text="Album artist" VerticalAlignment="Center" />
+              <TextBox x:Name="AlbumArtist" Grid.Column="1" Text="{Binding AlbumArtist}" />
+              <TextBlock Grid.Row="1" Text="Album" VerticalAlignment="Center" />
+              <TextBox x:Name="Album" Grid.Row="1" Grid.Column="1" Text="{Binding Album}" />
+              <TextBlock Grid.Row="2" Text="Date" VerticalAlignment="Center" />
+              <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Date}" Watermark="1991-11-26" />
+              <TextBlock Grid.Row="3" Text="Genre" VerticalAlignment="Center" />
+              <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Genre}" />
+            </Grid>
+            <Border Grid.Column="1" Width="132" Height="132" Background="{DynamicResource ThemeRaised}" CornerRadius="{DynamicResource ThemeRadiusControl}" ClipToBounds="True">
+              <Panel>
+                <TextBlock Text="No cover" Classes="muted" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Image Source="{Binding CoverImage}" Stretch="UniformToFill" />
+              </Panel>
+            </Border>
+          </Grid>
+          <TextBlock Classes="group" Text="Tracks" />
+          <!-- The whole disc, or only the tracks ticked. -->
+          <Grid x:Name="TrackOptions" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+            <TextBlock x:Name="TracksSummary" Text="{Binding TracksSummary}" VerticalAlignment="Center" TextWrapping="Wrap" />
+            <Button Grid.Column="1" Classes="ghost" Content="All" Command="{Binding AllTracksCommand}" />
+            <Button Grid.Column="2" Classes="ghost" Content="None" Command="{Binding NoTracksCommand}" />
+          </Grid>
+          <ScrollViewer MaxHeight="240">
+            <ItemsControl x:Name="Tracks" ItemsSource="{Binding Tracks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RipTrackRow">
+                  <Grid ColumnDefinitions="Auto,34,*,200" ColumnSpacing="8" Margin="0,2">
+                    <CheckBox IsChecked="{Binding IsChecked}" VerticalAlignment="Center" MinWidth="0"
+                              ToolTip.Tip="Rip this track" AutomationProperties.Name="{Binding Number, StringFormat='Rip track {0}'}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Number, StringFormat='{}{0:00}'}" VerticalAlignment="Center" Classes="muted" />
+                    <TextBox Grid.Column="2" Text="{Binding Title}" />
+                    <TextBox Grid.Column="3" Text="{Binding Artist}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+            <TextBlock Text="Read offset" VerticalAlignment="Center" />
+            <TextBox x:Name="Offset" Grid.Column="1" Width="80" Text="{Binding OffsetText}" Watermark="auto" />
+            <TextBlock Grid.Column="2" Classes="note" Text="{Binding OffsetNote}" VerticalAlignment="Center" />
+          </Grid>
+        </StackPanel>
+
+        <!-- CD 3. Format -->
+        <StackPanel x:Name="CdFormatStep" Spacing="10" IsVisible="{Binding OnCdFormat}">
+          <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+            <TextBlock Text="Format" VerticalAlignment="Center" />
+            <ComboBox x:Name="Format" Grid.Column="1" Width="260" SelectedIndex="{Binding FormatIndex}">
+              <ComboBoxItem Content="FLAC, level 8 (lossless)" IsEnabled="{Binding HasFlac}" />
+              <ComboBoxItem Content="WAV (uncompressed)" />
+            </ComboBox>
+          </Grid>
+          <TextBlock Classes="note"
+                     Text="FLAC is lossless: the same audio as the disc in about half the space, with the tags and cover inside each file. WAV is the disc's audio uncompressed; its tags are kept in the cue sheet and the log." />
+        </StackPanel>
+
+        <!-- CD 4. Cue sheet -->
+        <StackPanel x:Name="CdCueStep" Spacing="10" IsVisible="{Binding OnCdCue}">
+          <CheckBox x:Name="WriteCue" Content="Write a cue sheet (.cue)" IsChecked="{Binding WriteCue}" />
+          <TextBlock Classes="note" Text="{Binding CueNote}" />
+          <TextBlock Classes="note"
+                     Text="Every rip also gets its log, scored as tracker log checkers score them. The log is Atlas Player's own: those checkers only accept EAC's, XLD's and whipper's logs." />
+        </StackPanel>
+
+        <!-- DVD 2. What to rip -->
+        <StackPanel x:Name="DvdModeStep" Spacing="12" IsVisible="{Binding OnDvdMode}">
+          <RadioButton x:Name="MkvMode" GroupName="dvdmode" IsEnabled="{Binding CanMkv}"
+                       IsChecked="{Binding IsMkv, Mode=OneWay}" Click="OnMkvMode">
+            <StackPanel Spacing="2">
+              <TextBlock Text="Full DVD (video and audio)" FontWeight="SemiBold" />
+              <TextBlock Classes="note" Text="Each title you pick as an MKV: the video copied or encoded, the audio tracks you pick, every subtitle and the chapters." />
+            </StackPanel>
+          </RadioButton>
+          <RadioButton x:Name="AudioOnlyMode" GroupName="dvdmode" IsEnabled="{Binding CanMkv}"
+                       IsChecked="{Binding IsAudioOnly, Mode=OneWay}" Click="OnAudioOnlyMode">
+            <StackPanel Spacing="2">
+              <TextBlock Text="Audio only" FontWeight="SemiBold" />
+              <TextBlock Classes="note" Text="A concert's or a film's sound as FLAC or WAV files: one per title or one per chapter, for each audio track you pick." />
+            </StackPanel>
+          </RadioButton>
+          <!-- A VIDEO_TS folder is decrypted already: it isn't backed up again. -->
+          <RadioButton x:Name="DecryptMode" GroupName="dvdmode" IsEnabled="{Binding CanDecrypt}"
+                       IsVisible="{Binding ShowDecrypt}" IsChecked="{Binding IsBackup, Mode=OneWay}" Click="OnDecryptMode">
+            <StackPanel Spacing="2">
+              <TextBlock Text="Whole disc backup (VIDEO_TS, decrypted)" FontWeight="SemiBold" />
+              <TextBlock Classes="note" Text="Every file of the disc's VIDEO_TS folder, menus and extras included, decrypted, in a folder of its own: it plays like the disc." />
+            </StackPanel>
+          </RadioButton>
+        </StackPanel>
+
+        <!-- DVD 3. Titles, chapters and audio tracks -->
+        <Grid x:Name="DvdTitlesStep" ColumnDefinitions="300,*" ColumnSpacing="16" IsVisible="{Binding OnDvdTitles}">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="muted" FontSize="12" Text="{Binding TitlesSummary}" />
+            <ListBox x:Name="Titles" ItemsSource="{Binding TitleRows}" SelectedItem="{Binding SelectedTitleRow}" MaxHeight="380">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:RipTitleRow">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <CheckBox IsChecked="{Binding IsChecked}" VerticalAlignment="Center" MinWidth="0"
+                              AutomationProperties.Name="{Binding Number, StringFormat='Rip title {0}'}" />
+                    <StackPanel Grid.Column="1" Spacing="1">
+                      <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
+                      <TextBlock Classes="muted" FontSize="11.5" Text="{Binding Summary}" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock Classes="section" Text="{Binding SelectedTitle.Number, StringFormat='Title {0}'}" />
+            <!-- The title's chapters: all of it, or the ones ticked, in one file or one per chapter. -->
+            <StackPanel x:Name="ChapterOptions" Spacing="6" IsVisible="{Binding ShowChapters}">
+              <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                <TextBlock x:Name="ChaptersSummary" Text="{Binding ChaptersSummary}" VerticalAlignment="Center" TextWrapping="Wrap" />
+                <Button Grid.Column="1" Classes="ghost" Content="All" Command="{Binding AllChaptersCommand}" />
+                <Button Grid.Column="2" Classes="ghost" Content="None" Command="{Binding NoChaptersCommand}" />
+              </Grid>
+              <ListBox x:Name="ChapterList" ItemsSource="{Binding Chapters}" MaxHeight="170">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:RipChapterRow">
+                    <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" MinWidth="170" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <StackPanel Orientation="Horizontal" Spacing="16">
+                <RadioButton x:Name="OneFile" GroupName="chapterfiles" Content="{Binding SplitOneLabel}"
+                             IsChecked="{Binding !ChapterFiles, Mode=OneWay}" Click="OnOneFile" />
+                <RadioButton x:Name="FilePerChapter" GroupName="chapterfiles" Content="One file per chapter"
+                             IsChecked="{Binding ChapterFiles, Mode=OneWay}" Click="OnFilePerChapter" />
+              </StackPanel>
+            </StackPanel>
+            <TextBlock Classes="note" Text="One chapter: the title is ripped whole." IsVisible="{Binding !ShowChapters}" />
+            <TextBlock Classes="group" Text="Audio tracks" Margin="0,6,0,0" />
+            <ItemsControl x:Name="AudioTrackList" ItemsSource="{Binding AudioTracks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RipAudioRow">
+                  <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}" Margin="0,1" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="note" TextWrapping="Wrap"
+                       Text="Tick at least one. In an MKV each track ticked is an audio stream of its own; as audio files, each becomes files of its own (FLAC and WAV hold one track)." />
+          </StackPanel>
+        </Grid>
+
+        <!-- DVD 4. Format -->
+        <StackPanel x:Name="DvdFormatStep" Spacing="10" IsVisible="{Binding OnDvdFormat}">
+          <StackPanel Spacing="10" IsVisible="{Binding IsMkv}">
+            <TextBlock Classes="group" Text="Video (MKV)" />
+            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="8">
+              <TextBlock Text="Video" VerticalAlignment="Center" />
+              <ComboBox x:Name="VideoCodec" Grid.Column="1" HorizontalAlignment="Stretch" SelectedIndex="{Binding DvdVideoIndex}">
+                <ComboBoxItem Content="Copy: the disc's MPEG-2 as it is (lossless)" />
+                <ComboBoxItem Content="H.264 (x264): looks the same in less space, deinterlaced"
+                              IsEnabled="{Binding HasX264}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="Needs FFmpeg with x264" />
+                <ComboBoxItem Content="H.265 (x265): looks the same in about half the space, deinterlaced"
+                              IsEnabled="{Binding HasX265}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="Needs FFmpeg with x265" />
+              </ComboBox>
+              <TextBlock Grid.Row="1" Text="Deinterlacer" VerticalAlignment="Center" IsVisible="{Binding ShowDeinterlacing}" />
+              <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="10" IsVisible="{Binding ShowDeinterlacing}">
+                <ComboBox x:Name="Deinterlacer" Width="260" SelectedIndex="{Binding DeinterlacerIndex}">
+                  <ComboBoxItem Content="BWDIF (as Atlas Player plays DVDs)" />
+                  <ComboBoxItem Content="QTGMC (slower, cleaner)" IsEnabled="{Binding HasQtgmc}"
+                                ToolTip.ShowOnDisabled="True" ToolTip.Tip="{Binding QtgmcTip}" />
+                </ComboBox>
+                <ComboBox x:Name="QtgmcPreset" Width="150" ItemsSource="{Binding QtgmcPresets}" SelectedIndex="{Binding QtgmcPresetIndex}"
+                          IsVisible="{Binding UsesQtgmc}" ToolTip.Tip="QTGMC's preset: slower presets are cleaner" />
+              </StackPanel>
+              <TextBlock Grid.Row="2" Text="Frame rate" VerticalAlignment="Center" IsVisible="{Binding ShowDeinterlacing}" />
+              <ComboBox x:Name="FrameRate" Grid.Row="2" Grid.Column="1" Width="420" HorizontalAlignment="Left" SelectedIndex="{Binding FrameRateIndex}"
+                        IsVisible="{Binding ShowDeinterlacing}">
+                <ComboBoxItem Content="Double: a frame per field (50p, 59.94p for NTSC)" />
+                <ComboBoxItem Content="Original: as on the disc (25p, 29.97p for NTSC)" />
+              </ComboBox>
+            </Grid>
+            <TextBlock x:Name="MkvNote" Classes="note" Text="{Binding MkvNote}" />
+            <TextBlock Classes="group" Text="Audio" Margin="0,6,0,0" />
+            <Grid ColumnDefinitions="110,*" ColumnSpacing="10">
+              <TextBlock Text="Audio" VerticalAlignment="Center" />
+              <ComboBox x:Name="AudioCodec" Grid.Column="1" Width="420" HorizontalAlignment="Left" SelectedIndex="{Binding AudioCodecIndex}">
+                <ComboBoxItem Content="As on the disc (AC-3 and DTS copied, LPCM as FLAC)" />
+                <ComboBoxItem Content="FLAC, level 8 (lossless)" />
+                <ComboBoxItem Content="AAC, 160 kb/s a channel" />
+              </ComboBox>
+            </Grid>
+          </StackPanel>
+          <StackPanel Spacing="10" IsVisible="{Binding IsAudioOnly}">
+            <Grid ColumnDefinitions="110,*" ColumnSpacing="10">
+              <TextBlock Text="Format" VerticalAlignment="Center" />
+              <ComboBox x:Name="AudioFormat" Grid.Column="1" Width="260" HorizontalAlignment="Left" SelectedIndex="{Binding AudioFormatIndex}">
+                <ComboBoxItem Content="FLAC, level 8 (lossless)" />
+                <ComboBoxItem Content="WAV (uncompressed)" />
+              </ComboBox>
+            </Grid>
+          </StackPanel>
+          <CheckBox x:Name="Downmix" Content="Mix down to stereo" IsChecked="{Binding Downmix}" IsEnabled="{Binding CanDownmix}"
+                    ToolTip.ShowOnDisabled="True" ToolTip.Tip="Only converted audio can be mixed down: choose FLAC or AAC" />
+          <TextBlock x:Name="AudioNote" Classes="note" Text="{Binding AudioNote}" />
+        </StackPanel>
+
+        <!-- Last: what will be written, and where -->
+        <StackPanel x:Name="RipStep" Spacing="10" IsVisible="{Binding OnRip}">
+          <Border Classes="rows" Padding="16,12">
+            <TextBlock x:Name="RipSummary" Text="{Binding RipSummary}" TextWrapping="Wrap" LineHeight="20" />
+          </Border>
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <TextBlock Text="Save in" VerticalAlignment="Center" />
+            <TextBox x:Name="SaveFolder" Grid.Column="1" Text="{Binding SaveFolder}" />
+            <Button Grid.Column="2" Classes="ghost" Content="Change…" Click="OnPickSaveFolder" />
+          </Grid>
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</Window>

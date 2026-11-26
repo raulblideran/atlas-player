@@ -24,7 +24,7 @@ jobs:
       # A tag that doesn't match the project version would publish a mislabelled build.
       - id: v
         run: |
-          VERSION=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' src/Paramaja.App/Paramaja.App.csproj)
+          VERSION=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' src/AtlasPlayer.App/AtlasPlayer.App.csproj)
           [ "v$VERSION" = "$GITHUB_REF_NAME" ] || { echo "::error::tag $GITHUB_REF_NAME but the project is $VERSION"; exit 1; }
           grep -q "^## $VERSION " CHANGELOG.md || { echo "::error::CHANGELOG.md has no $VERSION section"; exit 1; }
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -46,8 +46,8 @@ jobs:
       # Named after the file inside, so a download from the run page says what it is.
       - uses: actions/upload-artifact@v4
         with:
-          name: Paramaja-${{ needs.check.outputs.version }}-portable-win-x64
-          path: dist/Paramaja-${{ needs.check.outputs.version }}-portable-win-x64.zip
+          name: AtlasPlayer-${{ needs.check.outputs.version }}-portable-win-x64
+          path: dist/AtlasPlayer-${{ needs.check.outputs.version }}-portable-win-x64.zip
           if-no-files-found: error
 
   flatpak:
@@ -73,10 +73,10 @@ jobs:
       # until the manifest's other modules change.
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
         with:
-          manifest-path: packaging/io.github.raulblideran.Paramaja.yaml
-          bundle: paramaja-${{ needs.check.outputs.version }}.flatpak
-          cache-key: flatpak-builder-${{ hashFiles('packaging/io.github.raulblideran.Paramaja.yaml') }}
-          artifact-name: paramaja-${{ needs.check.outputs.version }}-flatpak
+          manifest-path: packaging/io.github.raulblideran.AtlasPlayer.yaml
+          bundle: atlas-player-${{ needs.check.outputs.version }}.flatpak
+          cache-key: flatpak-builder-${{ hashFiles('packaging/io.github.raulblideran.AtlasPlayer.yaml') }}
+          artifact-name: atlas-player-${{ needs.check.outputs.version }}-flatpak
 
   # Publishes with the Windows zip only; doesn't wait for the Flatpak.
   release:
@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: "Paramaja-${{ needs.check.outputs.version }}-portable-win-x64", path: assets }
+        with: { name: "AtlasPlayer-${{ needs.check.outputs.version }}-portable-win-x64", path: assets }
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -99,7 +99,7 @@ jobs:
           PRE=()
           case "${{ needs.check.outputs.version }}" in *-*) PRE=(--prerelease) ;; esac
           gh release create "$GITHUB_REF_NAME" assets/*.zip "${PRE[@]}" \
-            --title "Paramaja ${{ needs.check.outputs.version }}" --notes-file notes.md
+            --title "Atlas Player ${{ needs.check.outputs.version }}" --notes-file notes.md
 
   # Attaches the Flatpak once built, and takes the "still building" line out of the notes.
   # Runs even if the Flatpak failed, to say so in the notes instead.
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         if: ${{ needs.flatpak.result == 'success' }}
-        with: { pattern: "paramaja-${{ needs.check.outputs.version }}-flatpak*", path: assets, merge-multiple: true }
+        with: { pattern: "atlas-player-${{ needs.check.outputs.version }}-flatpak*", path: assets, merge-multiple: true }
       - name: Attach the Flatpak
         env:
           GH_TOKEN: ${{ github.token }}

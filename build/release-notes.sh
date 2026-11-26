@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="${1:?usage: release-notes.sh <version> [linux-pending|linux-failed]}"
 LINUX="${2:-}"
-REPO="${GITHUB_REPOSITORY:-raulblideran/paramaja}"
+REPO="${GITHUB_REPOSITORY:-raulblideran/atlas-player}"
 
 awk -v v="$VERSION" '
   /^## / { if (found) exit; if (index($0, "## " v " ") == 1) { found = 1; next } }

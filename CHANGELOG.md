@@ -5,6 +5,15 @@ also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
 ## Unreleased
 
+- **The app is now Atlas Player,** with a new icon (a strongman holding up a planet with a play
+  symbol on it, in a gold coin) and a new default theme, **Atlas**: gold on deep navy, dark.
+  **Atlas Light** is its light counterpart. The other themes are unchanged.
+- **Linux:** the Flatpak's ID is now `io.github.raulblideran.AtlasPlayer`, so it installs as a
+  new app. On its first start it copies your settings (and any `mpv.conf`, `input.conf` or
+  shaders) over from the previous install; you can then uninstall the old one.
+- **Windows:** the zip is `AtlasPlayer-<version>-portable-win-x64.zip` and the program
+  `AtlasPlayer.exe`, in a folder named `Atlas Player`. To keep your settings, copy `settings.json`
+  from the old folder into the new one.
 - **Rip Disc is a step-by-step window.** It recognises the disc (an Audio CD, or a DVD from a
   drive, an `.iso` or a VIDEO_TS folder, as before), and each step shows only what applies to it.
   The steps are shown at the top; Back and Next move between them, and Rip is on the last.
@@ -67,7 +76,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
 - **The dark themes' bars fade into the picture again, much more lightly.** The fade is now 75%
   at the window's edge, down from 95%, and 40% halfway, down from 70%, so far less of the picture
   is dimmed. There's no line between the bar and the picture.
-  The light themes (Paramaja Light, MPC-HC and Miami Marina) keep beta.8's solid bars with a
+  The light themes (Atlas Light, MPC-HC and Miami Marina) keep beta.8's solid bars with a
   thin line, so there's no white haze over the video.
 
 ## 2.0.0-beta.8 — 2026-11-26
@@ -118,7 +127,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   after the deinterlacer, but one that still combs (as reported on Windows) is now deinterlaced
   with FFmpeg as it's saved, still an uncompressed PNG at full size.
 - **Fixed: screenshots of DVDs weren't saved on Linux.** The Flatpak's libVLC was built without
-  the encoder its screenshots need: Paramaja said "Screenshot saved" and nothing was. It's built
+  the encoder its screenshots need: Atlas Player said "Screenshot saved" and nothing was. It's built
   in now, and a screenshot the disc player couldn't save says so.
 - **Fixed: a second screenshot of the same paused moment replaced the first** (S, then Shift+S
   within the same second). The second is now "… (2).png".
@@ -141,13 +150,13 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   doesn't describe the disc. Each track is still checked against its own AccurateRip entry, and the
   cover already in the folder is kept.
 - **Fixed: a DVD's resolution badge read "0p".** libVLC says 0×0 for a moment as a DVD's picture
-  starts (its menu, then each title); Paramaja now waits for the real size. Interlaced video now
+  starts (its menu, then each title); Atlas Player now waits for the real size. Interlaced video now
   shows as **576i** / **480i** / **1080i**, as it's broadcast and stored, rather than "p".
 - **More (⋯) no longer offers Download video… while the top bar's download button is up** (a
   YouTube or other site video playing). It's still there the rest of the time.
 - **Torrents only play.** The "Delete downloaded data on closing" switch and the "Cache folder"
   button are gone from Settings → Streaming and downloads: what a torrent fetches is always deleted
-  when it closes and when Paramaja exits. The top bar says how much is **buffered**. A settings file
+  when it closes and when Atlas Player exits. The top bar says how much is **buffered**. A settings file
   from an earlier version that kept the data still loads; the setting is just ignored.
 
 ## 2.0.0-beta.5 — 2026-11-24
@@ -172,13 +181,13 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   following at once, older settings files) and rendered in three themes; the editor hasn't yet
   been tried by hand in the running app.
 - **Before that, beta.4: the Windows zip works again.** The beta.2 and beta.3 zips were missing
-  everything Paramaja plays with (libmpv, libVLC, FFmpeg, yt-dlp, the torrent engine): GitHub's
+  everything Atlas Player plays with (libmpv, libVLC, FFmpeg, yt-dlp, the torrent engine): GitHub's
   build machine moved to the .NET 11 SDK, which leaves those files out of a single-file build
   where older SDKs put them beside it. They opened to an error and played nothing. The build now
   says where they go, and refuses to publish a zip without them.
 - **Also fixed:** the subtitle colour choices and the seek bar's colours are made so any thread
   can use them (a test running off the UI thread failed with .NET 10).
-- **Before that, beta.3: security updates.** Every library Paramaja bundles was checked against the
+- **Before that, beta.3: security updates.** Every library Atlas Player bundles was checked against the
   published vulnerabilities (CVEs), and the ones with fixes were updated (below).
 - **.NET 10** (runtime 10.0.15): .NET 8 stopped getting security fixes on 10 November 2026. Both
   downloads carry their own .NET, now pinned to the newest patch, so the Flatpak no longer takes
@@ -198,7 +207,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   copied and to H.264 (LPCM to FLAC, deinterlaced to 50p). The Windows zip was built but not run
   here.
 - **A new look, and themes.** Settings → Appearance has eleven, switched at once in every
-  window: **Paramaja** (the default, its plum and orchid), **Paramaja Light**, **Graphite**,
+  window: the default theme (plum and orchid at the time) and its light version, **Graphite**,
   **Deep Sea**, **Amber**, **Forest**, and five with more character: **Call of Duty** (olive and
   HUD yellow, square edges, stencil titles), **GTA 6** (sunset pink and orange, neon teal, poster
   titles), **Red Dead Redemption 2** (leather, bone and blood red, western titles), **80s
@@ -283,10 +292,10 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
 
 - **MEGA desktop app links no longer buffer slowly.** The MEGA app's "Stream from MEGA" link
   (`http://127.0.0.1:4443/…`) sends about 4-5 MB/s per connection, less than a 4K film needs
-  in its busy scenes, so they stalled, and each stall made the next wait longer. Paramaja now
+  in its busy scenes, so they stalled, and each stall made the next wait longer. Atlas Player now
   reads the link six pieces at once, in order, and mpv plays from that: 18-25 MB/s here on a
   24 GB 2160p Dolby Vision remux, which started in under 4 s and never buffered again. The MEGA
-  app keeps answering however often you seek. `mega.nz` links pasted into Paramaja are read
+  app keeps answering however often you seek. `mega.nz` links pasted into Atlas Player are read
   the same way (they too went over one connection).
 - **Rip Disc: chapters.** Under the title, its chapters are listed with their lengths, all
   ticked; untick the ones you don't want. They become **one file** (chapters next to each other
@@ -295,7 +304,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   are the disc's, and joined chapters decode cleanly across the join, their audio bit for bit
   the disc's (LPCM becomes FLAC once, over the whole file). Where two chapters that weren't next
   to each other meet, the AC-3 track has a gap of a fraction of a second (0.23 s there).
-- **Rip Disc: x264 deinterlaces too**, with BWDIF, as x265 and Paramaja's playback do: each
+- **Rip Disc: x264 deinterlaces too**, with BWDIF, as x265 and Atlas Player's playback do: each
   field becomes a frame (50p, 59.94p for NTSC), in the field order found (the flags, confirmed by
   the picture). Interlaced titles are encoded at CRF 14: on a minute of "The One" (576i), against
   the disc's fields made frames by BWDIF, CRF 16 gave VMAF 95.9 at 51% of the disc's video size,
@@ -314,7 +323,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   gets the Previous / Next file buttons, as torrents had. Not for DVD and Blu-ray folders: their
   titles and chapters have their own buttons.
 - **Settings in one file, for a new install or another PC**: Settings → Interface → Export
-  settings… saves `paramaja-settings.json`; drop it on the player of the new install (it asks
+  settings… saves `atlas-player-settings.json`; drop it on the player of the new install (it asks
   first) or Import settings… it there. An old install's `settings.json` works the same way. The
   new machine's own graphics card, refresh rate, audio device and torrent port choices stay.
 - **The Developer tab's options moved where they belong**: a new **Video** tab (rendering
@@ -335,7 +344,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   - **NVIDIA's driver needs its Flatpak extension**, built for exactly that driver version
     (`org.freedesktop.Platform.GL.nvidia-590-44-01` for 590.44.01). Without it nothing can use
     the graphics card: video was black or crawled. Rolling distributions like CachyOS often run a
-    driver Flathub hasn't built yet. Paramaja now says so at start, with the command that installs
+    driver Flathub hasn't built yet. Atlas Player now says so at start, with the command that installs
     it (and a button that copies it); Create log names the drivers too.
   - Video still plays without one: mpv falls back from Vulkan to OpenGL, and the window from
     OpenGL to drawing on the CPU, instead of a black picture or no window.
@@ -348,12 +357,12 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   (they play one after the other, as a folder's do), a folder, a disc image, a cue sheet, a
   subtitle (it joins the video playing, or the one dropped with it) or a link or magnet from a
   browser, on the window or on the bars. Linux had none at all: the toolkit (Avalonia 11) has no
-  drag and drop on X11, so Paramaja now speaks X11's protocol (XDND) itself, the one KDE's
+  drag and drop on X11, so Atlas Player now speaks X11's protocol (XDND) itself, the one KDE's
   Wayland apps (Dolphin) use to drop into X11 windows too. On Windows, mpv's video window
   took every drop and refused it; it no longer gets them.
 - **The pointer hides in fullscreen on Windows.** Over the video it was left to mpv, whose window
   runs on its own thread and hid it only if it happened to be watching the mouse at that moment.
-  Paramaja now hides it for its whole window, the video included. **Not tried on Windows yet**
+  Atlas Player now hides it for its whole window, the video included. **Not tried on Windows yet**
   (no Windows machine here); Settings → Developer → **Create log** now says when the pointer
   last hid and what showed it again, if it still stays.
 - **Links start by themselves.** Each one waited for 10 s of buffer instead of 5 (the first wait
@@ -367,7 +376,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   fields as on the disc, in about ⅔ of the space. **x265** (CRF 18, preset slow) takes about half,
   but HEVC has no interlaced mode players handle (x265's field coding comes back with its field
   order swapping every frame), so an interlaced title is deinterlaced to 50p (59.94p) with BWDIF,
-  as Paramaja plays DVDs, at CRF 16: about ⅔. A title counts as interlaced when it's flagged so
+  as Atlas Player plays DVDs, at CRF 16: about ⅔. A title counts as interlaced when it's flagged so
   and 20 s of its picture agree (films flagged interlaced are common). Measured on a PAL concert
   DVD (576i, "The One"), against the disc's frames: on a minute of it, x264 66% of the video's
   size, VMAF 98.6; x265 50%, VMAF 98.7 as frames, 64% and VMAF 97.6 as 50p. The whole 40-minute
@@ -402,7 +411,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
     previous track), cover.jpg and a log.
   - **The log** has the layout rip logs use (settings, TOC, each track's test and copy CRCs,
     AccurateRip, the summary) and scores itself with the deductions tracker log checkers make:
-    100% for a clean secure rip. It's Paramaja's own: those checkers only accept EAC's, XLD's and
+    100% for a clean secure rip. It's Atlas Player's own: those checkers only accept EAC's, XLD's and
     whipper's logs, so it won't pass for one of them on a tracker.
   - Checked on the audio of the Dangerous rip in the Michael Jackson discography, read through a
     simulated drive with a +48 offset: the copy CRCs and AccurateRip checksums are exactly the
@@ -444,7 +453,7 @@ Please report anything that looks or works wrong there; 2.0.0 follows once it's 
   **Disc image…**, or open / drop the file). So does an Audio CD image (`.bin` with its `.cue`),
   with its tracks as chapters, named as its cue sheet names them. Other `.iso` files are left
   alone.
-- **SACD images:** the `.iso` a ripper makes of an SACD plays with Paramaja's own SACD reader,
+- **SACD images:** the `.iso` a ripper makes of an SACD plays with Atlas Player's own SACD reader,
   the stereo area by default; the **Titles & chapters** menu has the multichannel (5.1) area,
   and the tracks are chapters, with the disc's titles. Played through on two Thriller SACDs
   (1999 and the 2022 MFSL), whose stereo areas are plain DSD. DST-compressed discs (most

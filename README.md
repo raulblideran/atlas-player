@@ -1,184 +1,177 @@
-# Paramaja 🍆
+<p align="center">
+  <img src="src/AtlasPlayer.App/Assets/atlas-player-256.png" width="128" height="128" alt="Atlas Player icon">
+</p>
 
-A modern, portable video player. It plays everything mpv/VLC plays (HEVC/H.265 included), tonemaps HDR to SDR on the fly, and streams straight from **magnet links**.
+<h1 align="center">Atlas Player</h1>
 
-## Using it (Windows, portable)
+<p align="center">
+  A video player for Windows and Linux that plays almost anything, streams torrents and web video,<br>
+  and rips your CDs and DVDs.
+</p>
 
-1. Unzip `Paramaja-<version>-portable-win-x64.zip` anywhere, such as a USB stick or Downloads. To update, unzip a newer version over the old `Paramaja` folder: settings and screenshots are kept. On another PC (or a fresh copy), drop the old copy's `settings.json`, or a file from Settings → Backup and logs → **Export settings…**, on the player to take its settings over. The version is shown on the welcome screen and under Settings → About.
-2. Run `Paramaja.exe`. Nothing is installed, and nothing is written to AppData or the registry.
-3. Drop a video (or several, a folder, a subtitle or a link) on the window, press **Ctrl+V** to play a copied link (magnet, YouTube, MEGA or any video URL), or use **Open** (Open file, Open folder, Open Disc) / **Open Link**.
+<p align="center">
+  <a href="https://github.com/raulblideran/atlas-player/releases/latest"><img src="https://img.shields.io/github/v/release/raulblideran/atlas-player?include_prereleases&label=release" alt="Latest release"></a>
+  <a href="https://github.com/raulblideran/atlas-player/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/raulblideran/atlas-player/ci.yml?branch=main&label=tests" alt="Tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue" alt="License: GPL-3.0-or-later"></a>
+</p>
 
-The app keeps all of its data next to the exe:
+![Atlas Player playing Big Buck Bunny](docs/screenshots/playing.jpg)
 
-| Path | What |
-|---|---|
-| `settings.json` | Your settings (human-readable) |
-| `Screenshots/` | Lossless PNG screenshots |
-| `ripping/` | AccurateRip's list of drive offsets, kept for a month |
-| `cache/` | Torrent data while it plays (always deleted: torrents are streamed, never kept) |
-| `portable_config/` | Optional `mpv.conf` / `input.conf` / shaders for power users, plus mpv's shader cache |
-
-## Using it (Linux, as a Flatpak)
-
-```sh
-flatpak install --user paramaja-<version>.flatpak
-flatpak run io.github.raulblideran.Paramaja      # or launch it from the app menu
-```
-
-The bundle carries its own libmpv, built with an ffmpeg that has every decoder. The runtime's ffmpeg leaves out HEVC, H.264, AAC and AC-3. The app also registers itself as the handler for `magnet:` links, so clicking one in a browser opens it in Paramaja.
-
-A Flatpak can't write next to its own executable, so on Linux the data lives in the standard places:
-
-| Path | What |
-|---|---|
-| `~/.var/app/io.github.raulblideran.Paramaja/config/settings.json` | Settings |
-| `~/.var/app/io.github.raulblideran.Paramaja/config/portable_config/` | Optional `mpv.conf` / `input.conf` / shaders |
-| `~/.var/app/io.github.raulblideran.Paramaja/cache/torrents/` | Torrent data while it plays (always deleted) |
-| `~/Pictures/Paramaja/` | Screenshots |
-| `~/Downloads/` | Downloaded videos |
-| `~/Music/`, `~/Videos/` | Ripped CDs, ripped DVDs |
-
-It can read (and rip) physical CDs, DVDs and Blu-rays from the drive (`--device=all`), and every file on the system (`--filesystem=host:ro`), because the file chooser portal only hands out one file at a time, and subtitles next to a video are auto-loaded by name. Drives under `/var/mnt` on Bazzite and other Atomic desktops aren't covered by `host`. Add them with:
-
-```sh
-flatpak override --user --filesystem=/var/mnt:ro io.github.raulblideran.Paramaja
-```
-
-### If it doesn't work on your distribution
-
-The Flatpak brings everything it plays with; what it takes from the machine is the display and the graphics driver. It's been tried on CachyOS, Arch, Debian 13, Ubuntu 24.04 and Fedora 43.
-
-- **NVIDIA (proprietary driver):** the Flatpak needs the runtime's extension built for exactly your driver version. Paramaja says so at start if it's missing, with the command, e.g. `flatpak install flathub org.freedesktop.Platform.GL.nvidia-590-44-01` (`cat /proc/driver/nvidia/version` shows yours). `flatpak update` installs it once Flathub has built it; rolling distributions (Arch, CachyOS) sometimes run a driver Flathub hasn't caught up with yet, for a few days. Without it, video is drawn by the CPU.
-- **Wayland without Xwayland:** the window is X11 (the toolkit, Avalonia 11, has no Wayland backend). KDE and GNOME always run Xwayland; on sway, Hyprland or niri, enable it (xwayland-satellite for niri).
-- **Logs:** `flatpak run io.github.raulblideran.Paramaja` from a terminal shows why it stops; a crash at start is written to `~/.var/app/io.github.raulblideran.Paramaja/cache/logs/crash.log`. Settings → Backup and logs → **Create log** describes the machine, its graphics drivers and the playing video. `PARAMAJA_DEBUG=1` (`flatpak run --env=PARAMAJA_DEBUG=1 …`) adds mpv's full log there.
-
-### Building the Flatpak yourself
-
-```sh
-flatpak install --user flathub org.flatpak.Builder org.freedesktop.Sdk//25.08 \
-    org.freedesktop.Sdk.Extension.rust-stable//25.08 org.freedesktop.Sdk.Extension.dotnet10//25.08
-
-./build/publish-flatpak.sh     # builds, installs for your user, writes dist/paramaja-<version>.flatpak
-```
-
-The first build compiles FFmpeg, libplacebo, libass, LuaJIT and mpv. Later rebuilds only redo the app.
-
-The bundle is created with `--runtime-repo`, so it installs on machines that don't already have the 25.08 runtime.
-
-The manifest builds the Rust and .NET parts with `--share=network` so cargo and NuGet can download packages. That's fine locally but not allowed on Flathub. `packaging/flatpak/generate-sources.sh` writes the offline package lists that replace it.
+Atlas Player is built on [mpv](https://mpv.io), so it plays what mpv plays: HEVC and AV1, 10-bit,
+HDR (tonemapped to your screen, or passed through), every subtitle format, with hardware decoding
+where your GPU has it. Around that it adds the things I kept reaching for other apps to do:
+streaming a magnet link without waiting for the download, playing DVDs and Blu-rays with their
+menus, and ripping discs properly.
 
 ## Features
 
-| | |
-|---|---|
-| **Formats** | libmpv + FFmpeg: HEVC/H.265 (8/10-bit), H.264, AV1, VP9, VC-1, MPEG-2…; MKV/MP4/TS/M2TS/AVI (uncompressed too)/VOB…; TrueHD, DTS-HD, FLAC, AC3, Opus… |
-| **Folders & discs** | **Open → Open folder** (Ctrl+Shift+O) or drop a folder: its videos play in order, with **Previous** / **Next** file buttons (several files dropped at once too). **Open → Open Disc** plays a DVD or Blu-ray from a drive, a `VIDEO_TS` / `BDMV` folder or a disc image (`.iso`) **with its menus**, through [libVLC](https://www.videolan.org/vlc/libvlc.html) (mpv has no disc menu support). Click the menu buttons, or use the arrow keys and Enter; the **Disc menu** button returns to the root menu at any time, and the **Titles & chapters** menu jumps to any title or chapter. Store-bought DVDs play (libdvdcss); encrypted (AACS) Blu-rays and Java (BD-J) Blu-ray menus don't. |
-| **Audio CDs** | **Open Disc** plays an Audio CD from its drive, through libVLC, with the tracks as chapters (Page Up / Page Down, the chapters menu), one after the other. A CD rip plays the same way from its `.cue` sheet: open the sheet, drop it, or pick the rip's folder. So does a CD image (`.bin` / `.cue`). Sheets as rippers like EAC write them (naming the `.wav` that's now a `.flac`, a Windows sub-folder, other letter case, gaps appended to the previous track) are read by Paramaja and played as one timeline of the files really there. |
-| **Ripping** | **Open → Rip Disc…** (or a drive's **Rip…** button in Open Disc), a step at a time: the disc is recognised as a CD or a DVD and the steps follow from it. **Audio CDs** (Source → Tracks → Format → Cue sheet → Rip): secure reads (each track read twice, test and copy, with the drive's cache defeated; a block that reads differently is read again until two reads agree), the drive's read offset from AccurateRip's drive list (or found from the disc), gaps from the sub-channel, each track checked against **AccurateRip** (v1/v2), tags and cover from **MusicBrainz** (or CD-Text), editable. The whole disc, or only the **tracks you tick** (they join the album's folder). Saved as **FLAC level 8** (reference encoder, verified) or **WAV** in Music → Artist → Album (Year), with the cover and a log in the layout rip logs use, scored with tracker log checkers' deductions (it's Paramaja's own log: those checkers only take EAC, XLD and whipper logs), and a **cue sheet** if you want one (ticked for a whole disc, not for a few tracks). **DVDs** (drive, `.iso` or VIDEO_TS folder; Source → Rip mode → Titles → Format → Rip): **Full DVD** (each title you tick as an **MKV** with every subtitle track and the chapters), **Audio only** (FLAC level 8 or WAV, one file per title or per chapter, a file for each audio track you tick, gaps in a track filled with silence so it stays in time), or the **whole disc backup** (the VIDEO_TS folder as it is, decrypted; not offered for a VIDEO_TS folder, decrypted already). For each title: the **chapters** you tick, in one file (their marks kept) or one per chapter, and its **audio tracks** ("English, AC-3, 5.1"), each its own stream in the MKV. The MKV's video is the disc's MPEG-2 as it is, or encoded to look the same in less space: **H.264 (x264, CRF 16)** or **H.265 (x265, CRF 18**, about half the size**)**, interlaced video deinterlaced with **BWDIF** (as Paramaja plays it) or **QTGMC** (havsfunc through the bundled VapourSynth, preset Medium to Placebo, Slower by default), at a frame per field (50p, the default) or the disc's own rate; x264 at CRF 14 and x265 at CRF 16 for interlaced video. Its audio is **as on the disc** (AC-3 and DTS copied, LPCM as FLAC, bit for bit), **FLAC** or **AAC** (160 kb/s a channel). Every channel is kept (5.1 stays 5.1) unless you tick **Mix down to stereo**. The window fits the screen; on a small one the form scrolls and the buttons stay in view. The rip goes on with its window closed, its progress at the top of the player. |
-| **SACD & DSD** | DSD files (`.dsf`, `.dff`) play like any other music. **SACD images** (the `.iso` a disc ripper makes of an SACD) play with Paramaja's own SACD reader: the stereo area by default, the multichannel one (5.1) from the Titles & chapters menu, with the tracks as chapters and the disc's titles. Plain DSD and DST-compressed discs are both read; FFmpeg decodes the audio, played as 192 kHz PCM. |
-| **HDR** | Automatic: on a monitor with HDR switched on in Windows, HDR video is passed through untouched; on an SDR monitor it is tonemapped with `gpu-next` (libplacebo): scene-adaptive peak detection, perceptual gamut mapping and highlight-detail recovery. HDR10, HLG and Dolby Vision (profiles 5/8). The curve (mobius by default, spline, bt.2446a, bt.2390, st2094-40, hable…) is in Settings → Video. **H** switches by hand; the HDR mode is in Settings → Video. On Linux the app is an X11 client, which can't output HDR, so it always tonemaps. |
-| **Audio** | The original audio stream plays as-is by default, at its own sample rate: no resampling (DSD and SACDs aside, which play at 192 kHz), no ReplayGain or downmix normalisation. On Windows, **Settings → Audio → Exclusive** takes the audio device for the player alone, so the DAC runs at each file's rate instead of the system mixer's (off by default; other apps go quiet). Where a video or disc has several audio tracks, a stereo one plays by default (within your preferred language, if you set one). For a stereo source, the audio menu can play just its **left or right channel** on both speakers, for that video. Optional, all off by default: **Shift+D** downmixes 5.1/7.1 to stereo (surround sources only), and volume normalization (ffmpeg's dynamic normalizer) evens out loud and quiet parts. Passthrough (Settings → Audio) sends Dolby/DTS bitstreams untouched to an AV receiver. 5.1 and 7.1 play with all their channels, discs included; the audio badge shows "→ stereo" only when the downmix is on. The volume slider is logarithmic: it moves in equal steps of loudness, so 50% is −30 dB. |
-| **Subtitles** | Embedded (ASS/SSA with fonts, SRT, PGS, VobSub) and external files (auto-loaded by name, or drag & drop: on the playing video, or together with the video). The size slider shows the resulting font size. **Settings → Subtitles** sets their look, with a preview: font, bold, text and outline colours, outline and shadow, a box behind the text, how high they sit, and whether styled (ASS) subtitles take it too. Picture subtitles (DVD, Blu-ray, PGS) keep theirs. |
-| **Drag and drop** | Anything Open takes can be dropped on the window or the bars, from a file manager or a browser: a video, a folder, a disc image, a cue sheet, a link or a magnet. Several files play one after the other, as a folder's do; a subtitle joins the video playing. On Linux it's Paramaja's own XDND support (the toolkit has none on X11), which KDE's Wayland apps (Dolphin) drag into too. |
-| **Magnet streaming** | Rust engine ([librqbit](https://github.com/ikatson/rqbit)). It downloads only the file you watch, fetching pieces in order up to 256 MB ahead of the playhead (about 25 s of a 4K HDR remux; librqbit's default is 32 MB). Before starting or after a stall it waits for 5 s of video, instead of stuttering through a thin buffer. It picks the largest video automatically. A torrent with several videos or songs is a playlist: **Previous** / **Next** in the controls (and the list in the top bar) move between them, and each plays on into the next; an album starts at its first track. |
-| **Web links** | Links start by themselves after 5 s of buffer: the top bar says **Opening…** and the play button spins until they do (Play then can't pause them by mistake). Direct video URLs, plus YouTube and ~1800 other sites through the bundled [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [QuickJS-NG](https://github.com/quickjs-ng/quickjs), the JavaScript runtime YouTube needs. Settings → Streaming and downloads → **YouTube support** updates yt-dlp when a site changes; **Starting quality** there caps the resolution YouTube videos stream at (best available by default); while one plays, the video menu lists the qualities it offers and switches to one at once, for that video. Other sites play at their best. |
-| **Downloads** | **Download Video** (welcome screen, the controls, or the button at the top while a web video plays): paste a link and the qualities the site offers (2160p, 1080p, 720p…) appear by themselves. Pick one and it's saved to your Downloads folder with the best audio merged in (one MKV, no re-encoding, by the bundled ffmpeg), or pick **Audio only** for the best audio stream on its own (Opus, AAC… as it is). Title, uploader, date, description, chapters and thumbnail as cover art are kept. Downloading the same video again never overwrites: the resolution is added to the name, then a counter (`… 720p (1).mkv`). |
-| **MEGA** | `mega.nz` file links (new and legacy formats) are fetched from MEGA and decrypted on the fly, so seeking works. Folder links aren't supported yet. MEGA's free transfer quota applies. Links from the **MEGA desktop app** ("Stream from MEGA", `http://127.0.0.1:4443/…`) play too. Both are read six pieces at a time: one connection to MEGA (4-5 MB/s from the desktop app) is slower than a 4K film. |
-| **Screenshots** | **S**: uncompressed PNG (compression 0) at native resolution, 16-bit for 10-bit/HDR sources. **Shift+S** includes subtitles. Interlaced video gives the deinterlaced picture, as it's seen: a screenshot that still combs is deinterlaced with FFmpeg. Two of the same moment never replace each other. |
-| **Frame stepping** | **.** goes forward one frame, **,** goes back one frame |
-| **Deinterlacing** | Automatic, for interlaced videos only, from every source: files, folders, links and discs. A video counts as interlaced when its frames are flagged so, or, for videos the CPU decodes, when FFmpeg's `idet` sees it in the picture (tape captures saved as MJPEG or lossless AVIs carry no flags): a second, headless mpv checks a few hundred frames beside playback and needs a clear majority. **BWDIF** (motion-adaptive), one frame per field (50i becomes 50p). Discs play through libVLC, which has no BWDIF of its own: Paramaja's libVLC carries a port of FFmpeg's, which gives exactly the same frames. Settings → Video has an on/off switch while an interlaced video plays, for that video; progressive videos have none. **D** flips it. |
-| **Badges** | The controls bar shows the codec (H.264, HEVC, MPEG-2…; "DVD", "CD" or "SACD" for discs), resolution, HDR, hardware or software decoding, the audio channels (with "→ stereo" only while the downmix switch folds them) and the deinterlacer. Music shows only its audio badge. Each badge is a piece of the bar to place or take off in Settings → Appearance. |
-| **Rendering** | In Settings → Video. Balanced (default) is nearly as sharp as High at a fraction of the cost. Auto uses mpv's best scalers below 4K and Balanced for 4K. Scaling a 4K picture costs ~5× more than 1080p: measured 2.9 ms vs 0.6 ms per frame on a fast GPU, so a weaker one runs out of time only at 4K. If frames still drop, Auto switches to Fast (about VLC's cost). High, Balanced and Fast can also be chosen directly. |
-| **Hardware decoding** | Decided for each video: on for HEVC (H.265) and AV1 at any size and for every codec from 1080p up, where the graphics card can decode them (D3D11VA zero-copy on Windows, VA-API/Vulkan on Linux) for smooth 4K. Its switch then appears in Settings → Video, for that video only. Smaller videos, and anything the card can't decode, play in software with no switch. DVDs decode in software, Blu-rays on the GPU. On Windows laptops with two GPUs, playback runs on the high-performance one (Settings → Video). Frames are timed by the audio clock, as mpv does by default, which no refresh rate can upset; syncing to the display is an option in Settings → Video. **I** shows live stats. |
-| **Picture** | The video menu can **resize** the picture to 4:3 (any video that isn't 4:3) or **crop** it to 16:9 (any video that isn't 16:9), for that video. |
-| **Settings** | Appearance, Playback, Video, Audio, Subtitles, Streaming and downloads, Backup and logs, Shortcuts, About. Each setting is one row: what it is, a sentence on what it does, and its switch or list; a switch says only On or Off, its row says what it switches. **Backup and logs** **exports or imports** every setting as one file for another install, and has the troubleshooting tools: **Create log** saves every second's playback statistics since the video started (frames dropped and late, GPU time per frame, CPU use, refresh rates), the machine and how the video is played to a file in the `logs` folder, for benchmarking or for whoever is helping. Statistics overlay and Copy diagnostics are there too. |
-| **Themes** | Settings → Appearance, switched at once in every window: **Paramaja** (default), **Paramaja Light**, **Graphite**, **Graphite Red**, **Deep Sea**, **Amber**, **Forest**; the looks of other players: **Apple Music**, **Spotify**, **Tidal**, **MPC-HC** (classic, light) and **Windows Media Player**; five with more character: **Call of Duty**, **GTA 6**, **Red Dead Redemption 2**, **80s Synthwave** and **Halloween**; and seven gradient palettes: **Vice City Sunset**, **Golden Hour Escape**, **Neon Nights**, **Tropical Vice**, **Miami Marina** (light), **Vice City by Night** and **Midnight Pursuit** (their colours, corners and title type; no logos or game art). The **interface font** can be any installed font (titles follow it, except in themes with a title font of their own). The bars over the video fade into it in the dark themes and are solid, with a thin line and a shorter title bar, in the light ones. Themes are colours, corners and one title font: nothing blurs or animates, so they cost nothing while a video plays. Each is one file in `src/Paramaja.App/Themes/`: to add one, copy a file, change its values and add a line to `Services/ThemeRegistry.cs` (a test checks it defines every key and that its text is readable). |
-| **Controls bar** | Play sits on the bar's centre with previous / next file and the frame steps around it; volume and the badges on the left; the subtitle, audio and video menus, titles and chapters, the disc menu, More, Settings and fullscreen on the right. That's the **Simple** bar, the default. **More (⋯)** holds whatever the bar leaves off (stop, chapter steps, screenshots) and every way to open something, so nothing is out of reach. **You arrange it**, foobar2000-style: Settings → Appearance (or right-click the bar → **Customize bar…**) shows its left, centre and right as bands of chips; drag any piece between them or off the bar. Every button, badge and the volume's parts are separate pieces, and there are more to add: the time played, the time left, the length, a clock, the title, spaces and dividers. Play, More and Settings can move but stay on. **Everything** puts every button on in one go; **MPC-HC** lays it out like Media Player Classic's toolbar (and comes with the MPC-HC theme). Every shortcut works whatever the bar shows. |
+- **Plays local files, folders and disc images**: drop them on the window. Subtitles next to a video load by themselves.
+- **Streams magnet links and torrent files** while they download, with seeking. Nothing is kept afterwards.
+- **Plays links**: YouTube and about 1,800 other sites (through yt-dlp), MEGA file links, and direct video URLs. Paste one with Ctrl+V.
+- **Downloads videos** from those sites at the quality you pick, or just the audio.
+- **Discs**: DVDs and Blu-rays with their menus, Audio CDs track by track, SACD images.
+- **Rips CDs** the careful way: secure reads, drive offset correction, AccurateRip verification, tags and cover from MusicBrainz, FLAC or WAV, an optional cue sheet, and a log.
+- **Rips DVDs** to MKV (video copied, or encoded with x264/x265 and deinterlaced with BWDIF or QTGMC), to FLAC/WAV audio only, or as a decrypted VIDEO_TS backup. You pick the titles, chapters and audio tracks.
+- **24 themes**, from the default gold and navy to a few playful ones, and a controls bar you can rearrange.
+- **Portable on Windows**: unzip and run. Settings stay in the folder, nothing touches the registry.
 
-### Shortcuts
+<table>
+  <tr>
+    <td><img src="docs/screenshots/theme-synthwave.jpg" alt="Playing with the 80s Synthwave theme"></td>
+    <td><img src="docs/screenshots/settings-appearance.png" alt="Settings, Appearance: the themes"></td>
+  </tr>
+  <tr>
+    <td align="center">Same player, 80s Synthwave theme</td>
+    <td align="center">Settings → Appearance</td>
+  </tr>
+</table>
+
+## Install
+
+Downloads are on the [releases page](https://github.com/raulblideran/atlas-player/releases).
+
+### Windows
+
+Unzip `AtlasPlayer-<version>-portable-win-x64.zip` wherever you like and run `AtlasPlayer.exe`.
+To update, unzip the new version over the old folder; your settings and screenshots are kept.
+
+Everything the app writes lives next to the exe: `settings.json`, `Screenshots/`, `cache/`
+(torrent data while it plays, deleted afterwards) and `portable_config/` (an optional `mpv.conf`,
+`input.conf` or shaders if you want to tweak mpv yourself).
+
+### Linux (Flatpak)
+
+```sh
+flatpak install --user atlas-player-<version>.flatpak
+flatpak run io.github.raulblideran.AtlasPlayer
+```
+
+The bundle brings its own FFmpeg with all the decoders (the Flatpak runtime's copy leaves out
+H.264, HEVC, AAC and AC-3). Settings live in `~/.var/app/io.github.raulblideran.AtlasPlayer/`,
+screenshots go to `~/Pictures/Atlas Player/`, rips to `~/Music` and `~/Videos`.
+
+A few things worth knowing:
+
+- **NVIDIA's proprietary driver** needs the matching Flatpak GL extension. The app tells you at
+  start if it's missing, with the exact `flatpak install` command.
+- **Drives under `/var/mnt`** (Bazzite and other atomic distros) aren't visible by default:
+  `flatpak override --user --filesystem=/var/mnt:ro io.github.raulblideran.AtlasPlayer`
+- **Wayland**: the window is X11, so you need Xwayland. KDE and GNOME always have it; on sway,
+  Hyprland or niri, turn it on.
+- If something goes wrong, Settings → Backup and logs → **Create log** saves a report you can
+  attach to an issue.
+
+## Keyboard shortcuts
 
 | Key | Action | Key | Action |
 |---|---|---|---|
-| Space | Play / pause | . / , | Next / previous frame |
-| Page Down / Page Up | Next / previous chapter | | |
-| ← / → | Seek ±5 s | Ctrl+← / → | Seek ±60 s |
-| ↑ / ↓, wheel | Volume | M | Mute |
-| F, Enter, double-click | Fullscreen (the pointer hides after 3 s) | Esc | Leave fullscreen |
+| Space | Play / pause | F, Enter, double-click | Fullscreen |
+| ← / → | Seek 5 s | Ctrl+← / → | Seek 60 s |
+| ↑ / ↓, mouse wheel | Volume | M | Mute |
+| . / , | Next / previous frame | Page Down / Page Up | Next / previous chapter |
+| A / J | Next audio / subtitle track | V | Hide subtitles |
+| Z / X | Subtitle delay −/+ 0.1 s | D | Deinterlace on / off |
 | S / Shift+S | Screenshot / with subtitles | I | Statistics |
-| A / J | Cycle audio / subtitle track | V | Hide subtitles |
-| Z / X | Subtitle timing −/+ 0.1 s (the total shows on screen) | H | HDR tonemap ↔ passthrough (overrides Auto) |
-| D | Deinterlacing on / off (interlaced videos) | Shift+D | Downmix to stereo (5.1 / 7.1) |
-| Ctrl+O / Ctrl+Shift+O | Open file / folder | Ctrl+U / Ctrl+V | Open link / play a copied link |
-| Ctrl+S | Stop | | |
-| Ctrl+I | Copy diagnostics (while the problem video plays) | | |
+| Ctrl+O | Open file | Ctrl+U / Ctrl+V | Open link / play a copied link |
 
-## Architecture
+The full list is in Settings → Shortcuts.
 
-```
-Paramaja.App   (C# / Avalonia 11)  UI: welcome screen, overlay controls, dialogs, settings
-   │  P/Invoke
-   ├── Paramaja.Core  (C#)        libmpv bindings, PlayerService, settings, shortcuts
-   │     └── libmpv-2.dll           playback, gpu-next HDR, hwdec, subtitles, screenshots
-   │     └── libvlc/                DVDs and Blu-rays with their menus (VlcDiscPlayer)
-   ├── paramaja_torrent.dll (Rust)      librqbit session, MEGA decryption, parallel read-ahead (MEGA, the MEGA app's links), localhost HTTP Range server, C ABI
-   └── yt-dlp.exe + qjs.exe         YouTube & other sites, called by mpv's ytdl hook
-         └── ffmpeg.exe + ffprobe.exe   merge downloads and embed their metadata and cover art
-```
+## Ripping
 
-mpv renders into a native child window (`--wid`), so the full gpu-next/D3D11 pipeline is kept. Discs play through libVLC instead, into a second native window shown only while a disc plays; both engines sit behind the same `IPlayer` interface, so the controls drive either. The controls are transparent overlay windows floated above the video.
+![The DVD rip window](docs/screenshots/rip-dvd.png)
 
-Magnet flow: `nt_add(magnet)` resolves metadata and selects the largest video. mpv then opens `http://127.0.0.1:<port>/stream/<id>/<file>`, and each HTTP range request becomes a librqbit `FileStream` that prioritises the pieces it needs.
+**Open → Rip Disc…** walks you through it a step at a time, and the steps depend on the disc.
 
-## Building
+For an **Audio CD** you check the tags and tracks (looked up on MusicBrainz), pick FLAC or WAV,
+decide whether you want a cue sheet, and rip. Every block is read until two reads agree, the
+result is checked against AccurateRip, and a log is written in the familiar EAC-style layout.
 
-Requirements: .NET 10 SDK, Rust (with the `x86_64-pc-windows-gnu` target and MinGW for Windows cross-builds), ffmpeg + mpv/libmpv (for tests), 7-Zip, ImageMagick (icon only).
+For a **DVD** (a drive, an `.iso` or a `VIDEO_TS` folder) you choose between a full MKV, audio
+only, or a decrypted backup of the whole disc, then the titles, chapters and audio tracks. MKVs
+can keep the original MPEG-2 or be encoded with x264 or x265; interlaced video is deinterlaced
+with BWDIF or QTGMC, at the disc's frame rate or double it. Multichannel audio stays multichannel
+unless you ask for stereo.
 
-```bash
-./build/test.sh              # fixtures + Rust + .NET tests (add --net for the real-swarm test)
-./build/bump-version.sh 1.2.0 "What changed"   # sets the version in the project, CHANGELOG.md and metainfo
-./build/publish-win.sh       # → dist/Paramaja-<version>-portable-win-x64.zip
-./build/publish-flatpak.sh   # → dist/paramaja-<version>.flatpak (see above)
-./build/fetch-libs.sh linux-x64 && dotnet run --project src/Paramaja.App   # run on Linux
-./build/make-icon.sh         # re-render the aubergine icon from Assets/paramaja.svg
+## Building from source
+
+You'll need the .NET 10 SDK, Rust, and (for the tests) FFmpeg and libmpv.
+
+```sh
+./build/fetch-libs.sh linux-x64                 # builds the Rust torrent library
+dotnet run --project src/AtlasPlayer.App        # run it
+./build/test.sh                                 # Rust and .NET test suites
 ```
 
-### Releases
+Packaging:
 
-Pushing a version tag publishes a GitHub Release: `.github/workflows/release.yml` builds the
-Windows zip and the Flatpak from that commit, with the version's CHANGELOG.md section as the
-notes (`build/release-notes.sh`). The release goes up as soon as the Windows zip is ready, a
-few minutes in, and the Flatpak is attached when its longer build finishes. The tag must
-match the project version.
-
-```bash
-./build/bump-version.sh 1.3.3 "What changed"   # then list the changes in CHANGELOG.md
-git commit -am "1.3.3: what changed"
-git tag v1.3.3 && git push origin main v1.3.3
+```sh
+./build/publish-win.sh       # dist/AtlasPlayer-<version>-portable-win-x64.zip
+./build/publish-flatpak.sh   # dist/atlas-player-<version>.flatpak, installed for your user
 ```
 
-Set `PARAMAJA_DEBUG=1` to write a verbose mpv log to `logs/mpv.log`.
+The Flatpak build needs `org.flatpak.Builder` and the 25.08 SDK with the `rust-stable` and
+`dotnet10` extensions. The first build compiles FFmpeg, mpv and their dependencies and takes a
+while; after that only the app is rebuilt. Pushing a `v<version>` tag builds both packages on
+GitHub Actions and publishes a release with the matching `CHANGELOG.md` section as its notes.
 
-### Tests
+### How it fits together
 
-* **Rust** (`native/paramaja-torrent`): unit tests for magnet parsing, file selection and HTTP ranges. There's an offline end-to-end test (a local seeder → magnet with `x.pe` → HTTP range streaming → mpv playback) and an opt-in real-swarm test using Blender's *Sintel* (CC-BY).
-* **Core** (`tests/Paramaja.Core.Tests`): every generated mpv option is checked against real libmpv. Headless playback of generated fixtures checks:
-  * HEVC Main10 HDR10 detection and 4K HEVC playback
-  * 5.1/7.1 passthrough vs downmix, and no normalisation
-  * exact frame step and back-step
-  * screenshots that really are uncompressed PNGs (stored deflate blocks), 16-bit for HDR
-  * auto-deinterlacing for flagged 1080i and for unflagged interlaced pictures (idet), never for progressive video
-  * a stereo track picked by default, and a stereo source's left or right channel on both speakers
-  * embedded/external subtitles and key forwarding
+```
+src/AtlasPlayer.App      Avalonia UI: windows, overlay controls, dialogs, settings
+src/AtlasPlayer.Core     playback (libmpv, libVLC for disc menus), ripping, settings
+native/atlas-torrent     Rust: librqbit torrent streaming and MEGA links, served over localhost HTTP
+packaging/               Flatpak manifest, desktop entry, AppStream metadata
+```
 
-  The full C# → Rust → mpv path is also tested through a local seeder.
-* **App** (`tests/Paramaja.App.Tests`): view-model tests (shortcuts, magnet flow, settings persistence, auto-hide, badges) and Avalonia headless UI tests (controls bar, seek bar, settings, magnet dialog, welcome screen).
+mpv draws straight into a native child window, so its full GPU pipeline is kept; the controls are
+small transparent windows floated on top. Torrents are exposed to mpv as an HTTP stream, and each
+range request tells librqbit which pieces to fetch first.
 
-Test media is generated by `tests/fixtures/make-fixtures.sh`, so no copyrighted content is needed.
+## Contributing
+
+Bug reports and pull requests are welcome. For playback problems, please attach the log from
+Settings → Backup and logs → **Create log** (made while the video is playing), since it includes
+the codec, the GPU and what mpv decided to do.
 
 ## Credits
 
-`native/paramaja-torrent/vendor/librqbit` is librqbit 9.0.1 with one small patch that makes the stream lookahead configurable (`vendor/PARAMAJA-librqbit.patch`).
+Atlas Player stands on a lot of other people's work: [mpv](https://mpv.io),
+[FFmpeg](https://ffmpeg.org), [libplacebo](https://code.videolan.org/videolan/libplacebo),
+[libVLC](https://www.videolan.org/vlc/libvlc.html), [librqbit](https://github.com/ikatson/rqbit),
+[Avalonia](https://avaloniaui.net), [yt-dlp](https://github.com/yt-dlp/yt-dlp),
+[QuickJS-NG](https://github.com/quickjs-ng/quickjs),
+[libdvdread and libdvdcss](https://www.videolan.org/developers/libdvdcss.html),
+[x264](https://www.videolan.org/developers/x264.html), [x265](https://www.x265.org),
+[FLAC](https://xiph.org/flac/), and for QTGMC [VapourSynth](https://www.vapoursynth.com),
+[havsfunc](https://github.com/HomeOfVapourSynthEvolution/havsfunc),
+[MVTools](https://github.com/dubhater/vapoursynth-mvtools), [znedi3](https://github.com/sekrit-twc/znedi3)
+and [BestSource](https://github.com/vapoursynth/bestsource). Rips are checked against
+[AccurateRip](http://www.accuraterip.com) and tagged from [MusicBrainz](https://musicbrainz.org).
+Icons are from [Material Design Icons](https://pictogrammers.com).
 
-Built on [mpv](https://mpv.io) (libmpv, LGPL/GPL), [FFmpeg](https://ffmpeg.org), [libplacebo](https://code.videolan.org/videolan/libplacebo), [librqbit](https://github.com/ikatson/rqbit) (Apache-2.0), [Avalonia](https://avaloniaui.net) (MIT) and [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) (MIT), [yt-dlp](https://github.com/yt-dlp/yt-dlp) (Unlicense) and [QuickJS-NG](https://github.com/quickjs-ng/quickjs) (MIT), [libdvdread and libdvdcss](https://www.videolan.org/developers/libdvdcss.html) (GPL-2.0+), [x264](https://www.videolan.org/developers/x264.html) and [x265](https://www.x265.org) (GPL-2.0+), [FLAC](https://xiph.org/flac/) (BSD/GPL), and for QTGMC [VapourSynth](https://www.vapoursynth.com) (LGPL-2.1), [havsfunc](https://github.com/HomeOfVapourSynthEvolution/havsfunc), [mvsfunc](https://github.com/HomeOfVapourSynthEvolution/mvsfunc), [MVTools](https://github.com/dubhater/vapoursynth-mvtools) (GPL-2.0), [znedi3](https://github.com/sekrit-twc/znedi3) (GPL-2.0), [RemoveGrain](https://github.com/vapoursynth/vs-removegrain), [BestSource](https://github.com/vapoursynth/bestsource) (MIT) and, on Windows, [Python](https://www.python.org) (PSF). Rips are checked against [AccurateRip](http://www.accuraterip.com) and tagged from [MusicBrainz](https://musicbrainz.org) and the [Cover Art Archive](https://coverartarchive.org). Windows FFmpeg builds come from [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds). Icons are from [Material Design Icons](https://pictogrammers.com) (Apache-2.0). Windows libmpv builds come from [shinchiro/mpv-winbuild-cmake](https://github.com/shinchiro/mpv-winbuild-cmake).
+The screenshots show [Big Buck Bunny](https://peach.blender.org), © Blender Foundation, CC BY 3.0.
 
-Both builds bundle a GPL libmpv, so the project is licensed GPL-3.0-or-later (see `LICENSE`).
+## License
+
+GPL-3.0-or-later; see [LICENSE](LICENSE). The bundled libmpv is GPL, which sets the license for the
+whole package.

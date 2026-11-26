@@ -67,19 +67,19 @@ jobs:
         with: { dotnet-version: "10.0.x" }
       - uses: dtolnay/rust-toolchain@stable
       - name: Torrent engine tests
-        working-directory: native/paramaja-torrent
+        working-directory: native/atlas-torrent
         run: cargo test --lib
       - name: UI and view model tests
-        run: dotnet test tests/Paramaja.App.Tests --filter "Category!=desktop" --logger GitHubActions
+        run: dotnet test tests/AtlasPlayer.App.Tests --filter "Category!=desktop" --logger GitHubActions
       # Real windows on the runner's desktop: the fullscreen pointer hidden over a child window of
       # another thread (as mpv's video is) and a drop target revoked there. A runner's session may
       # show no pointer at all, so this step reports (annotations) without failing the run.
       - name: Pointer and drop targets on real windows
         continue-on-error: true
-        run: dotnet test tests/Paramaja.App.Tests --filter "Category=desktop" --logger GitHubActions
+        run: dotnet test tests/AtlasPlayer.App.Tests --filter "Category=desktop" --logger GitHubActions
       # The DVD ripper's libdvdread and libdvdcss, as the Windows zip ships them (build/build-dvdread-win.sh).
       - name: DVD reading (libdvdread)
         env:
-          PARAMAJA_NATIVE_DIR: ${{ github.workspace }}/packaging/dvd/win64
-          PARAMAJA_REQUIRE_DVDREAD: "1"
-        run: dotnet test tests/Paramaja.Core.Tests --filter "FullyQualifiedName~DvdReadNativeTests" --logger GitHubActions
+          ATLAS_NATIVE_DIR: ${{ github.workspace }}/packaging/dvd/win64
+          ATLAS_REQUIRE_DVDREAD: "1"
+        run: dotnet test tests/AtlasPlayer.Core.Tests --filter "FullyQualifiedName~DvdReadNativeTests" --logger GitHubActions

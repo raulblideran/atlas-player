@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:s="using:AtlasPlayer.App.Services"
+        x:Class="AtlasPlayer.App.Views.OpenDiscDialog"
+        Title="Open Disc" Icon="/Assets/atlas-player.ico"
+        Width="580" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
+  <DockPanel>
+    <Border Classes="footer" DockPanel.Dock="Bottom">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
+        <Button Classes="ghost" Content="Disc folder…" Click="OnPickFolder"
+                ToolTip.Tip="A DVD (VIDEO_TS) or Blu-ray (BDMV) folder, or a CD rip's folder with its .cue sheet" />
+        <Button x:Name="DiscImageButton" Grid.Column="1" Classes="ghost" Content="Disc image…" Click="OnPickImage"
+                ToolTip.Tip="A DVD, Blu-ray or SACD image (.iso), or an Audio CD image (.cue with its .bin)" />
+        <Button Grid.Column="3" Classes="ghost" Content="Cancel" Click="OnCancel" IsCancel="True" />
+      </Grid>
+    </Border>
+    <StackPanel Margin="24,22,24,20" Spacing="12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <PathIcon Classes="title" Data="{StaticResource IconDisc}" />
+        <TextBlock Classes="dialog" Text="Open Disc" />
+      </StackPanel>
+      <TextBlock Classes="note" FontSize="13.5"
+                 Text="Play a CD, DVD or Blu-ray from a drive, a disc folder or a disc image. DVDs and Blu-rays open on their menus; an Audio CD plays track by track. Store-bought DVDs play; encrypted Blu-rays don't." />
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Classes="group" Text="Drives" Margin="2,6,0,4" />
+        <Button Grid.Column="1" Classes="ghost" Content="Refresh" Click="OnRefresh" ToolTip.Tip="After putting a disc in" Padding="10,5" />
+      </Grid>
+      <Border Classes="rows" Padding="20,10">
+        <StackPanel>
+          <ItemsControl x:Name="DriveList">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="s:OpticalDrive">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,4">
+                  <TextBlock Text="{Binding Description}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                  <Button Grid.Column="1" Classes="ghost" Content="Rip…" IsEnabled="{Binding HasDisc}" Click="OnRipDrive" Tag="{Binding Root}"
+                          ToolTip.Tip="Copy this CD or DVD to files" />
+                  <Button Grid.Column="2" Classes="accent" Content="Play" IsEnabled="{Binding HasDisc}" Click="OnPlayDrive" Tag="{Binding Root}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock x:Name="NoDrives" Classes="note" Margin="0,4" Text="No CD, DVD or Blu-ray drive found. You can still open a disc folder or a disc image below." IsVisible="False" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </DockPanel>
+</Window>

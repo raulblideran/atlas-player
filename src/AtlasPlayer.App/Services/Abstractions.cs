@@ -1,0 +1,37 @@
+namespace AtlasPlayer.App.Services;
+
+/// <summary>Marshals work onto the UI thread (mpv raises events on its own thread).</summary>
+public interface IUiDispatcher
+{
+    void Post(Action action);
+}
+
+/// <summary>Everything the view model needs from the windowing layer, so it can be tested headless.</summary>
+/// <summary>A place in the settings window to open at.</summary>
+public enum SettingsSection { None, ControlsBar }
+
+public interface IDialogService
+{
+    Task<string?> PickMediaFileAsync();
+    Task<string?> PickFolderAsync();
+    Task<string?> PickSubtitleFileAsync();
+    Task<string?> AskLinkAsync();
+    /// <summary>The downloader window; <paramref name="url"/> prefills it (else the clipboard, if it holds a link).</summary>
+    Task ShowDownloaderAsync(string? url);
+    /// <summary>A drive with a disc, or a VIDEO_TS / BDMV folder; null if cancelled. "rip:" before a drive's path: rip it instead.</summary>
+    Task<string?> PickDiscAsync();
+    /// <summary>The ripper window, for <paramref name="drive"/> (a drive's root) or the first drive with a disc.</summary>
+    Task ShowRipperAsync(string? drive);
+    Task<string?> ReadClipboardTextAsync();
+    /// <summary>The settings window, at <paramref name="section"/> if one is given.</summary>
+    Task ShowSettingsAsync(SettingsSection section = SettingsSection.None);
+    void OpenFolder(string path);
+    Task CopyToClipboardAsync(string text);
+    /// <summary>A yes / no question; true for <paramref name="yes"/>.</summary>
+    Task<bool> ConfirmAsync(string title, string message, string yes);
+}
+
+public sealed class AvaloniaDispatcher : IUiDispatcher
+{
+    public void Post(Action action) => Avalonia.Threading.Dispatcher.UIThread.Post(action);
+}

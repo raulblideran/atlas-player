@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Stages native libraries into libs/<rid>:
-#   win-x64   : libmpv-2.dll from shinchiro/mpv-winbuild-cmake (pinned) + paramaja_torrent.dll (cross-built),
+#   win-x64   : libmpv-2.dll from shinchiro/mpv-winbuild-cmake (pinned) + atlas_torrent.dll (cross-built),
 #               libVLC, yt-dlp, QuickJS, FFmpeg, flac and libdvdread (pinned or committed)
-#   linux-x64 : libparamaja_torrent.so (libmpv comes from the system / Homebrew)
+#   linux-x64 : libatlas_torrent.so (libmpv comes from the system / Homebrew)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RID="${1:-win-x64}"
@@ -32,7 +32,7 @@ FLAC_SHA256=53f1500f0d6e7c61379d7fee50d4a9f7f504c650009506d9ba015530d76c0dde
 # and SHA-256. Its deinterlacer is swapped for the BWDIF one (build/build-vlc-bwdif-win.sh).
 LIBVLC_VERSION=3.0.24
 LIBVLC_SHA256=1ed59c09152e78aff84663fa76efab26057716576db74332858810e5ef54ae1f
-# QTGMC for DVD rips (Paramaja.Core/Ripping/Dvd/Qtgmc.cs): a "vapoursynth" folder with Python's
+# QTGMC for DVD rips (AtlasPlayer.Core/Ripping/Dvd/Qtgmc.cs): a "vapoursynth" folder with Python's
 # embeddable build, VapourSynth's wheel (unpacked into Lib\site-packages, as its portable
 # installer does), havsfunc r33 (its last release with QTGMC) with mvsfunc and adjust, and the
 # plugins QTGMC needs, from the releases VapourSynth's package index (vsrepo) lists. Each pinned
@@ -71,7 +71,7 @@ fetch_checked() {
   mv "$dest.part" "$dest"
 }
 mkdir -p "$OUT"
-cd "$ROOT/native/paramaja-torrent"
+cd "$ROOT/native/atlas-torrent"
 
 case "$RID" in
   win-x64)
@@ -79,11 +79,11 @@ case "$RID" in
       # On Windows (Git Bash, e.g. GitHub's Windows runners): the native MSVC toolchain.
       # .cargo/config.toml links the C runtime statically, so no VC++ redistributable is needed.
       cargo build --release
-      cp target/release/paramaja_torrent.dll "$OUT/"
+      cp target/release/atlas_torrent.dll "$OUT/"
     else
       # On Linux: cross-compiled with MinGW.
       cargo build --release --target x86_64-pc-windows-gnu
-      cp target/x86_64-pc-windows-gnu/release/paramaja_torrent.dll "$OUT/"
+      cp target/x86_64-pc-windows-gnu/release/atlas_torrent.dll "$OUT/"
     fi
     # libmpv and FFmpeg are re-fetched when their pin changes (libs/<rid>.*-build record the
     # build, outside the folder the app ships).
@@ -196,7 +196,7 @@ case "$RID" in
     ;;
   linux-x64)
     cargo build --release
-    cp target/release/libparamaja_torrent.so "$OUT/"
+    cp target/release/libatlas_torrent.so "$OUT/"
     ;;
   *) echo "unsupported rid $RID" >&2; exit 1 ;;
 esac

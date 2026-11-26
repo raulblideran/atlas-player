@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.raulblideran.AtlasPlayer</id>
+
+  <name>Atlas Player</name>
+  <summary>Play any video, with HDR tonemapping and magnet streaming</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <developer id="io.github.raulblideran">
+    <name>Raul Blideran</name>
+  </developer>
+
+  <description>
+    <p>
+      Atlas Player plays what mpv and VLC play, HEVC and 10-bit included, and
+      keeps out of the way: one window, controls that hide when you are
+      watching, and a welcome screen that takes a dropped file or a pasted
+      magnet link.
+    </p>
+    <p>
+      HDR films are tonemapped to SDR on the fly, scene by scene, so they look
+      right on an ordinary monitor. On an HDR display, one key switches to
+      passthrough instead.
+    </p>
+    <p>
+      Paste a magnet link and it starts playing in seconds. Only the file you
+      are watching is downloaded, prioritised around the playhead, so seeking
+      works as it would on a local file.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>HDR10, HLG and Dolby Vision tonemapped to SDR, or passed through to an HDR display</li>
+      <li>Magnet link streaming, with a choice of file when a torrent has several</li>
+      <li>Volume is never normalised; 5.1 and 7.1 are kept unless you ask for a stereo downmix</li>
+      <li>Embedded and external subtitles, auto-loaded by file name</li>
+      <li>Lossless, uncompressed PNG screenshots at the video's own resolution</li>
+      <li>Frame-by-frame stepping, forwards and backwards</li>
+      <li>Automatic deinterlacing, only for interlaced content</li>
+      <li>Hardware-accelerated decoding for smooth 4K</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.raulblideran.AtlasPlayer.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Playing Big Buck Bunny (Blender Foundation, CC BY 3.0)</caption>
+      <image>https://raw.githubusercontent.com/raulblideran/atlas-player/main/docs/screenshots/playing.jpg</image>
+    </screenshot>
+    <screenshot>
+      <caption>Themes: 80s Synthwave</caption>
+      <image>https://raw.githubusercontent.com/raulblideran/atlas-player/main/docs/screenshots/theme-synthwave.jpg</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/raulblideran/atlas-player</url>
+  <url type="bugtracker">https://github.com/raulblideran/atlas-player/issues</url>
+  <url type="vcs-browser">https://github.com/raulblideran/atlas-player</url>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Video</category>
+    <category>Player</category>
+  </categories>
+
+  <keywords>
+    <keyword>video</keyword>
+    <keyword>player</keyword>
+    <keyword>hdr</keyword>
+    <keyword>torrent</keyword>
+    <keyword>magnet</keyword>
+  </keywords>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <requires>
+    <display_length compare="ge">720</display_length>
+  </requires>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="2.0.0-beta.10" date="2026-11-26" type="development">
+      <description>
+        <p>Describe this release</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.9" date="2026-11-26" type="development">
+      <description>
+        <p>Describe this release</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.8" date="2026-11-26" type="development">
+      <description>
+        <p>Describe this release</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.7" date="2026-11-25" type="development">
+      <description>
+        <p>Thirteen new themes, a font for the interface, codec badges for audio, deinterlaced screenshots</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.6" date="2026-11-25" type="development">
+      <description>
+        <p>Rip single tracks of an Audio CD; a DVD's resolution badge no longer reads 0p (interlaced video shows as 576i); torrents only play, their data always deleted; More leaves out Download video while the top bar offers it.</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.5" date="2026-11-24" type="development">
+      <description>
+        <p>A controls bar you arrange yourself: drag any button, badge or readout (time left, clock, title, spaces, dividers) to the left, centre or right of the bar, or off it, in Settings, Appearance.</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.4" date="2026-11-24" type="development">
+      <description>
+        <p>2.0.0-beta.3 with a complete Windows zip (beta.2 and beta.3 shipped without their libraries). The Linux build is unchanged.</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.3" date="2026-11-24" type="development">
+      <description>
+        <p>2.0.0-beta.2 with security updates: .NET 10, FFmpeg 9.1, mpv 0.42, libass 0.17.5, libplacebo, libbluray and yt-dlp.</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.2" date="2026-11-24" type="development">
+      <description>
+        <p>A beta of 2.0.0, not yet tried on Windows: the same as 2.0.0-beta.1 (a new look with eleven themes, a simpler controls bar, regrouped settings, themed messages over the video), with the Linux Flatpak built again.</p>
+      </description>
+    </release>
+    <release version="2.0.0-beta.1" date="2026-11-24" type="development">
+      <description>
+        <p>A beta of 2.0.0, not yet tried on Windows. A new look: eleven themes (the default and its light version, Graphite, Deep Sea, Amber, Forest, Call of Duty, GTA 6, Red Dead Redemption 2, 80s Synthwave, Halloween), switched live; a simpler controls bar with a More menu; the welcome screen lists every way to open something; settings regrouped into pages, each setting named and explained in a sentence. Playback, streaming and ripping are unchanged.</p>
+      </description>
+    </release>
+    <release version="1.12.0" date="2026-11-08">
+      <description>
+        <p>MEGA desktop app links read six chunks at once (no more slow buffering); DVD rips of chosen chapters, x264 deinterlaced with BWDIF; subtitle styling; choose the controls bar's buttons; Previous / Next for folders; settings carried to a new install in one file; Settings options in their categories; the pointer back on any move; the Flatpak checked on five distributions, with fallbacks for graphics drivers it can't reach.</p>
+      </description>
+    </release>
+    <release version="1.11.0" date="2026-10-31">
+      <description>
+        <p>Drag and drop on Linux and over the video on Windows; the fullscreen pointer hides on Windows; links start by themselves after 5 s of buffer; DVD rips to H.264 or H.265 MKVs that look the same as the disc in less space; the Rip Disc window fits the screen.</p>
+      </description>
+    </release>
+    <release version="1.10.1" date="2026-10-31">
+      <description>
+        <p>Crop to 16:9 right after Resize to 4:3 crops by the right shape; the Linux build attached</p>
+      </description>
+    </release>
+    <release version="1.10.0" date="2026-10-31">
+      <description>
+        <p>CD and DVD ripping (AccurateRip, MusicBrainz, FLAC; DVD to MKV or VIDEO_TS), DSD and SACDs at 192 kHz, CD and SACD badges in the controls bar, a channels badge that follows the downmix switch, the pointer hidden in fullscreen</p>
+      </description>
+    </release>
+    <release version="1.9.0" date="2026-10-29">
+      <description>
+        <p>Stop button, torrent playlists, Resize 4:3 / Crop 16:9, streaming quality in the video menu, DVD / Blu-ray / CD / SACD images, DSD files, fixes for Space, double-click and overlapping messages</p>
+      </description>
+    </release>
+    <release version="1.8.0" date="2026-10-28">
+      <description>
+        <p>Deinterlacing only for interlaced videos, smoother playback on laptops, Developer tab and logs</p>
+      </description>
+    </release>
+    <release version="1.7.0" date="2026-10-27">
+      <description>
+        <p>Simpler Open menus with Open Link and Download Video as their own buttons; downloads list their qualities as soon as a link is pasted, and can save the audio only. DVDs and Blu-rays deinterlace with BWDIF like files do. Audio CDs and CD rips with a cue sheet play, with tracks as chapters. Hardware acceleration is decided for each video, mobius is the default tonemapping curve, and DVDs no longer lag on Windows when they first load.</p>
+      </description>
+    </release>
+    <release version="1.6.0" date="2026-10-27">
+      <description>
+        <p>DVDs and Blu-rays with their menus (Open disc, Disc menu button); downloads keep their metadata and never overwrite</p>
+      </description>
+    </release>
+    <release version="1.5.0" date="2026-10-27">
+      <description>
+        <p>Downloader with quality choice, streaming quality, Open link button, volume normalization, mono downmix, 60 Hz playback timing, Balanced rendering by default</p>
+      </description>
+    </release>
+    <release version="1.4.0" date="2026-10-26">
+      <description>
+        <p>Titles and chapters menu; menus show only the options the playing video can use; HEVC-only hardware decoding; double-click fullscreen on Windows</p>
+      </description>
+    </release>
+    <release version="1.3.3" date="2026-10-26">
+      <description>
+        <p>Fixes an error when closing the window on Windows, and support for older system libmpv on Linux</p>
+      </description>
+    </release>
+    <release version="1.3.2" date="2026-10-26">
+      <description>
+        <p>Fullscreen controls bar now really sits on the bottom edge on Linux/KDE</p>
+      </description>
+    </release>
+    <release version="1.3.1" date="2026-10-26">
+      <description>
+        <p>In fullscreen the controls bar sits on the bottom edge of the screen again, with no strip of video below it</p>
+      </description>
+    </release>
+    <release version="1.3.0" date="2026-10-26">
+      <description>
+        <p>Open folders, DVDs and Blu-rays, download YouTube videos, automatic HDR</p>
+      </description>
+    </release>
+    <release version="1.2.0" date="2026-10-26">
+      <description>
+        <p>Smooth 4K on weaker GPUs: Auto rendering uses a lighter profile for 4K</p>
+      </description>
+    </release>
+    <release version="1.1.0" date="2026-10-26">
+      <description>
+        <p>Fixes and additions from the first round of testing.</p>
+        <ul>
+          <li>Controls come back when you move the mouse, including in fullscreen</li>
+          <li>BWDIF or Bob deinterlacing, logarithmic volume, subtitle font size shown</li>
+          <li>Faster magnet streaming for 4K HDR, with a bigger buffer before playback starts</li>
+          <li>YouTube and other sites, MEGA file links and direct video URLs</li>
+          <li>Optional AV-receiver passthrough; the original audio plays by default</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.0" date="2026-10-26">
+      <description>
+        <p>First release.</p>
+        <ul>
+          <li>HDR to SDR tonemapping with scene-adaptive brightness, and HDR passthrough</li>
+          <li>Magnet link streaming that downloads only the file being watched</li>
+          <li>Optional 5.1/7.1 stereo downmix, with volume never normalised</li>
+          <li>Uncompressed PNG screenshots, frame stepping and automatic deinterlacing</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>

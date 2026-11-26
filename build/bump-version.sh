@@ -12,8 +12,8 @@ VERSION="${1:?usage: bump-version.sh <major.minor.patch> [summary]}"
 SUMMARY="${2:-}"
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "version must look like 1.2.3 or 1.2.3-beta.1" >&2; exit 1; }
 DATE="$(date +%F)"
-CSPROJ="$ROOT/src/Paramaja.App/Paramaja.App.csproj"
-META="$ROOT/packaging/io.github.raulblideran.Paramaja.metainfo.xml"
+CSPROJ="$ROOT/src/AtlasPlayer.App/AtlasPlayer.App.csproj"
+META="$ROOT/packaging/io.github.raulblideran.AtlasPlayer.metainfo.xml"
 
 CURRENT=$(sed -n 's|.*<Version>\(.*\)</Version>.*|\1|p' "$CSPROJ")
 if [[ "$CURRENT" == "$VERSION" ]]; then echo "already at $VERSION"; exit 0; fi

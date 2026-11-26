@@ -1,0 +1,356 @@
+using System.ComponentModel;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using AtlasPlayer.App.Services;
+using AtlasPlayer.App.ViewModels;
+
+namespace AtlasPlayer.App.Views;
+
+public partial class MainWindow : Window
+{
+    private ControlsBar? _bottom;
+    private TopBar? _top;
+    private ToastWindow? _toast;
+    private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    /// <summary>While the pointer is hidden its position is polled more often, so it's back as soon as it moves.</summary>
+    private readonly DispatcherTimer _hiddenTick = new() { Interval = TimeSpan.FromMilliseconds(50) };
+    private int _ticks;
+    private readonly ICursorProbe _cursor = CursorProbe.Create();
+    private readonly IDisplayHdrProbe _hdr = DisplayHdr.Create();
+    private PixelRect? _hdrScreen;
+    private IDisposable? _clicks;
+
+    private MainViewModel Vm => (MainViewModel)DataContext!;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        Video.HandleCreated += h => Vm.AttachPlayer(h);
+        DiscVideo.HandleCreated += h => Vm.AttachDiscSurface(h);
+
+        AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
+        // A key that ran a shortcut is the shortcut's on its way up too (see OnKeyDown).
+        AddHandler(KeyUpEvent, (_, e) => { if (_shortcutKeys.Remove(e.Key)) e.Handled = true; }, RoutingStrategies.Tunnel);
+        AddHandler(DragDrop.DragOverEvent, (_, e) => e.DragEffects = DragDropEffects.Copy);
+        AddHandler(DragDrop.DropEvent, OnDrop);
+        PointerMoved += (_, _) => Vm.NotifyPointerMoved();
+        PointerWheelChanged += (_, e) => Vm.HandleKey(e.Delta.Y > 0 ? "WHEEL_UP" : "WHEEL_DOWN");
+
+        PositionChanged += (_, _) =>
+        {
+            UpdateOverlays();
+            // Moving to another monitor may move between HDR and SDR.
+            if (Screens.ScreenFromWindow(this)?.Bounds != _hdrScreen) ProbeHdr();
+        };
+        Resized += (_, _) => UpdateOverlays();
+        Video.LayoutUpdated += (_, _) => UpdateOverlays();
+        DiscVideo.LayoutUpdated += (_, _) => UpdateOverlays();
+
+        _hiddenTick.Tick += (_, _) => PollPointer();
+        _tick.Tick += (_, _) =>
+        {
+            PollPointer();
+            Vm.TickAutoHide(DateTime.UtcNow);
+            // mpv's video window takes drops and refuses them (Windows); without it they reach ours.
+            if (OperatingSystem.IsWindows())
+                foreach (var surface in new[] { Video, DiscVideo })
+                    if (surface.Handle is { } host) Win32DropTargets.RevokeInside((IntPtr)host);
+            // Cheap when nothing changed, and heals anything an event missed (e.g. a
+            // fullscreen switch that moved the video after the last layout pass).
+            UpdateOverlays();
+            if (++_ticks % 4 == 0)
+            {
+                if (Vm.IsTorrent) Vm.RefreshTorrentStats();
+                Vm.RefreshHealth();
+            }
+        };
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (DataContext is not MainViewModel vm) return;
+        vm.PropertyChanged += OnVmPropertyChanged;
+        vm.FullscreenRequested += SetFullscreen;
+        ApplySurfaces();
+    }
+
+    protected override void OnOpened(EventArgs e)
+    {
+        base.OnOpened(e);
+        _bottom = new ControlsBar { DataContext = DataContext };
+        _top = new TopBar { DataContext = DataContext };
+        _toast = new ToastWindow { DataContext = DataContext };
+        if (OverlayPlacement.ParkInsteadOfHiding)
+        {
+            _toast.Position = OverlayPlacement.Parked;
+            _toast.Show(this);
+        }
+        // On Windows the bars are shown once and parked off-screen while hidden; see
+        // OverlayPlacement.Parked.
+        foreach (var bar in new Window[] { _top, _bottom })
+        {
+            if (OverlayPlacement.ParkInsteadOfHiding)
+            {
+                bar.Position = OverlayPlacement.Parked;
+                bar.Show(this);
+            }
+            // Clicking a bar activates it and deactivates us; judge once that has settled.
+            bar.Activated += (_, _) => Dispatcher.UIThread.Post(UpdateOverlays);
+            bar.Deactivated += (_, _) => Dispatcher.UIThread.Post(UpdateOverlays);
+        }
+        Activated += (_, _) =>
+        {
+            Dispatcher.UIThread.Post(UpdateOverlays);
+            ProbeHdr(); // catches HDR switched on or off in the system settings meanwhile
+        };
+        Deactivated += (_, _) => Dispatcher.UIThread.Post(UpdateOverlays);
+        _tick.Start();
+        // Avalonia's X11 backend has no drag and drop of its own (X11DragDrop).
+        if (OperatingSystem.IsLinux())
+        {
+            X11DragDrop.OnDrop(Vm.DropAsync);
+            X11DragDrop.Register(this);
+        }
+        UpdateOverlays();
+        ProbeHdr();
+        // Double-click fullscreen, from clicks the OS reports; where it can't, the engine's own.
+        if (TryGetPlatformHandle()?.Handle is { } hwnd)
+            _clicks = VideoClicks.Watch(hwnd, () => { if (!Vm.IsIdle) Vm.HandleClick(DateTime.UtcNow); },
+                () => Vm.NotifyPointerMoved("the mouse's movement"));
+        Vm.ClicksFromSystem = _clicks is not null;
+        // A graphics driver the Flatpak can't use (NVIDIA without its extension): said once the window is up.
+        Dispatcher.UIThread.Post(() => _ = Vm.CheckGraphicsAsync(), DispatcherPriority.Background);
+    }
+
+    /// <summary>
+    /// The pointer's position from the OS: mpv's video window keeps its movements. In fullscreen
+    /// any movement counts while the player is in front, whatever the monitors' layout says.
+    /// </summary>
+    private void PollPointer()
+    {
+        if (_cursor.Position() is not { } p) return;
+        var fullscreen = WindowState == WindowState.FullScreen;
+        var inside = OverlayPlacement.IsPointerOverPlayer(new PixelPoint(p.X, p.Y),
+            OverlayPlacement.WindowRect(Position, ClientSize, RenderScaling),
+            Screens.ScreenFromWindow(this)?.Bounds, fullscreen) || (fullscreen && IsActive);
+        Vm.ReportPointer(p.X, p.Y, inside);
+    }
+
+    private void ProbeHdr()
+    {
+        if (TryGetPlatformHandle()?.Handle is not { } hwnd || DataContext is not MainViewModel vm) return;
+        _hdrScreen = Screens.ScreenFromWindow(this)?.Bounds;
+        vm.DisplayIsHdr = _hdr.IsHdrActive(hwnd);
+    }
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        _tick.Stop();
+        _hiddenTick.Stop();
+        VideoClicks.WantMotion = false;
+        _clicks?.Dispose();
+        Win32Pointer.SetHidden(false, VideoHosts());
+        if (OperatingSystem.IsWindows()) Win32OnThread.Unhook();
+        _bottom?.Close();
+        _top?.Close();
+        // A resize or move already queued would otherwise try to show the closed bars again.
+        _bottom = null;
+        _top = null;
+        base.OnClosing(e);
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == WindowStateProperty)
+        {
+            if (DataContext is MainViewModel vm) vm.IsFullscreen = WindowState == WindowState.FullScreen;
+            UpdateOverlays();
+        }
+    }
+
+    private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MainViewModel.IsIdle) or nameof(MainViewModel.IsDiscMode):
+                ApplySurfaces();
+                UpdateOverlays();
+                break;
+            case nameof(MainViewModel.ControlsVisible) or nameof(MainViewModel.ToastVisible):
+                UpdateOverlays();
+                break;
+            case nameof(MainViewModel.IsCursorHidden):
+                var hidden = Vm.IsCursorHidden;
+                // While hidden, any movement over the player shows it: the OS's mouse events, and
+                // its position polled more often (libVLC's window reports nothing).
+                VideoClicks.WantMotion = hidden;
+                if (hidden) _hiddenTick.Start();
+                else _hiddenTick.Stop();
+                Cursor = hidden ? new Cursor(StandardCursorType.None) : Cursor.Default;
+                // On Linux the video surfaces get a blank pointer of their own as well: libVLC's
+                // hiding doesn't work in a window it was given, and mpv's window takes theirs.
+                foreach (var surface in new[] { Video, DiscVideo })
+                    if (surface.Handle is { } xid) X11Cursor.SetHidden(xid, hidden);
+                // On Windows the engines' video windows are their threads': see Win32Pointer.
+                Win32Pointer.SetHidden(hidden, VideoHosts());
+                break;
+        }
+    }
+
+    private IEnumerable<IntPtr> VideoHosts() =>
+        new[] { Video, DiscVideo }.Select(s => s.Handle).OfType<long>().Select(h => (IntPtr)h);
+
+    /// <summary>The surface of the engine that's playing: libVLC's for discs, mpv's otherwise.</summary>
+    private Controls.VideoHost ActiveVideo => Vm.IsDiscMode ? DiscVideo : Video;
+
+    /// <summary>
+    /// Only the playing engine's surface fills the window; the other, and both while idle, are
+    /// shrunk to nothing so the welcome screen (regular Avalonia content, which can't draw over a
+    /// native window) shows. The surfaces themselves stay alive.
+    /// </summary>
+    private void ApplySurfaces()
+    {
+        foreach (var surface in new[] { Video, DiscVideo })
+        {
+            var shown = !Vm.IsIdle && surface == ActiveVideo;
+            surface.Width = shown ? double.NaN : 1;
+            surface.Height = shown ? double.NaN : 1;
+            surface.HorizontalAlignment = shown ? Avalonia.Layout.HorizontalAlignment.Stretch : Avalonia.Layout.HorizontalAlignment.Left;
+            surface.VerticalAlignment = shown ? Avalonia.Layout.VerticalAlignment.Stretch : Avalonia.Layout.VerticalAlignment.Top;
+        }
+    }
+
+    private void UpdateOverlays()
+    {
+        if (_bottom is null || _top is null || DataContext is not MainViewModel vm) return;
+        var fullscreen = WindowState == WindowState.FullScreen;
+        var appActive = IsActive || _top.IsActive || _bottom.IsActive;
+        var visible = vm.ControlsVisible && !vm.IsIdle && WindowState != WindowState.Minimized && IsVisible
+                      && ActiveVideo.Bounds.Width > 100
+                      && (!OverlayPlacement.HideWhileInactive || appActive || vm.IsPointerOverControls || vm.IsMenuOpen);
+
+        var topmost = OverlayPlacement.ShouldBeTopmost(fullscreen, appActive);
+        if (_top.Topmost != topmost) _top.Topmost = topmost;
+        if (_bottom.Topmost != topmost) _bottom.Topmost = topmost;
+
+        var area = visible || (!vm.IsIdle && ActiveVideo.Bounds.Height > 100)
+            ? OverlayPlacement.PlayerArea(ActiveVideo.PointToScreen(new Point(0, 0)), ActiveVideo.Bounds.Size, RenderScaling,
+                Screens.ScreenFromWindow(this)?.Bounds, fullscreen)
+            : default;
+        // The engines' messages start below the top bar, which covers the top of the video.
+        if (area.Height > 0) vm.SetOsdInset(OverlayPlacement.OsdInset(TopBar.BarHeight, RenderScaling, area.Height));
+        vm.BarsShown = visible;
+        PlaceToast(vm, area, visible, topmost, appActive);
+        if (visible)
+        {
+            _top.Width = _bottom.Width = area.Width / RenderScaling;
+            _top.Height = TopBar.BarHeight;
+            _bottom.Height = ControlsBar.BarHeight;
+        }
+        if (!visible)
+        {
+            // An open menu would otherwise stay behind, alone, or follow its bar off screen.
+            _top.CloseMenus();
+            _bottom.CloseMenus();
+            // A bar clicked last has the keyboard: hidden, it would take it along (on Linux nothing
+            // got it back, and Space did nothing until the window was minimized and restored).
+            if (_top.IsActive || _bottom.IsActive) Activate();
+        }
+        if (!visible && !OverlayPlacement.ParkInsteadOfHiding)
+        {
+            if (_top.IsVisible) _top.Hide();
+            if (_bottom.IsVisible) _bottom.Hide();
+            return;
+        }
+        var (top, bottom) = OverlayPlacement.Place(area, ControlsBar.BarHeight, RenderScaling, visible);
+        if (_top.Position != top) _top.Position = top;
+        if (_bottom.Position != bottom) _bottom.Position = bottom;
+        if (!_top.IsVisible) _top.Show(this);
+        if (!_bottom.IsVisible) _bottom.Show(this);
+    }
+
+    /// <summary>The window as it was before fullscreen: maximized, or a window of this place and size.</summary>
+    internal (WindowState State, PixelPoint Position, Size Size)? BeforeFullscreen { get; private set; }
+
+    internal void SetFullscreen(bool? on)
+    {
+        var fs = on ?? WindowState != WindowState.FullScreen;
+        if (fs == (WindowState == WindowState.FullScreen)) return;
+        if (fs)
+        {
+            BeforeFullscreen = (WindowState == WindowState.Maximized ? WindowState.Maximized : WindowState.Normal, Position, ClientSize);
+            WindowState = WindowState.FullScreen;
+            return;
+        }
+        // Leaving fullscreen goes back to the window it came from: maximized, or the same size in the same place.
+        var before = BeforeFullscreen ?? (WindowState.Maximized, Position, ClientSize);
+        WindowState = before.State;
+        if (before.State != WindowState.Normal) return;
+        RestoreBounds(before.Position, before.Size);
+        // X11 window managers may still be applying the fullscreen geometry as the state
+        // changes, and leave a screen-sized window: put the bounds back once that's done.
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (WindowState == WindowState.Normal) RestoreBounds(before.Position, before.Size);
+        }, DispatcherPriority.Background);
+    }
+
+    private void RestoreBounds(PixelPoint position, Size size)
+    {
+        if (double.IsFinite(size.Width) && double.IsFinite(size.Height) && size.Width > 0 && size.Height > 0)
+        {
+            Width = size.Width;
+            Height = size.Height;
+        }
+        Position = position;
+    }
+
+    private readonly HashSet<Key> _shortcutKeys = [];
+
+    /// <summary>The message over the video (ToastWindow): at its top-left while it lasts, else hidden (parked on Windows).</summary>
+    private void PlaceToast(MainViewModel vm, PixelRect area, bool barsShown, bool topmost, bool appActive)
+    {
+        if (_toast is null) return;
+        var show = vm.ToastVisible && !vm.IsIdle && area.Width > 0 && WindowState != WindowState.Minimized && IsVisible
+                   && (!OverlayPlacement.HideWhileInactive || appActive);
+        if (_toast.Topmost != topmost) _toast.Topmost = topmost;
+        if (!show)
+        {
+            if (OverlayPlacement.ParkInsteadOfHiding) { if (_toast.Position != OverlayPlacement.Parked) _toast.Position = OverlayPlacement.Parked; }
+            else if (_toast.IsVisible) _toast.Hide();
+            return;
+        }
+        var at = OverlayPlacement.ToastAt(area, barsShown ? TopBar.BarHeight : 0, RenderScaling);
+        if (_toast.Position != at) _toast.Position = at;
+        if (!_toast.IsVisible) _toast.Show(this);
+    }
+
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Source is TextBox) return;
+        // On the welcome screen, Space and Enter press the focused button (Open file…), as anywhere.
+        if (Vm.IsIdle && e.Source is Button && e.Key is Key.Space or Key.Enter) return;
+        if (KeyMapping.ToCanonical(e) is { } key && Vm.HandleKey(key))
+        {
+            e.Handled = true;
+            // Its key-up too: a focused button clicks on Space's key-up, so a button clicked a moment
+            // ago was pressed again along with the shortcut.
+            _shortcutKeys.Add(e.Key);
+        }
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e) => await DropOn(Vm, e);
+
+    /// <summary>What was dropped on the window or a bar, to the view model (files first, else text).</summary>
+    internal static Task DropOn(MainViewModel vm, DragEventArgs e)
+    {
+        var paths = e.DataTransfer.TryGetFiles()?.Select(f => f.TryGetLocalPath()).OfType<string>().ToList() ?? [];
+        return vm.DropAsync(paths, paths.Count == 0 ? e.DataTransfer.TryGetText() : null);
+    }
+}

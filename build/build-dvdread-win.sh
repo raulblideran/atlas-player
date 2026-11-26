@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds packaging/dvd/win64/libdvdcss-2.dll and libdvdread-8.dll: libdvdread with libdvdcss, which
-# the DVD ripper's decrypted VIDEO_TS copy calls (Paramaja.Core/Ripping/Dvd/DvdRead.cs). VLC's
+# the DVD ripper's decrypted VIDEO_TS copy calls (AtlasPlayer.Core/Ripping/Dvd/DvdRead.cs). VLC's
 # Windows build has both only inside its plugins, so they're built here: the same releases as the
 # Flatpak's, cross-compiled with MinGW-w64 (meson from a throwaway virtualenv), libgcc linked in.
 # The DLLs are committed, so building the Windows zip doesn't need a C compiler:

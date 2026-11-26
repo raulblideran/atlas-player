@@ -204,7 +204,7 @@ index 9f9d529..594f201 100644
 +
  vlc_module_begin ()
 -    set_description( N_("Deinterlacing video filter") )
-+    /* Paramaja's build: "BWDIF" in the description tells the app it's here. */
++    /* Atlas Player's build: "BWDIF" in the description tells the app it's here. */
 +    set_description( N_("Deinterlacing video filter (yadif2x runs BWDIF)") )
      set_shortname( N_("Deinterlace" ))
      set_capability( "video filter", 0 )

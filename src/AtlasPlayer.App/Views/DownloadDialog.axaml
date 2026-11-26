@@ -1,0 +1,48 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AtlasPlayer.App.ViewModels"
+        x:Class="AtlasPlayer.App.Views.DownloadDialog"
+        x:DataType="vm:DownloadDialogViewModel"
+        Title="Download Video" Icon="/Assets/atlas-player.ico"
+        Width="620" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
+  <DockPanel>
+    <Border Classes="footer" DockPanel.Dock="Bottom">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Button Classes="ghost" Content="Open downloads folder" Command="{Binding Main.OpenDownloadsFolderCommand}" />
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+          <Button Classes="ghost" Content="Close" Click="OnClose" IsCancel="True" />
+          <Button Classes="accent" Content="Download" Command="{Binding StartCommand}" IsDefault="True" />
+        </StackPanel>
+      </Grid>
+    </Border>
+    <StackPanel Margin="24,22,24,20" Spacing="12">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <PathIcon Classes="title" Data="{StaticResource IconDownload}" />
+        <TextBlock Classes="dialog" Text="Download Video" />
+      </StackPanel>
+      <TextBlock Classes="note" FontSize="13.5"
+                 Text="Paste a YouTube (or other video site) link to see the qualities on offer. The video is saved to your Downloads folder with the best audio track merged in, or you can save the audio only." />
+      <TextBox x:Name="Input" Text="{Binding Url}" Watermark="https://youtube.com/watch?v=…" AcceptsReturn="False" />
+      <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsChecking}" />
+      <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap"
+                 IsVisible="{Binding Title, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding Qualities.Count}">
+        <TextBlock Text="Quality" VerticalAlignment="Center" />
+        <ComboBox x:Name="Quality" Width="240" ItemsSource="{Binding Qualities}" SelectedItem="{Binding SelectedQuality}" />
+        <TextBlock Classes="muted" FontSize="12" Text="with the best audio" VerticalAlignment="Center" IsVisible="{Binding WithBestAudio}" />
+      </StackPanel>
+      <TextBlock Text="{Binding Message}" Classes="status"
+                 IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+      <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding Main.IsDownloading}">
+        <TextBlock Text="{Binding Main.DownloadStatus}" VerticalAlignment="Center" Classes="progress" />
+        <Button Classes="ghost" Content="Cancel download" Command="{Binding Main.CancelDownloadCommand}" />
+      </StackPanel>
+      <TextBlock Classes="note" IsVisible="{Binding Main.IsDownloading}"
+                 Text="You can close this window: the download carries on, with its progress at the top of the player." />
+      <TextBlock Text="{Binding Main.StatusMessage}" Classes="note"
+                 IsVisible="{Binding Main.StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </StackPanel>
+  </DockPanel>
+</Window>
