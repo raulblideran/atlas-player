@@ -8,13 +8,13 @@ also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 - **Rip Disc is a step-by-step window.** It recognises the disc (an Audio CD, or a DVD from a
   drive, an `.iso` or a VIDEO_TS folder, as before), and each step shows only what applies to it.
   The steps are shown at the top; Back and Next move between them, and Rip is on the last.
-  - **Audio CD:** Source → Tracks (the tags and tracks, as before) → Format (FLAC level 8 or WAV)
-    → **Cue sheet** → Rip. The cue sheet is now a choice: ticked for a whole disc, not for a few
-    tracks or a single one, and a few tracks can have one of their own. The log scores the same
-    with or without one.
-  - **DVD:** Source → **Rip mode** → **Titles** → Format → Rip. The mode is **Full DVD** (MKVs), the
-    new **Audio only**, or the **whole disc backup** (the VIDEO_TS folder, decrypted, as before;
-    it skips straight to Rip).
+- **An Audio CD's steps:** Source → Tracks (the tags and tracks, as before) → Format (FLAC level 8
+  or WAV) → **Cue sheet** → Rip. The cue sheet is now a choice: ticked for a whole disc, not for a
+  few tracks or a single one, and a few tracks can have one of their own. The log scores the same
+  with or without one.
+- **A DVD's steps:** Source → **Rip mode** → **Titles** → Format → Rip. The mode is **Full DVD**
+  (MKVs), the new **Audio only**, or the **whole disc backup** (the VIDEO_TS folder, decrypted, as
+  before; it skips straight to Rip).
 - **Several titles in one rip.** Tick the titles you want; each becomes its own file. For each
   title: the chapters you tick, one file or one per chapter, as before.
 - **Choose a title's audio tracks.** Each title lists its tracks as "English, AC-3, 5.1", all
