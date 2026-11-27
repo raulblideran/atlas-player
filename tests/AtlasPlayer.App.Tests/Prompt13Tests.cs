@@ -10,7 +10,7 @@ using AtlasPlayer.Core.Settings;
 namespace AtlasPlayer.App.Tests;
 
 /// <summary>
-/// Prompt 13: normalization on at -3 dB by default; a CD rip folder with a log, a cue sheet and
+/// Prompt 13: normalization off by default, starting at -3 dB when switched on; a CD rip folder with a log, a cue sheet and
 /// pictures plays its music (it said "Can't play this: no audio or video data played"), with
 /// cover.jpg or front.jpg as the picture.
 /// </summary>
@@ -118,11 +118,13 @@ public class Prompt13Tests
     }
 
     [Fact]
-    public void Normalization_starts_on_at_minus_3_dB_and_its_level_applies_live()
+    public void Normalization_is_off_and_starts_at_minus_3_dB_when_switched_on()
     {
         using var r = new Rig(new PlayerSettings { SettingsVersion = PlayerSettings.CurrentVersion }); // as loaded
-        Assert.True(r.Vm.NormalizeAudio);
+        Assert.False(r.Vm.NormalizeAudio);
         Assert.Equal(-3, r.Vm.NormalizeTargetDb);
+        r.Vm.NormalizeAudio = true;
+        Assert.Equal("Volume normalization: on (-3 dB)", r.Vm.ToastText);
         r.Vm.NormalizeTargetDb = -6.4;
         Assert.Equal(-6, r.Settings.NormalizeTargetDb);
         Assert.Contains("ApplyAudio", r.Player.Calls);
@@ -132,26 +134,32 @@ public class Prompt13Tests
     }
 
     [AvaloniaFact]
-    public void The_audio_settings_show_normalization_on_with_its_level()
+    public void The_audio_settings_show_normalization_off_and_its_level_from_minus_3_dB_when_on()
     {
         using var r = new Rig();
         var w = new SettingsWindow { DataContext = r.Vm };
         w.Show();
         w.GetLogicalDescendants().OfType<TabControl>().Single().SelectedItem = w.FindControl<TabItem>("AudioTab");
         Dispatch();
-        Assert.True(w.FindControl<ToggleSwitch>("NormalizeSwitch")!.IsChecked);
+        var normalize = w.FindControl<ToggleSwitch>("NormalizeSwitch")!;
+        Assert.False(normalize.IsChecked);
         var level = w.FindControl<NumericUpDown>("NormalizeLevelBox")!;
-        Assert.True(level.IsEffectivelyVisible);
-        Assert.Equal(-3m, level.Value);
+        var levelRow = w.FindControl<SettingRow>("NormalizeLevelRow")!;
+        Assert.False(levelRow.IsVisible);
         var rows = w.GetVisualDescendants().OfType<SettingRow>().ToList();
-        Assert.Contains("On (default)", rows.Single(row => row.Title == "Even out loud and quiet parts").Description);
+        Assert.Contains("Off (default)", rows.Single(row => row.Title == "Even out loud and quiet parts").Description);
+
+        normalize.IsChecked = true;
+        Dispatch();
+        Assert.True(levelRow.IsVisible);
+        Assert.Equal(-3m, level.Value);
 
         level.Value = -5;
         Dispatch();
         Assert.Equal(-5, r.Settings.NormalizeTargetDb);
-        w.FindControl<ToggleSwitch>("NormalizeSwitch")!.IsChecked = false;
+        normalize.IsChecked = false;
         Dispatch();
-        Assert.False(level.IsEffectivelyVisible);
+        Assert.False(levelRow.IsVisible);
         w.Close();
     }
 }

@@ -6,7 +6,7 @@ using AtlasPlayer.Core.Settings;
 namespace AtlasPlayer.Core.Tests;
 
 /// <summary>
-/// Prompt 13: volume normalization is on by default, to -3 dB. A CD rip folder holding more than
+/// Prompt 13: volume normalization, when switched on, starts at -3 dB (it stays off by default). A CD rip folder holding more than
 /// its music (the ripper's log, a cue sheet naming the disc's image file, scans) said "Can't play
 /// this: no audio or video data played": the cue went to mpv as it was. Such a folder plays its
 /// music now, with cover.jpg (or front.jpg…) as the picture.
@@ -23,27 +23,27 @@ public class Prompt13CoreTests
         Assert.Contains(expected, MpvOptionsBuilder.NormalizeFilter(db));
 
     [Fact]
-    public void Normalization_is_on_at_minus_3_dB_by_default_and_for_existing_users()
+    public void Normalization_is_off_by_default_and_starts_at_minus_3_dB_when_switched_on()
     {
         var fresh = new PlayerSettings();
-        Assert.True(fresh.NormalizeAudio);
+        Assert.False(fresh.NormalizeAudio);
+        Assert.Equal("", MpvOptionsBuilder.AudioFilters(fresh, 2));
         Assert.Equal(-3, fresh.NormalizeTargetDb);
+        fresh.NormalizeAudio = true;
         Assert.Equal(MpvOptionsBuilder.NormalizeFilter(-3), MpvOptionsBuilder.AudioFilters(fresh, 2));
 
-        // beta.12's settings (version 7) with it off, the old default: moved to the new one.
-        var dir = TestEnvironment.TempDir();
-        var path = Path.Combine(dir, "settings.json");
+        // beta.12's settings (no level yet), with it off or on: it stays as it was, from -3 dB.
+        var path = Path.Combine(TestEnvironment.TempDir(), "settings.json");
         File.WriteAllText(path, """{ "settingsVersion": 7, "normalizeAudio": false }""");
-        var migrated = new SettingsStore(path).Load();
-        Assert.True(migrated.NormalizeAudio);
-        Assert.Equal(-3, migrated.NormalizeTargetDb);
-        Assert.Equal(PlayerSettings.CurrentVersion, migrated.SettingsVersion);
+        var off = new SettingsStore(path).Load();
+        Assert.False(off.NormalizeAudio);
+        Assert.Equal(-3, off.NormalizeTargetDb);
+        File.WriteAllText(path, """{ "settingsVersion": 7, "normalizeAudio": true }""");
+        Assert.True(new SettingsStore(path).Load().NormalizeAudio);
 
-        // Switched off (or set to another level) after that: it stays so.
-        File.WriteAllText(path, $$"""{ "settingsVersion": {{PlayerSettings.CurrentVersion}}, "normalizeAudio": false, "normalizeTargetDb": -6 }""");
-        var kept = new SettingsStore(path).Load();
-        Assert.False(kept.NormalizeAudio);
-        Assert.Equal(-6, kept.NormalizeTargetDb);
+        // Another level set: kept.
+        File.WriteAllText(path, """{ "settingsVersion": 7, "normalizeAudio": true, "normalizeTargetDb": -6 }""");
+        Assert.Equal(-6, new SettingsStore(path).Load().NormalizeTargetDb);
 
         // Hand-edited nonsense is brought into range.
         var odd = new PlayerSettings { SettingsVersion = PlayerSettings.CurrentVersion, NormalizeTargetDb = 7 };

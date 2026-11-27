@@ -242,11 +242,11 @@
                   <ToggleSwitch x:Name="DownmixSwitch" IsChecked="{Binding DownmixToStereo}" />
                 </c:SettingRow>
                 <c:SettingRow Title="Even out loud and quiet parts"
-                              Description="Dynamic normalization: quiet parts come up and loud ones down. On (default). Off: the original dynamics.">
+                              Description="Dynamic normalization, for late nights: quiet parts come up and loud ones down. Off (default): the original dynamics.">
                   <ToggleSwitch x:Name="NormalizeSwitch" IsChecked="{Binding NormalizeAudio}" />
                 </c:SettingRow>
-                <c:SettingRow Title="Normalize peaks to"
-                              Description="How loud the evened-out audio gets, below full scale. -3 dB (default) leaves headroom."
+                <c:SettingRow x:Name="NormalizeLevelRow" Title="Normalize peaks to"
+                              Description="How loud the evened-out audio gets, below full scale. It starts at -3 dB (default), which leaves headroom."
                               IsVisible="{Binding NormalizeAudio}">
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <NumericUpDown x:Name="NormalizeLevelBox" Value="{Binding NormalizeTargetDb}" Minimum="-12" Maximum="0" Increment="1" FormatString="0" Width="130" />

@@ -5,10 +5,10 @@ also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
 ## Unreleased
 
-- **Volume normalization is on by default, at -3 dB.** Loud and quiet parts are evened out,
-  with the peaks brought to 3 dB below full scale. Settings → Audio has the level (-12 to 0 dB)
-  under **Even out loud and quiet parts**; switch it off there (or in the audio menu) for the
-  original dynamics. Updating switches it on once, as it was off by default before.
+- **Volume normalization starts at -3 dB.** It is still off by default. When you switch on
+  **Even out loud and quiet parts** (Settings → Audio, or the audio menu), the peaks are brought
+  to 3 dB below full scale. Settings → Audio now has that level (-12 to 0 dB) right under the
+  switch, to change it.
 - **CD rip folders play,** even with their log, cue sheet, pictures and other files beside the
   music. A folder whose cue sheet named files that aren't there (one for the whole disc's image,
   next to a file per track, as in some rips) said "Can't play this: no audio or video data

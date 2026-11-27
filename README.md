@@ -26,7 +26,7 @@ menus, and ripping discs properly.
 ## Features
 
 - **Plays local files, folders and disc images**: drop them on the window. Subtitles next to a video load by themselves. A CD rip's folder plays its tracks (by its cue sheet, as chapters, where it has one) with its cover.jpg or front.jpg on screen.
-- **Evens out the volume** by default (peaks to -3 dB, adjustable in Settings → Audio), or plays it exactly as recorded.
+- **Plays audio exactly as recorded**, or evens out loud and quiet parts if you switch that on (peaks to -3 dB to begin with, adjustable in Settings → Audio).
 - **Streams magnet links and torrent files** while they download, with seeking. Nothing is kept afterwards.
 - **Plays links**: YouTube and about 1,800 other sites (through yt-dlp), MEGA file links, and direct video URLs. Paste one with Ctrl+V.
 - **Downloads videos** from those sites at the quality you pick, or just the audio.

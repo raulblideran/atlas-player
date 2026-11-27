@@ -37,7 +37,7 @@ public enum RenderQuality
 public sealed class PlayerSettings
 {
     /// <summary>Bumped when a default changes for existing users too (see <see cref="Normalize"/>).</summary>
-    public const int CurrentVersion = 8;
+    public const int CurrentVersion = 7;
 
     /// <summary>The settings.json format; 0 for files written before versioning.</summary>
     public int SettingsVersion { get; set; }
@@ -75,14 +75,14 @@ public sealed class PlayerSettings
     public double HdrContrastRecovery { get; set; } = 0.3;
     public string GamutMapping { get; set; } = "perceptual";
 
-    // Audio — evened out by default (to -3 dB); downmix is strictly opt-in.
+    // Audio — never normalised unless asked; downmix is strictly opt-in.
     /// <summary>Applies to surround sources only (5.1, 7.1…).</summary>
     public bool DownmixToStereo { get; set; }
-    /// <summary>Evens out loud and quiet passages (dynamic normalization). On by default (2.0.0-beta.13).</summary>
-    public bool NormalizeAudio { get; set; } = true;
+    /// <summary>Evens out loud and quiet passages (dynamic normalization). Off by default.</summary>
+    public bool NormalizeAudio { get; set; }
     /// <summary>
-    /// The level normalization brings the audio's peaks to, in dB below full scale
-    /// (<see cref="MinNormalizeDb"/> to 0); -3 dB by default.
+    /// The level normalization brings the audio's peaks to when it's switched on, in dB below
+    /// full scale (<see cref="MinNormalizeDb"/> to 0); it starts at -3 dB.
     /// </summary>
     public double NormalizeTargetDb { get; set; } = DefaultNormalizeDb;
     public const double DefaultNormalizeDb = -3;
@@ -274,12 +274,6 @@ public sealed class PlayerSettings
         if (SettingsVersion < 4 && DisplayFps == 60) DisplayFps = 0;
         // 2.0.0-beta.5 made the bar's pieces movable: the old show-or-hide list becomes the bar's groups.
         if (SettingsVersion < 7 && HiddenControls is { } hidden) MigrateHiddenControls(hidden);
-        // 2.0.0-beta.13 evens out the volume by default, to -3 dB; whoever had it off (the old default) moves too.
-        if (SettingsVersion < 8)
-        {
-            NormalizeAudio = true;
-            NormalizeTargetDb = DefaultNormalizeDb;
-        }
         HiddenControls = null;
         SettingsVersion = CurrentVersion;
         if (!ToneMappingCurves.Contains(ToneMapping)) ToneMapping = "mobius";

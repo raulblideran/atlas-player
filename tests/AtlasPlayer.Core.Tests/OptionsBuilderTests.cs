@@ -15,9 +15,9 @@ public class OptionsBuilderTests
     }
 
     [Fact]
-    public void Audio_plays_as_recorded_with_normalization_off()
+    public void Audio_is_never_normalised()
     {
-        var o = Build(new PlayerSettings { NormalizeAudio = false });
+        var o = Build(new PlayerSettings());
         Assert.Equal("no", o["audio-normalize-downmix"]);
         Assert.Equal("no", o["replaygain"]);
         Assert.Equal("", o["af"]);
@@ -167,11 +167,10 @@ public class OptionsBuilderTests
     }
 
     [Fact]
-    public void Normalization_is_on_at_minus_3_dB_by_default_and_never_on_a_bitstream()
+    public void Normalization_is_off_by_default_starts_at_minus_3_dB_and_is_never_on_a_bitstream()
     {
-        Assert.Equal("lavfi=[dynaudnorm=f=250:g=15:p=0.708]", Build(new PlayerSettings())["af"]);
-        Assert.Equal("", Build(new PlayerSettings { NormalizeAudio = false })["af"]);
-        Assert.Contains("dynaudnorm", Build(new PlayerSettings { NormalizeAudio = true })["af"]);
+        Assert.Equal("", Build(new PlayerSettings())["af"]);
+        Assert.Equal("lavfi=[dynaudnorm=f=250:g=15:p=0.708]", Build(new PlayerSettings { NormalizeAudio = true })["af"]);
         Assert.Equal("", Build(new PlayerSettings { NormalizeAudio = true, AudioPassthrough = true })["af"]);
     }
 
