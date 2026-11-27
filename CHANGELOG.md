@@ -3,7 +3,10 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## Unreleased
+## 2.0.0-beta.12 — 2026-11-27
+
+A **beta** of 2.0.0. Mostly a fix for QTGMC, which beta.11 shipped broken: it now runs a
+whole rip on Linux, and every preset is checked on Windows as the zip is built.
 
 - **QTGMC works now, on Windows and Linux.** In 2.0.0-beta.11 it couldn't be picked on either:
   its MVTools was an old build that the bundled VapourSynth (R82) no longer loads, and four
