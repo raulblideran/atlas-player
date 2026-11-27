@@ -381,23 +381,32 @@ modules:
   # ---- QTGMC, for DVD rips only (playback keeps BWDIF) --------------------
   # VapourSynth's own Python module (the manylinux wheel: the core, its filters and vspipe), run
   # by the runtime's python3; havsfunc r33 (its last release with QTGMC) and the scripts it
-  # imports; and the plugins QTGMC needs. mvtools, znedi3 and RemoveGrain are the builds
-  # VapourSynth's package index (vsrepo) lists, self-contained (libc and libstdc++ only);
-  # BestSource, which reads the title's copy, is built here against this FFmpeg rather than
-  # taken as its 80 MB prebuilt (FFmpeg linked in). Everything goes in /app/lib/vapoursynth,
-  # where the app looks (AtlasPlayer.Core/Ripping/Dvd/Qtgmc.cs); its script loads the plugins by
-  # path, so nothing relies on autoloading.
+  # imports; and every plugin QTGMC calls (Qtgmc.Namespaces). VapourSynth R82 loads API 4
+  # plugins only: MVTools v29 comes from its wheel, installed as pip would (into VapourSynth's
+  # own plugin folder, which loads on its own, with the FFTW it links two folders up); znedi3,
+  # RemoveGrain, fmtconv, MiscFilters, EEDI3m and FFT3DFilter are the builds VapourSynth's
+  # package index (vsrepo) lists, self-contained (libc and libstdc++ only); BestSource, which
+  # reads the title's copy, is built here against this FFmpeg rather than taken as its 80 MB
+  # prebuilt (FFmpeg linked in). Everything goes in /app/lib/vapoursynth, where the app looks
+  # (AtlasPlayer.Core/Ripping/Dvd/Qtgmc.cs); its script loads the plugins folder by path.
+  # qtgmc-check (after BestSource) runs QTGMC with all of it.
   - name: vapoursynth
     buildsystem: simple
     build-commands:
       - mkdir -p /app/lib/vapoursynth/python/mvsfunc /app/lib/vapoursynth/plugins
       - python3 -m zipfile -e vapoursynth.whl /app/lib/vapoursynth/python/
+      - python3 -m zipfile -e vapoursynth-mvtools.whl /app/lib/vapoursynth/python/
       - rm -f /app/lib/vapoursynth/python/vapoursynth/*.pyi
-      - install -Dm644 havsfunc.py adjust.py -t /app/lib/vapoursynth/python/
+      # VapourSynth R82 no longer takes a Python keyword with a leading underscore (_lambda); havsfunc
+      # r33 passes two to MVTools. The trailing one (lambda_) is how it's spelt now.
+      - sed -E 's/\b_lambda=/lambda_=/g; s/\b_global=/global_=/g' havsfunc.py > /app/lib/vapoursynth/python/havsfunc.py
+      - test "$(grep -cE '\b_(lambda|global)=' /app/lib/vapoursynth/python/havsfunc.py)" = 0
+      - install -Dm644 adjust.py -t /app/lib/vapoursynth/python/
       - install -Dm644 mvsfunc.py -t /app/lib/vapoursynth/python/mvsfunc/
       - install -Dm644 mvsfunc-init.py /app/lib/vapoursynth/python/mvsfunc/__init__.py
       - install -Dm644 mvsfunc-metadata.py /app/lib/vapoursynth/python/mvsfunc/_metadata.py
-      - install -Dm755 mvtools/libmvtools.so znedi3/libvsznedi3.so removegrain/libremovegrain.so -t /app/lib/vapoursynth/plugins/
+      - install -Dm755 znedi3/libvsznedi3.so removegrain/libremovegrain.so fmtconv/libfmtconv.so misc/libmiscfilters.so
+        eedi3m/libeedi3m.so fft3dfilter/libfft3dfilter.so -t /app/lib/vapoursynth/plugins/
       # znedi3 looks for its weights next to itself.
       - install -Dm644 nnedi3_weights.bin -t /app/lib/vapoursynth/plugins/
       - python3 -c "import sys; sys.path.insert(0, '/app/lib/vapoursynth/python'); import vapoursynth as vs; print(vs.core.version())"
@@ -426,11 +435,10 @@ modules:
       - type: file
         url: https://raw.githubusercontent.com/dubhatervapoursynth/vapoursynth-nnedi3/82993ff21cf569776fc1a7e5bb60235c00bbeea3/src/nnedi3_weights.bin
         sha256: 27f382430435bb7613deb1c52f3c79c300c9869812cfe29079432a9c82251d42
-      - type: archive
-        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/com.nodame.mvtools/v24/linux-glibc-x86_64/2024-09-30T17.05.16%2B00.00Z/MVTools-v24-linux-glibc-x86_64.zip
-        sha256: a3e96cad752d09f05109ff72e3072300be7fe195b3045c7cf70c53227038c834
-        strip-components: 0
-        dest: mvtools
+      - type: file
+        url: https://files.pythonhosted.org/packages/a1/7b/fe16b0dd4d032387e39f951e642baf2da4d37086fba4acaf87283a0a257a/vapoursynth_mvtools-29-py3-none-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+        sha256: ceee185fe4a6fd4058612823bfb93c4c64e981d661248108de99a6560553bc2a
+        dest-filename: vapoursynth-mvtools.whl
       - type: archive
         url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/xxx.abc.znedi3/3bd542a/linux-glibc-x86_64/2026-01-10T23.46.05%2B00.00Z/ZNEDI3-3bd542a-linux-glibc-x86_64.zip
         sha256: 4d30d49cb57ad61c94d61f4b226eb281611b9ed58a8e49fef911f23aa01a58ae
@@ -441,6 +449,26 @@ modules:
         sha256: 280774257c3d2385a832f2e6b3e594cdd6e4946456c059ef86fc263f7032e4be
         strip-components: 0
         dest: removegrain
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/fmtconv/git-18a9cecb/linux-glibc-x86_64/2024-10-10T14.44.42%2B00.00Z/fmtconv-git-18a9cecb-linux-glibc-x86_64.zip
+        sha256: f0175362854b2d921f9127043a3db6aad3c9d54e8fd92d649b5fa7f190753528
+        strip-components: 0
+        dest: fmtconv
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/com.vapoursynth.misc/git-07e0589/linux-glibc-x86_64/2024-10-09T22.47.34%2B00.00Z/Miscfilters-git-07e0589-linux-glibc-x86_64.zip
+        sha256: 2771e2f1ef0b4309324b378b0de3d8fc83b5c466f88ea41a46dd3eae8db3654e
+        strip-components: 0
+        dest: misc
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/com.holywu.eedi3/r8/linux-glibc-x86_64/2026-01-15T20.47.25%2B00.00Z/EEDI3m-r8-linux-glibc-x86_64.zip
+        sha256: 3d11d7925d1f8cfd58ec00044f7efaa40e29a451a56745ce446f43d0e24c514a
+        strip-components: 0
+        dest: eedi3m
+      - type: archive
+        url: https://github.com/Stefan-Olt/vs-plugin-build/releases/download/vsplugin/systems.innocent.fft3dfilter/R2/linux-glibc-x86_64/2024-10-09T17.43.07%2B00.00Z/FFT3DFilter-R2-linux-glibc-x86_64.zip
+        sha256: b1efd47b3c145ec1786c34eeff8f266c6d5600004c151d7c180486207846252b
+        strip-components: 0
+        dest: fft3dfilter
 
   # BestSource R23 (FFmpeg 9 and up), the plugin only: no AviSynth interface, no GPU decoding.
   # Built with meson from its wheel (the SDK has none); libp2p, which its wrap would fetch from
@@ -470,6 +498,16 @@ modules:
         url: https://files.pythonhosted.org/packages/57/99/36cd25f9598eef70db97577440a70a360af505f6f01c2338a18d1556079c/meson-1.12.1-py3-none-any.whl
         sha256: 930bc7542cbd9f57009e182fd014eba48cf1a0180a7b9006d2d32d8f168d8b02
         dest-filename: meson.whl
+
+  # QTGMC runs with what the two modules above put in /app/lib/vapoursynth (build/qtgmc-check.py):
+  # every plugin it calls loads, and every preset deinterlaces a blank PAL clip.
+  - name: qtgmc-check
+    buildsystem: simple
+    build-commands:
+      - python3 -I qtgmc-check.py /app/lib/vapoursynth/python /app/lib/vapoursynth/plugins
+    sources:
+      - type: file
+        path: ../build/qtgmc-check.py
 
   # ---- the application (C# / Avalonia) -----------------------------------
   # Published self-contained, so the .NET runtime travels with the app rather

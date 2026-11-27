@@ -59,7 +59,11 @@ public sealed partial class RipAudioRow(DvdAudio audio) : ObservableObject
     [ObservableProperty] private bool _isChecked = true;
 }
 
-/// <summary>A DVD title to rip or not, with its chapters, its audio tracks and how it's split into files.</summary>
+/// <summary>
+/// A DVD title to rip or not, with its chapters, its audio tracks and how it's split into files:
+/// the whole title as one file, or each ticked chapter as a file of its own (the chapter ticks
+/// only count then).
+/// </summary>
 public sealed partial class RipTitleRow : ObservableObject
 {
     public RipTitleRow(DvdTitle title)
@@ -91,13 +95,12 @@ public sealed partial class RipTitleRow : ObservableObject
     [NotifyPropertyChangedFor(nameof(Summary))]
     private bool _isChecked;
 
-    /// <summary>Each ticked chapter as its own file, rather than all of them in one.</summary>
+    /// <summary>Each ticked chapter as its own file; otherwise the whole title in one, whatever is ticked.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ChaptersSummary))]
     private bool _chapterFiles;
 
     partial void OnIsCheckedChanged(bool value) => Edited?.Invoke();
-    partial void OnChapterFilesChanged(bool value) => Edited?.Invoke();
+    partial void OnChapterFilesChanged(bool value) => Changed();
 
     /// <summary>"Title 1 · 1:05:12 · 12 chapters" (what's ticked of it, audio tracks too, is the <see cref="Summary"/> below).</summary>
     public string Label => $"Title {Number} · {RipDialogViewModel.Duration(Title.Duration)} · "
@@ -109,20 +112,23 @@ public sealed partial class RipTitleRow : ObservableObject
     public IReadOnlyList<int> CheckedChapters => Chapters.Where(c => c.IsChecked).Select(c => c.Number).ToList();
     public IReadOnlyList<int> CheckedAudio => Audio.Where(a => a.IsChecked).Select(a => a.Number).ToList();
 
-    /// <summary>A ticked chapter (if it has any to choose) and a ticked audio track (if it has any).</summary>
-    public bool IsComplete => (Chapters.Count == 0 || Chapters.Any(c => c.IsChecked)) && (Audio.Count == 0 || Audio.Any(a => a.IsChecked));
+    /// <summary>Its chapters split into files of their own (a title with more than one).</summary>
+    public bool SplitsChapters => HasChapterChoice && ChapterFiles;
 
-    /// <summary>"All 12 chapters · 1:05:12", "3 of 12 chapters · 12:34, as 3 files".</summary>
+    /// <summary>A ticked chapter (when its chapters are files of their own) and a ticked audio track (if it has any).</summary>
+    public bool IsComplete => (!SplitsChapters || Chapters.Any(c => c.IsChecked)) && (Audio.Count == 0 || Audio.Any(a => a.IsChecked));
+
+    /// <summary>"The whole title · 1:05:12" as one file; "All 12 chapters · 1:05:12, as 12 files", "3 of 12 chapters · 12:34, as 3 files" split.</summary>
     public string ChaptersSummary
     {
         get
         {
+            if (!SplitsChapters) return $"The whole title · {RipDialogViewModel.Duration(Title.Duration)}";
             var picked = Chapters.Where(c => c.IsChecked).ToList();
             if (picked.Count == 0) return "No chapters ticked";
             var count = picked.Count == Chapters.Count ? $"All {Chapters.Count} chapters" : $"{picked.Count} of {Chapters.Count} chapters";
             var length = picked.All(c => c.Length is not null) ? $" · {RipDialogViewModel.Duration(TimeSpan.FromTicks(picked.Sum(c => c.Length!.Value.Ticks)))}" : "";
-            var files = ChapterFiles && picked.Count > 1 ? $", as {picked.Count} files" : "";
-            return count + length + files;
+            return $"{count}{length}, as {(picked.Count == 1 ? "1 file" : $"{picked.Count} files")}";
         }
     }
 
@@ -140,10 +146,11 @@ public sealed partial class RipTitleRow : ObservableObject
 
     /// <summary>What's ticked of it, under the title in the list.</summary>
     public string Summary => !IsChecked ? "Not ripped" : !IsComplete ? (Audio.Count > 0 && !Audio.Any(a => a.IsChecked) ? "Tick an audio track" : "Tick a chapter")
-        : $"{(Chapters.Count > 1 ? ChaptersSummary : "The whole title")} · {AudioSummary}";
+        : $"{(SplitsChapters ? ChaptersSummary : "The whole title")} · {AudioSummary}";
 
     private void Changed()
     {
+        OnPropertyChanged(nameof(SplitsChapters));
         OnPropertyChanged(nameof(ChaptersSummary));
         OnPropertyChanged(nameof(AudioSummary));
         OnPropertyChanged(nameof(Summary));
@@ -163,8 +170,8 @@ public sealed partial class RipTitleRow : ObservableObject
         foreach (var c in Chapters) c.IsChecked = false;
     }
 
-    /// <summary>The chapters to rip: null for the whole title in one file, read as it always was.</summary>
-    internal IReadOnlyList<int>? ChaptersToRip => Chapters.Count > 1 && (ChapterFiles || Chapters.Any(c => !c.IsChecked)) ? CheckedChapters : null;
+    /// <summary>The chapters to rip, each its own file; null for the whole title in one file, read as it always was.</summary>
+    internal IReadOnlyList<int>? ChaptersToRip => SplitsChapters ? CheckedChapters : null;
 }
 
 /// <summary>
@@ -185,10 +192,10 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     /// <summary>Look discs up (MusicBrainz, AccurateRip); tests stay offline.</summary>
     private readonly bool _online;
 
-    /// <param name="qtgmc">QTGMC's runtime and whether it works; null looks for the bundled one.</param>
+    /// <param name="qtgmc">QTGMC's runtime, whether it works and if not why; null looks for the bundled one.</param>
     public RipDialogViewModel(MainViewModel main, IReadOnlyList<OpticalDrive> drives, string? drive = null,
         Func<string, ICdDrive>? openCd = null, Func<string, DvdInfo>? readDvd = null, string? flac = null, string? ffmpeg = null,
-        bool online = true, string? ffprobe = null, IReadOnlySet<string>? encoders = null, (QtgmcRuntime? Runtime, bool Works)? qtgmc = null)
+        bool online = true, string? ffprobe = null, IReadOnlySet<string>? encoders = null, (QtgmcRuntime? Runtime, bool Works)? qtgmc = null, string? qtgmcProblem = null)
     {
         Main = main;
         _online = online;
@@ -209,6 +216,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         {
             Qtgmc = q.Runtime;
             HasQtgmc = q.Works;
+            QtgmcProblem = qtgmcProblem;
         }
         else if (Core.Ripping.Dvd.Qtgmc.Find() is { } runtime)
         {
@@ -324,8 +332,8 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         RipStep.DvdMode =>
             "Save the disc's films as MKV videos, only their audio as FLAC or WAV files, or the whole disc as it is.",
         RipStep.DvdTitles => DvdChoice == DvdRipChoice.AudioOnly
-            ? "Tick the titles to rip. For each title: the chapters, whether they're one file or one each, and the audio tracks. Every audio track ticked becomes files of its own."
-            : "Tick the titles to rip: each becomes its own MKV. For each title: the chapters, whether they're one file or one each, and the audio tracks the MKV keeps.",
+            ? "Tick the titles to rip. For each title: the whole title as one file, or a file for each chapter ticked, and the audio tracks. Every audio track ticked becomes files of its own."
+            : "Tick the titles to rip. For each title: the whole title as one MKV, or an MKV for each chapter ticked, and the audio tracks the MKV keeps.",
         RipStep.DvdFormat => DvdChoice == DvdRipChoice.AudioOnly
             ? "FLAC is lossless and smaller; WAV is uncompressed. Both keep every channel of the track, 5.1 included."
             : "Keep the disc's video as it is, or encode it to look the same in less space. Then choose the audio's format.",
@@ -487,7 +495,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     /// <summary>The title shown on the right of the list: its chapters and audio tracks.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedTitle), nameof(Chapters), nameof(ChaptersSummary), nameof(ShowChapters), nameof(ChapterFiles),
-        nameof(AudioTracks))]
+        nameof(ChapterTicksEnabled), nameof(AudioTracks))]
     private RipTitleRow? _selectedTitleRow;
 
     /// <summary>The title shown (for its chapters and tracks).</summary>
@@ -510,9 +518,13 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         {
             if (SelectedTitleRow is { } row) row.ChapterFiles = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(ChapterTicksEnabled));
             OnPropertyChanged(nameof(ChaptersSummary));
         }
     }
+
+    /// <summary>The chapter ticks count only when each chapter is a file of its own: otherwise the whole title is ripped.</summary>
+    public bool ChapterTicksEnabled => ChapterFiles;
 
     public string ChaptersSummary => SelectedTitleRow?.ChaptersSummary ?? "";
 
@@ -532,6 +544,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(ChaptersSummary));
         OnPropertyChanged(nameof(ChapterFiles));
+        OnPropertyChanged(nameof(ChapterTicksEnabled));
         OnPropertyChanged(nameof(TitlesSummary));
         OnPropertyChanged(nameof(RipSummary));
         StartCommand.NotifyCanExecuteChanged();
@@ -551,7 +564,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     /// <summary>What the DVD is ripped to: 0 MKV, 1 audio only, 2 the VIDEO_TS folder.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMkv), nameof(IsAudioOnly), nameof(IsBackup), nameof(DvdChoice), nameof(MkvNote), nameof(CanDownmix),
-        nameof(StepNote), nameof(SplitOneLabel), nameof(TitlesSummary))]
+        nameof(StepNote), nameof(TitlesSummary))]
     [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(NextCommand))]
     private int _dvdModeIndex;
 
@@ -562,8 +575,6 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     public bool IsAudioOnly => DvdChoice == DvdRipChoice.AudioOnly;
     public bool IsBackup => DvdChoice == DvdRipChoice.Backup;
 
-    /// <summary>The split choice's first option, which differs by mode.</summary>
-    public string SplitOneLabel => IsAudioOnly ? "One file per title" : "One file";
 
     /// <summary>The MKV's video: 0 copied, 1 x264, 2 x265 (<see cref="DvdVideo"/>).</summary>
     [ObservableProperty]
@@ -609,13 +620,25 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(NextCommand))]
     private bool _hasQtgmc;
 
+    /// <summary>Why the bundled VapourSynth didn't load (Python's last lines), when it's there but doesn't.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(QtgmcTip))]
+    private string? _qtgmcProblem;
+
     public string QtgmcTip => HasQtgmc ? "QTGMC (through VapourSynth): slower than BWDIF, with cleaner edges and steadier detail"
-        : "QTGMC needs the VapourSynth that comes with Atlas Player, which isn't there or doesn't load";
+        : QtgmcProblem is { Length: > 0 } why ? $"QTGMC didn't load: {why}"
+        : Qtgmc is null ? "QTGMC needs the VapourSynth that comes with Atlas Player, which isn't there"
+        : "Checking QTGMC's VapourSynth…";
 
     private async Task CheckQtgmcAsync(QtgmcRuntime runtime)
     {
-        var works = await Core.Ripping.Dvd.Qtgmc.AvailableAsync(runtime);
-        Avalonia.Threading.Dispatcher.UIThread.Post(() => HasQtgmc = works);
+        var probe = await Core.Ripping.Dvd.Qtgmc.ProbeAsync(runtime);
+        if (!probe.Works) Console.Error.WriteLine($"QTGMC: VapourSynth at {runtime.Python} didn't load: {probe.Reason}");
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            QtgmcProblem = probe.Works ? null : probe.Reason ?? "it didn't say why";
+            HasQtgmc = probe.Works;
+        });
     }
 
     /// <summary>Deinterlacing choices apply to encoded video; a copy keeps the disc's fields.</summary>
@@ -745,7 +768,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
             if (IsBackup) return $"Every file of the disc's VIDEO_TS folder, menus included, decrypted, in a folder named after the disc ({_dvd?.Name}). It plays like the disc.";
             var titles = TitleRows.Where(t => t.IsChecked).ToList();
             if (titles.Count == 0) return "No titles ticked.";
-            var lines = titles.Select(t => $"Title {t.Number}: {(t.HasChapterChoice ? t.ChaptersSummary : "the whole title")}"
+            var lines = titles.Select(t => $"Title {t.Number}: {(t.SplitsChapters ? t.ChaptersSummary : "the whole title")}"
                                            + (t.Audio.Count == 0 ? "" : $", {t.AudioSummary.ToLowerInvariant()}")).ToList();
             string what;
             if (IsAudioOnly)
@@ -1030,9 +1053,9 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         return TitleRows.Where(t => t.IsChecked).Select(t => common with
         {
             Title = t.Number,
-            // Every chapter in one file is the whole title, read as it always was.
+            // One file is the whole title, read as it always was; split, each ticked chapter is a file.
             Chapters = t.ChaptersToRip,
-            ChapterFiles = t.HasChapterChoice && t.ChapterFiles,
+            ChapterFiles = t.SplitsChapters,
             // Every track (or a title with none listed) is all of them, mapped as always.
             AudioTracks = t.Audio.Count == 0 || t.Audio.All(a => a.IsChecked) ? null : t.CheckedAudio,
         }).ToList();

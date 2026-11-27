@@ -83,3 +83,18 @@ jobs:
           ATLAS_NATIVE_DIR: ${{ github.workspace }}/packaging/dvd/win64
           ATLAS_REQUIRE_DVDREAD: "1"
         run: dotnet test tests/AtlasPlayer.Core.Tests --filter "FullyQualifiedName~DvdReadNativeTests" --logger GitHubActions
+      # QTGMC as the Windows zip ships it (build/fetch-qtgmc-win.sh), in a folder with a space in
+      # its name like "Atlas Player": the app's own lookup and probe, then every preset on a blank
+      # PAL clip (build/qtgmc-check.py). Beta.11's didn't load at all.
+      - name: QTGMC (VapourSynth and its plugins)
+        shell: bash
+        run: |
+          DIR="$RUNNER_TEMP/Atlas Player"
+          ./build/fetch-qtgmc-win.sh "$DIR"
+          VS="$(cygpath -w "$DIR/vapoursynth")"
+          if ! OUT="$("$DIR/vapoursynth/python.exe" -I "$(cygpath -w build/qtgmc-check.py)" "$VS\\Lib\\site-packages" "$VS\\plugins" 2>&1)"; then
+            echo "::error::QTGMC doesn't run on Windows: $(echo "$OUT" | tail -3 | tr '\n' ' ')"
+            exit 1
+          fi
+          echo "$OUT"
+          ATLAS_VAPOURSYNTH="$VS" dotnet test tests/AtlasPlayer.Core.Tests --filter "FullyQualifiedName~Prompt12CoreTests" --logger GitHubActions

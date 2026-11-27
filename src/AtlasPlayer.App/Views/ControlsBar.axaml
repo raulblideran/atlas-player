@@ -89,7 +89,13 @@
         </Button>
         <Button c:BarRow.Item="play" x:Name="PlayButton" Classes="icon play" c:BarRow.CentreOn="True" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{Binding PlayButtonTip}">
           <Panel>
-            <PathIcon Data="{StaticResource IconPlay}" IsVisible="{Binding ShowPlayIcon}" />
+            <!-- PathIcon centres the triangle's box, which leaves its weight (a third of the way in from
+                 the flat side) left of the middle: moved right by a sixth of its width (18 of 24) to look centred. -->
+            <PathIcon x:Name="PlayGlyph" Data="{StaticResource IconPlay}" IsVisible="{Binding ShowPlayIcon}">
+              <PathIcon.RenderTransform>
+                <TranslateTransform X="3" />
+              </PathIcon.RenderTransform>
+            </PathIcon>
             <PathIcon Data="{StaticResource IconPause}" IsVisible="{Binding ShowPauseIcon}" />
             <PathIcon x:Name="OpeningSpinner" Classes="spin" Data="{StaticResource IconSpinner}" IsVisible="{Binding IsStartingStream}" />
           </Panel>

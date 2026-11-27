@@ -310,16 +310,19 @@ public class Prompt10MiscTests
         Assert.Equal(2, vm.SelectedTitle!.Number);
         Assert.True(vm.ShowChapters);
         Assert.Equal(["Chapter 1 · 11:00", "Chapter 2 · 10:00", "Chapter 3 · 7:00", "Chapter 4 · 12:00"], vm.Chapters.Select(c => c.Label));
-        Assert.Equal("All 4 chapters · 40:00", vm.ChaptersSummary);
+        Assert.StartsWith("The whole title · ", vm.ChaptersSummary);
         Assert.Null(vm.DvdOptions()!.Chapters); // the whole title, read as always
+        Assert.False(vm.ChapterTicksEnabled);
 
+        // One file per title is the whole title, whatever is ticked (prompt 12).
         vm.Chapters[1].IsChecked = false;
-        Assert.Equal("3 of 4 chapters · 30:00", vm.ChaptersSummary);
-        Assert.Equal([1, 3, 4], vm.DvdOptions()!.Chapters);
+        Assert.Null(vm.DvdOptions()!.Chapters);
         Assert.False(vm.DvdOptions()!.ChapterFiles);
         vm.ChapterFiles = true;
+        Assert.True(vm.ChapterTicksEnabled);
+        Assert.Equal("3 of 4 chapters · 30:00, as 3 files", vm.ChaptersSummary);
+        Assert.Equal([1, 3, 4], vm.DvdOptions()!.Chapters);
         Assert.True(vm.DvdOptions()!.ChapterFiles);
-        Assert.EndsWith("as 3 files", vm.ChaptersSummary);
 
         vm.NoChaptersCommand.Execute(null);
         Assert.False(vm.StartCommand.CanExecute(null));

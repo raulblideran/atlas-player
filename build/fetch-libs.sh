@@ -32,29 +32,7 @@ FLAC_SHA256=53f1500f0d6e7c61379d7fee50d4a9f7f504c650009506d9ba015530d76c0dde
 # and SHA-256. Its deinterlacer is swapped for the BWDIF one (build/build-vlc-bwdif-win.sh).
 LIBVLC_VERSION=3.0.24
 LIBVLC_SHA256=1ed59c09152e78aff84663fa76efab26057716576db74332858810e5ef54ae1f
-# QTGMC for DVD rips (AtlasPlayer.Core/Ripping/Dvd/Qtgmc.cs): a "vapoursynth" folder with Python's
-# embeddable build, VapourSynth's wheel (unpacked into Lib\site-packages, as its portable
-# installer does), havsfunc r33 (its last release with QTGMC) with mvsfunc and adjust, and the
-# plugins QTGMC needs, from the releases VapourSynth's package index (vsrepo) lists. Each pinned
-# by SHA-256 (the wheel's matches PyPI's). VapourSynth needs MSVCP140.dll (the VC++ runtime):
-# copied from the Windows build machine's System32 when there is one (the release is built on
-# GitHub's Windows runner); the embeddable Python brings VCRUNTIME140(_1).dll itself.
-PYTHON_VERSION=3.14.10
-PYTHON_SHA256=90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159
-VS_WHEEL_URL=https://files.pythonhosted.org/packages/09/d7/f67e68a7bf35dc24bdff34b30d14baee5b726790c0bed8cba449790dbc33/vapoursynth-82-cp312-abi3-win_amd64.whl
-VS_WHEEL_SHA256=dbde9930d4e85de4eb220e05a0314edb7469b9016c5c58a279844b90da4a32b1
-MVTOOLS_SHA256=b9883003eed100d4ffd44344b658554076b89da6d45041b378e675720426bc95   # v24
-ZNEDI3_SHA256=2f6512a971cbc94660b716f9689ee9a55ab6d9fd29484ea62d92a20151d56fd6    # r3.3, with nnedi3_weights.bin
-REMOVEGRAIN_SHA256=dc408c560de537d273e78607a776f357ba80d9a7a0074d3c10bc9f3e3376d35f # R1
-BESTSOURCE_SHA256=328daf65114863375f5b706b50ef2b3c55832795f10d5194a26462ddf4edd06c  # R23, msvc
-HAVSFUNC_SHA256=4da2839544b1ce9382db670b069dc358228251d147dad91f740a860840e04924
-MVSFUNC_COMMIT=865c7486ca860d323754ec4774bc4cca540a7076
-MVSFUNC_SHA256=1adeb385d19bac1f8c541b655d1f98a38e18c9a0065d4483c25184c22908a984
-MVSFUNC_INIT_SHA256=a08e2bc2d1b255ffa373ef52a63506da6a926e72a4d115aaabe5e95272016d89
-MVSFUNC_META_SHA256=654d75ba830a969d5940e1d6a18a7801a0a8b9860fd9aa85688f954ee0d5bd53
-ADJUST_COMMIT=a3af7cb57cb37747b0667346375536e65b1fed17
-ADJUST_SHA256=22b25995ef37e6d003c2999e51e80d1570376413db9067f703fe4fcef4600bfa
-QTGMC_BUILD="python-$PYTHON_VERSION vs-82 mv-v24 znedi3-r3.3 rg-R1 bs-R23 havsfunc-r33"
+# QTGMC for DVD rips: build/fetch-qtgmc-win.sh stages it (its pins are there).
 export PATH="$HOME/.cargo/bin:$PATH"
 
 OUT="$ROOT/libs/$RID"
@@ -148,51 +126,8 @@ case "$RID" in
     fi
     # libdvdread and libdvdcss for the DVD ripper's VIDEO_TS copy (build/build-dvdread-win.sh).
     cp "$ROOT/packaging/dvd/win64/libdvdcss-2.dll" "$ROOT/packaging/dvd/win64/libdvdread-8.dll" "$OUT/"
-    # QTGMC: re-staged when a pin changes.
-    VSDIR="$OUT/vapoursynth"
-    if [ ! -f "$VSDIR/python.exe" ] || [ "$(cat "$ROOT/libs/$RID.qtgmc-build" 2>/dev/null)" != "$QTGMC_BUILD" ]; then
-      rm -rf "$VSDIR"
-      DL="$(mktemp -d)"
-      fetch_checked "https://www.python.org/ftp/python/$PYTHON_VERSION/python-$PYTHON_VERSION-embed-amd64.zip" "$PYTHON_SHA256" "$DL/python.zip"
-      fetch_checked "$VS_WHEEL_URL" "$VS_WHEEL_SHA256" "$DL/vs.whl"
-      fetch_checked https://github.com/dubhatervapoursynth/vapoursynth-mvtools/releases/download/v24/vapoursynth-mvtools-v24-win64.7z \
-        "$MVTOOLS_SHA256" "$DL/mv.7z"
-      fetch_checked https://github.com/sekrit-twc/znedi3/releases/download/r3.3/znedi3_r3.3.7z "$ZNEDI3_SHA256" "$DL/znedi3.7z"
-      fetch_checked https://github.com/vapoursynth/vs-removegrain/releases/download/R1/removegrain-r1.7z "$REMOVEGRAIN_SHA256" "$DL/rg.7z"
-      fetch_checked https://github.com/vapoursynth/bestsource/releases/download/R23/BestSource-R23-win64-msvc.zip "$BESTSOURCE_SHA256" "$DL/bs.zip"
-      fetch_checked https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/havsfunc/r33/havsfunc.py "$HAVSFUNC_SHA256" "$DL/havsfunc.py"
-      fetch_checked "https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/mvsfunc/$MVSFUNC_COMMIT/mvsfunc/mvsfunc.py" "$MVSFUNC_SHA256" "$DL/mvsfunc.py"
-      fetch_checked "https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/mvsfunc/$MVSFUNC_COMMIT/mvsfunc/__init__.py" "$MVSFUNC_INIT_SHA256" "$DL/mvsfunc-init.py"
-      fetch_checked "https://raw.githubusercontent.com/HomeOfVapourSynthEvolution/mvsfunc/$MVSFUNC_COMMIT/mvsfunc/_metadata.py" "$MVSFUNC_META_SHA256" "$DL/mvsfunc-meta.py"
-      fetch_checked "https://raw.githubusercontent.com/dubhatervapoursynth/vapoursynth-adjust/$ADJUST_COMMIT/adjust.py" "$ADJUST_SHA256" "$DL/adjust.py"
-      SITE="$VSDIR/Lib/site-packages"
-      mkdir -p "$SITE/mvsfunc" "$VSDIR/plugins"
-      (cd "$DL" && 7z x -y -opython python.zip >/dev/null && 7z x -y -ovs vs.whl >/dev/null \
-        && 7z e -y -oplugins mv.7z libmvtools.dll >/dev/null && 7z e -y -oplugins znedi3.7z vsznedi3.dll nnedi3_weights.bin >/dev/null \
-        && 7z e -y -oplugins rg.7z win64/RemoveGrainVS.dll >/dev/null && 7z e -y -oplugins bs.zip >/dev/null)
-      cp -r "$DL/python/." "$VSDIR/"
-      # The embeddable Python's search path: its own zip and folder, plus site-packages.
-      printf 'Lib\\site-packages\r\n' >> "$(ls "$VSDIR"/python3*._pth | head -1)"
-      cp -r "$DL/vs/vapoursynth" "$DL/vs/"vapoursynth-*.dist-info "$SITE/"
-      # Debug symbols, headers and the VfW bridge aren't needed to run scripts.
-      rm -rf "$SITE/vapoursynth/"*.pdb "$SITE/vapoursynth/include" "$SITE/vapoursynth/pkgconfig" "$SITE/vapoursynth/vsvfw.dll" "$SITE/vapoursynth/"*.pyi
-      cp "$DL/plugins/"* "$VSDIR/plugins/"
-      mv "$VSDIR/plugins/BestSource-R23-win64-msvc.dll" "$VSDIR/plugins/BestSource.dll"
-      cp "$DL/havsfunc.py" "$DL/adjust.py" "$SITE/"
-      cp "$DL/mvsfunc.py" "$SITE/mvsfunc/"
-      cp "$DL/mvsfunc-init.py" "$SITE/mvsfunc/__init__.py"
-      cp "$DL/mvsfunc-meta.py" "$SITE/mvsfunc/_metadata.py"
-      rm -rf "$DL"
-      echo "$QTGMC_BUILD" > "$ROOT/libs/$RID.qtgmc-build"
-    fi
-    SYS32="${SYSTEMROOT:-${WINDIR:-}}"
-    if [ -n "$SYS32" ] && command -v cygpath >/dev/null; then SYS32="$(cygpath -u "$SYS32")"; fi
-    SYS32="$SYS32/System32"
-    if [ -f "$SYS32/msvcp140.dll" ]; then
-      cp "$SYS32/msvcp140.dll" "$VSDIR/"
-    elif [ ! -f "$VSDIR/msvcp140.dll" ]; then
-      echo "warning: no msvcp140.dll here: QTGMC will need the VC++ runtime installed on the PC" >&2
-    fi
+    # QTGMC: VapourSynth and its plugins in libs/win-x64/vapoursynth (re-staged when a pin changes).
+    "$ROOT/build/fetch-qtgmc-win.sh" "$OUT"
     ;;
   linux-x64)
     cargo build --release

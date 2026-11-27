@@ -3,6 +3,21 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## Unreleased
+
+- **QTGMC works now, on Windows and Linux.** In 2.0.0-beta.11 it couldn't be picked on either:
+  its MVTools was an old build that the bundled VapourSynth (R82) no longer loads, and four
+  plugins it needs (fmtconv, MiscFilters, EEDI3m, FFT3DFilter) weren't included. Both builds now
+  bring all of them, and every preset (Medium to Placebo) is tested when the app is built. If it
+  still can't load, hovering over QTGMC in the rip window shows why.
+- **One button for a disc folder or image.** Open Disc has **Disc folder/image…** and Rip Disc
+  **DVD folder/image…**, in place of two buttons each; it asks which one you want.
+- **"One file per title" rips the whole title.** The chapter ticks only apply to **One file per
+  chapter**, so they're greyed out otherwise. With **One file per chapter**, each chapter you
+  tick becomes its own file (all of them, to begin with). The whole title stays the default, for
+  MKVs and audio only alike.
+- **The Play button's triangle is centred,** rather than sitting a little to the left.
+
 ## 2.0.0-beta.11 — 2026-11-26
 
 A **beta** of 2.0.0, and the first under its new name. Tried on Linux, not yet on Windows.

@@ -92,12 +92,18 @@
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-              <Button Classes="ghost" Content="DVD image…" Click="OnPickDvdImage" ToolTip.Tip="A DVD-Video image (.iso), to rip like a disc" />
-              <Button Classes="ghost" Content="DVD folder…" Click="OnPickDvdFolder" ToolTip.Tip="A VIDEO_TS folder, or the folder it's in" />
-            </StackPanel>
+            <!-- One button for both: a picker can't take a folder or a file at once, so it asks which. -->
+            <Button x:Name="DvdSourceButton" Grid.Column="2" Classes="ghost" Content="DVD folder/image…"
+                    ToolTip.Tip="A DVD's VIDEO_TS folder, or a DVD-Video image (.iso), to rip like a disc">
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedRight">
+                  <MenuItem x:Name="DvdFolderItem" Header="Folder…" Click="OnPickDvdFolder" ToolTip.Tip="A VIDEO_TS folder, or the folder it's in" />
+                  <MenuItem x:Name="DvdImageItem" Header="Image…" Click="OnPickDvdImage" ToolTip.Tip="A DVD-Video image (.iso), to rip like a disc" />
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
           </Grid>
-          <TextBlock Classes="muted" FontSize="12" Text="No CD or DVD drive found: open a DVD image or folder instead." IsVisible="{Binding !HasDrives}" />
+          <TextBlock Classes="muted" FontSize="12" Text="No CD or DVD drive found: open a DVD folder or image instead." IsVisible="{Binding !HasDrives}" />
           <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
           <TextBlock Text="{Binding Message}" Classes="status" TextWrapping="Wrap"
                      IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
@@ -232,14 +238,22 @@
           </StackPanel>
           <StackPanel Grid.Column="1" Spacing="8">
             <TextBlock Classes="section" Text="{Binding SelectedTitle.Number, StringFormat='Title {0}'}" />
-            <!-- The title's chapters: all of it, or the ones ticked, in one file or one per chapter. -->
+            <!-- The whole title in one file, or each ticked chapter in a file of its own: the ticks only count then. -->
             <StackPanel x:Name="ChapterOptions" Spacing="6" IsVisible="{Binding ShowChapters}">
+              <StackPanel Orientation="Horizontal" Spacing="16">
+                <RadioButton x:Name="OneFile" GroupName="chapterfiles" Content="One file per title"
+                             IsChecked="{Binding !ChapterFiles, Mode=OneWay}" Click="OnOneFile"
+                             ToolTip.Tip="The whole title, every chapter, in one file" />
+                <RadioButton x:Name="FilePerChapter" GroupName="chapterfiles" Content="One file per chapter"
+                             IsChecked="{Binding ChapterFiles, Mode=OneWay}" Click="OnFilePerChapter"
+                             ToolTip.Tip="Each chapter ticked below in a file of its own" />
+              </StackPanel>
               <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
                 <TextBlock x:Name="ChaptersSummary" Text="{Binding ChaptersSummary}" VerticalAlignment="Center" TextWrapping="Wrap" />
-                <Button Grid.Column="1" Classes="ghost" Content="All" Command="{Binding AllChaptersCommand}" />
-                <Button Grid.Column="2" Classes="ghost" Content="None" Command="{Binding NoChaptersCommand}" />
+                <Button Grid.Column="1" Classes="ghost" Content="All" Command="{Binding AllChaptersCommand}" IsEnabled="{Binding ChapterTicksEnabled}" />
+                <Button Grid.Column="2" Classes="ghost" Content="None" Command="{Binding NoChaptersCommand}" IsEnabled="{Binding ChapterTicksEnabled}" />
               </Grid>
-              <ListBox x:Name="ChapterList" ItemsSource="{Binding Chapters}" MaxHeight="170">
+              <ListBox x:Name="ChapterList" ItemsSource="{Binding Chapters}" MaxHeight="170" IsEnabled="{Binding ChapterTicksEnabled}">
                 <ListBox.ItemsPanel>
                   <ItemsPanelTemplate>
                     <WrapPanel Orientation="Horizontal" />
@@ -251,12 +265,6 @@
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
-              <StackPanel Orientation="Horizontal" Spacing="16">
-                <RadioButton x:Name="OneFile" GroupName="chapterfiles" Content="{Binding SplitOneLabel}"
-                             IsChecked="{Binding !ChapterFiles, Mode=OneWay}" Click="OnOneFile" />
-                <RadioButton x:Name="FilePerChapter" GroupName="chapterfiles" Content="One file per chapter"
-                             IsChecked="{Binding ChapterFiles, Mode=OneWay}" Click="OnFilePerChapter" />
-              </StackPanel>
             </StackPanel>
             <TextBlock Classes="note" Text="One chapter: the title is ripped whole." IsVisible="{Binding !ShowChapters}" />
             <TextBlock Classes="group" Text="Audio tracks" Margin="0,6,0,0" />

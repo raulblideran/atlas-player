@@ -98,19 +98,26 @@ public class PackagingTests
         Assert.True(m.IndexOf("- name: bestsource", StringComparison.Ordinal) < app.Index);
         Assert.Contains("python3 -m zipfile -e vapoursynth.whl /app/lib/vapoursynth/python/", m);
         Assert.Contains("havsfunc/r33/havsfunc.py", m);
-        foreach (var plugin in new[] { "libmvtools.so", "libvsznedi3.so", "libremovegrain.so", "nnedi3_weights.bin" })
+        foreach (var plugin in new[] { "vapoursynth-mvtools.whl", "libvsznedi3.so", "libremovegrain.so", "nnedi3_weights.bin",
+                     "libfmtconv.so", "libmiscfilters.so", "libeedi3m.so", "libfft3dfilter.so" })
             Assert.Contains(plugin, m);
+        // And the build runs QTGMC with them, after BestSource (prompt 12: beta.11's didn't load).
+        Assert.True(m.IndexOf("- name: bestsource", StringComparison.Ordinal) < m.IndexOf("- name: qtgmc-check", StringComparison.Ordinal));
+        Assert.Contains("python3 -I qtgmc-check.py /app/lib/vapoursynth/python /app/lib/vapoursynth/plugins", m);
         Assert.Contains("build/libbestsource.so /app/lib/vapoursynth/plugins/", m);
-        // Every file it fetches is pinned too.
+        // Every file it fetches is pinned too (the repo's own files aren't fetched).
         var lines = m.Split('\n').Select(l => l.Trim()).ToList();
         for (var i = 0; i < lines.Count; i++)
-            if (lines[i] == "- type: file")
+            if (lines[i] == "- type: file" && lines[i + 1].StartsWith("url: ", StringComparison.Ordinal))
                 Assert.StartsWith("sha256: ", lines[i + 2]);
         // Windows: the same, in a "vapoursynth" folder next to AtlasPlayer.exe, checked by the publish script.
-        var fetch = File.ReadAllText(Path.Combine(Root, "build", "fetch-libs.sh"));
+        Assert.Contains("build/fetch-qtgmc-win.sh\" \"$OUT\"", File.ReadAllText(Path.Combine(Root, "build", "fetch-libs.sh")));
+        var fetch = File.ReadAllText(Path.Combine(Root, "build", "fetch-qtgmc-win.sh"));
         Assert.Contains("VSDIR=\"$OUT/vapoursynth\"", fetch);
         Assert.Matches("VS_WHEEL_SHA256=[0-9a-f]{64}", fetch);
-        Assert.Contains("BestSource.dll", File.ReadAllText(Path.Combine(Root, "build", "publish-win.sh")));
+        var publish = File.ReadAllText(Path.Combine(Root, "build", "publish-win.sh"));
+        Assert.Contains("BestSource.dll", publish);
+        Assert.Contains("build/qtgmc-check.py", publish);
     }
 
     [Fact]

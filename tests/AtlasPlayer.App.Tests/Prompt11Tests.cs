@@ -185,7 +185,6 @@ public class Prompt11Tests
         vm.DvdModeIndex = 1;
         Assert.True(vm.IsAudioOnly);
         Assert.Equal(5, vm.Steps.Count);
-        Assert.Equal("One file per title", vm.SplitOneLabel);
         vm.DvdModeIndex = 2;
         Assert.Equal([RipStep.Source, RipStep.DvdMode, RipStep.Rip], vm.Steps);
         Assert.Equal(DvdRipMode.Decrypt, Assert.Single(vm.DvdJobs()!).Mode);
@@ -221,13 +220,15 @@ public class Prompt11Tests
         vm.AudioTracks[1].IsChecked = true;
         Assert.True(vm.NextCommand.CanExecute(null));
 
-        // Both titles, each its own job; the first's chapter and track as they are.
+        // Both titles, each its own job; the second's chapters split, one file each, and its track as it is.
         vm.TitleRows[0].IsChecked = true;
+        vm.ChapterFiles = true;
         vm.Chapters[0].IsChecked = false;
         var jobs = vm.DvdJobs()!;
         Assert.Equal([1, 2], jobs.Select(j => j.Title));
         Assert.Null(jobs[0].Chapters);
         Assert.Equal([2, 3], jobs[1].Chapters);
+        Assert.True(jobs[1].ChapterFiles);
         Assert.Equal([1], jobs[1].AudioTracks);
         Assert.Contains("Title 1: the whole title", vm.RipSummary);
 

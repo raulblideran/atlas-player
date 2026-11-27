@@ -167,7 +167,7 @@ public class Prompt11CoreTests
         Assert.Contains("havsfunc.QTGMC(clip, Preset=preset, TFF=(order == 'tff'), FPSDivisor=divisor)", Qtgmc.Script);
         Assert.Contains("clip.output(sys.stdout.buffer, y4m=True)", Qtgmc.Script);
         Assert.Contains("core.bs.VideoSource", Qtgmc.Script);
-        Assert.Contains("('mv', 'znedi3', 'rgvs', 'bs')", Qtgmc.ProbeScript);
+        Assert.Contains("('mv', 'znedi3', 'rgvs', 'bs', ", Qtgmc.ProbeScript); // and the rest: Prompt12CoreTests
         // Python's own indentation survives the C# literal.
         Assert.Contains("\n        try:\n            core.std.LoadPlugin", Qtgmc.Script);
     }

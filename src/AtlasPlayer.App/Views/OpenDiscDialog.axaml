@@ -7,12 +7,20 @@
         WindowStartupLocation="CenterOwner" Background="{DynamicResource ThemeSurface}">
   <DockPanel>
     <Border Classes="footer" DockPanel.Dock="Bottom">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
-        <Button Classes="ghost" Content="Disc folder…" Click="OnPickFolder"
-                ToolTip.Tip="A DVD (VIDEO_TS) or Blu-ray (BDMV) folder, or a CD rip's folder with its .cue sheet" />
-        <Button x:Name="DiscImageButton" Grid.Column="1" Classes="ghost" Content="Disc image…" Click="OnPickImage"
-                ToolTip.Tip="A DVD, Blu-ray or SACD image (.iso), or an Audio CD image (.cue with its .bin)" />
-        <Button Grid.Column="3" Classes="ghost" Content="Cancel" Click="OnCancel" IsCancel="True" />
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+        <!-- One button for both: a picker can't take a folder or a file at once, so it asks which. -->
+        <Button x:Name="DiscSourceButton" Classes="ghost" Content="Disc folder/image…"
+                ToolTip.Tip="A disc folder (VIDEO_TS, BDMV or a CD rip's), or a disc image (.iso, .cue)">
+          <Button.Flyout>
+            <MenuFlyout Placement="TopEdgeAlignedLeft">
+              <MenuItem x:Name="DiscFolderItem" Header="Folder…" Click="OnPickFolder"
+                        ToolTip.Tip="A DVD (VIDEO_TS) or Blu-ray (BDMV) folder, or a CD rip's folder with its .cue sheet" />
+              <MenuItem x:Name="DiscImageItem" Header="Image…" Click="OnPickImage"
+                        ToolTip.Tip="A DVD, Blu-ray or SACD image (.iso), or an Audio CD image (.cue with its .bin)" />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+        <Button Grid.Column="2" Classes="ghost" Content="Cancel" Click="OnCancel" IsCancel="True" />
       </Grid>
     </Border>
     <StackPanel Margin="24,22,24,20" Spacing="12">
@@ -40,7 +48,7 @@
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <TextBlock x:Name="NoDrives" Classes="note" Margin="0,4" Text="No CD, DVD or Blu-ray drive found. You can still open a disc folder or a disc image below." IsVisible="False" />
+          <TextBlock x:Name="NoDrives" Classes="note" Margin="0,4" Text="No CD, DVD or Blu-ray drive found. You can still open a disc folder or image with the button below." IsVisible="False" />
         </StackPanel>
       </Border>
     </StackPanel>

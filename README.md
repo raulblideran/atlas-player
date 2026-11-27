@@ -107,7 +107,8 @@ decide whether you want a cue sheet, and rip. Every block is read until two read
 result is checked against AccurateRip, and a log is written in the familiar EAC-style layout.
 
 For a **DVD** (a drive, an `.iso` or a `VIDEO_TS` folder) you choose between a full MKV, audio
-only, or a decrypted backup of the whole disc, then the titles, chapters and audio tracks. MKVs
+only, or a decrypted backup of the whole disc, then the titles and audio tracks: each title as
+one file, or one file for each chapter you tick. MKVs
 can keep the original MPEG-2 or be encoded with x264 or x265; interlaced video is deinterlaced
 with BWDIF or QTGMC, at the disc's frame rate or double it. Multichannel audio stays multichannel
 unless you ask for stereo.
@@ -164,8 +165,10 @@ Atlas Player stands on a lot of other people's work: [mpv](https://mpv.io),
 [x264](https://www.videolan.org/developers/x264.html), [x265](https://www.x265.org),
 [FLAC](https://xiph.org/flac/), and for QTGMC [VapourSynth](https://www.vapoursynth.com),
 [havsfunc](https://github.com/HomeOfVapourSynthEvolution/havsfunc),
-[MVTools](https://github.com/dubhater/vapoursynth-mvtools), [znedi3](https://github.com/sekrit-twc/znedi3)
-and [BestSource](https://github.com/vapoursynth/bestsource). Rips are checked against
+[MVTools](https://github.com/dubhater/vapoursynth-mvtools), [znedi3](https://github.com/sekrit-twc/znedi3),
+[fmtconv](https://gitlab.com/EleonoreMizo/fmtconv), [EEDI3](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-EEDI3),
+[FFT3DFilter](https://github.com/myrsloik/VapourSynth-FFT3DFilter), [FFTW](https://www.fftw.org),
+VapourSynth's RemoveGrain and MiscFilters, and [BestSource](https://github.com/vapoursynth/bestsource). Rips are checked against
 [AccurateRip](http://www.accuraterip.com) and tagged from [MusicBrainz](https://musicbrainz.org).
 Icons are from [Material Design Icons](https://pictogrammers.com).
 
