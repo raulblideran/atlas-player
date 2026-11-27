@@ -133,6 +133,7 @@ public class Prompt10BarTests
 }
 
 /// <summary>Settings carried to another install, subtitle looks, the Interface tab (1.12.0).</summary>
+[Collection(ThemeCollection.Name)] // importing settings applies their theme
 public class Prompt10SettingsTests
 {
     private static string Exported(Action<PlayerSettings> set)

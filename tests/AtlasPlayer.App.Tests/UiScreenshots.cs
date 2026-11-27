@@ -16,6 +16,7 @@ namespace AtlasPlayer.App.Tests;
 /// PNGs there, to look at after a UI change (ATLAS_SCREENSHOT_BACKDROP=&lt;png&gt; puts a video
 /// frame behind the bars). Without the variable it does nothing.
 /// </summary>
+[Collection(ThemeCollection.Name)]
 public class UiScreenshots
 {
     private static void Dispatch() => Dispatcher.UIThread.RunJobs();
