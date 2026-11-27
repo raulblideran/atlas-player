@@ -85,6 +85,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0-beta.13" date="2026-11-27" type="development">
+      <description>
+        <p>CD rip folders play with their cover, normalization starts at -3 dB, credits for everything Atlas Player is built on</p>
+      </description>
+    </release>
     <release version="2.0.0-beta.12" date="2026-11-27" type="development">
       <description>
         <p>QTGMC works on Windows and Linux, one folder/image button, whole title or a file per chapter</p>

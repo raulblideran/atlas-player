@@ -3,7 +3,10 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
-## Unreleased
+## 2.0.0-beta.13 — 2026-11-27
+
+A **beta** of 2.0.0. CD rip folders play however much else is in them, with the album's cover
+on screen, and Atlas Player now credits everyone whose work it is built on.
 
 - **Volume normalization starts at -3 dB.** It is still off by default. When you switch on
   **Even out loud and quiet parts** (Settings → Audio, or the audio menu), the peaks are brought
