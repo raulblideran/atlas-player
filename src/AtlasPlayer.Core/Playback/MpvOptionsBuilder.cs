@@ -107,6 +107,9 @@ public static class MpvOptionsBuilder
         yield return P("directory-filter-types", "video,audio");
         // mpv's own list of audio files lacks DSD (.dsf, .dff), which it plays.
         yield return P("audio-exts", AudioExtensions);
+        // Music's cover (cover.jpg, front.jpg, one in a Covers folder) is found by the player
+        // (FolderMedia.Cover) and handed over with each file, also for a cue sheet's edl://.
+        yield return P("cover-art-auto", "no");
     }
 
     /// <summary>YouTube and other sites: mpv's ytdl hook hands page URLs to yt-dlp.</summary>
@@ -164,7 +167,7 @@ public static class MpvOptionsBuilder
         if (s.AudioPassthrough) return "";
         var filters = new List<string>();
         if (sourceChannels == 2 && channel != StereoChannel.Both) filters.Add(ChannelFilter(channel));
-        if (s.NormalizeAudio) filters.Add(NormalizeFilter);
+        if (s.NormalizeAudio) filters.Add(NormalizeFilter(s.NormalizeTargetDb));
         return string.Join(",", filters);
     }
 
@@ -191,8 +194,15 @@ public static class MpvOptionsBuilder
         return audio.Where(t => t.Channels == 2).OrderByDescending(t => t.Default).ThenBy(t => t.Id).FirstOrDefault()?.Id;
     }
 
-    /// <summary>ffmpeg's dynamic normalizer, with a short window so it reacts within a couple of seconds.</summary>
-    public const string NormalizeFilter = "lavfi=[dynaudnorm=f=250:g=15:p=0.9]";
+    /// <summary>
+    /// ffmpeg's dynamic normalizer, with a short window so it reacts within a couple of seconds,
+    /// bringing the peaks to <paramref name="db"/> below full scale (dynaudnorm's p is linear: -3 dB is 0.708).
+    /// </summary>
+    public static string NormalizeFilter(double db = PlayerSettings.DefaultNormalizeDb)
+    {
+        var peak = Math.Pow(10, Math.Clamp(db, PlayerSettings.MinNormalizeDb, 0) / 20);
+        return $"lavfi=[dynaudnorm=f=250:g=15:p={Math.Clamp(peak, 0, 1).ToString("0.###", CultureInfo.InvariantCulture)}]";
+    }
 
     /// <summary>Videos at least this tall count as 4K for Auto rendering (covers 3840×1600 scope too).</summary>
     public const int UhdHeight = 1500;

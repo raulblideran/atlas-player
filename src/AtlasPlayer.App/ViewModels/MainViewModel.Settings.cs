@@ -63,9 +63,25 @@ public sealed partial class MainViewModel
             if (Settings.NormalizeAudio == value) return;
             Settings.NormalizeAudio = value;
             OnPropertyChanged();
-            Changed(() => _player?.ApplyAudio(), value ? "Volume normalization: on" : "Volume normalization: off");
+            Changed(() => _player?.ApplyAudio(), value ? $"Volume normalization: on ({NormalizeLevelText})" : "Volume normalization: off");
         }
     }
+
+    /// <summary>The level normalization brings the peaks to, in dB (-12 to 0; -3 by default).</summary>
+    public double NormalizeTargetDb
+    {
+        get => Settings.NormalizeTargetDb;
+        set
+        {
+            value = double.IsFinite(value) ? Math.Clamp(Math.Round(value), PlayerSettings.MinNormalizeDb, 0) : PlayerSettings.DefaultNormalizeDb;
+            if (Settings.NormalizeTargetDb == value) return;
+            Settings.NormalizeTargetDb = value;
+            OnPropertyChanged();
+            Changed(() => { if (Settings.NormalizeAudio) _player?.ApplyAudio(); });
+        }
+    }
+
+    private string NormalizeLevelText => $"{Settings.NormalizeTargetDb.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)} dB";
 
     /// <summary>Choices for the stream quality list, highest first; 0 is "best available".</summary>
     public static readonly int[] StreamHeights = [0, 2160, 1440, 1080, 720, 480, 360];

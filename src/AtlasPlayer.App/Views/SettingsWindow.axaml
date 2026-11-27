@@ -242,13 +242,21 @@
                   <ToggleSwitch x:Name="DownmixSwitch" IsChecked="{Binding DownmixToStereo}" />
                 </c:SettingRow>
                 <c:SettingRow Title="Even out loud and quiet parts"
-                              Description="Dynamic normalization, for late nights. Off (default): the original dynamics.">
+                              Description="Dynamic normalization: quiet parts come up and loud ones down. On (default). Off: the original dynamics.">
                   <ToggleSwitch x:Name="NormalizeSwitch" IsChecked="{Binding NormalizeAudio}" />
+                </c:SettingRow>
+                <c:SettingRow Title="Normalize peaks to"
+                              Description="How loud the evened-out audio gets, below full scale. -3 dB (default) leaves headroom."
+                              IsVisible="{Binding NormalizeAudio}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumericUpDown x:Name="NormalizeLevelBox" Value="{Binding NormalizeTargetDb}" Minimum="-12" Maximum="0" Increment="1" FormatString="0" Width="130" />
+                    <TextBlock Text="dB" VerticalAlignment="Center" Classes="muted" />
+                  </StackPanel>
                 </c:SettingRow>
               </StackPanel>
             </Border>
             <TextBlock Classes="note" Margin="2,8,0,0"
-                       Text="With these off the audio plays exactly as recorded, at its own sample rate (DSD and SACDs as 192 kHz PCM). For a stereo video the audio menu can also play just the left or right channel." />
+                       Text="With downmixing and normalization off the audio plays exactly as recorded, at its own sample rate (DSD and SACDs as 192 kHz PCM). For a stereo video the audio menu can also play just the left or right channel." />
 
             <TextBlock Classes="group" Text="Language" />
             <Border Classes="rows">
@@ -476,9 +484,12 @@
               <TextBlock Classes="note" VerticalAlignment="Center" Width="460"
                          Text="Include it when you report a problem: the part in brackets is the exact build." />
             </StackPanel>
-            <TextBlock Classes="group" Text="Licence" />
-            <TextBlock Classes="note"
-                       Text="GPL-3.0-or-later. Built on mpv, FFmpeg, libplacebo, libVLC, librqbit, Avalonia, yt-dlp and QuickJS-NG. Icons from Material Design Icons (Apache-2.0). Theme title fonts Black Ops One, Anton, Rye, Audiowide and Creepster are under the SIL Open Font License. CHANGELOG.txt next to the app lists what changed in each version." />
+            <TextBlock Classes="group" Text="A free, non-commercial project" />
+            <TextBlock x:Name="NonCommercialText" Classes="note"
+                       Text="Atlas Player is a hobby project, shared for free: no ads, no tracking, no accounts and no paid features. It is GPL-3.0-or-later." />
+            <TextBlock Classes="group" Text="Credits" />
+            <TextBlock x:Name="CreditsText" Classes="note"
+                       Text="Almost everything that makes it work was written by other people and shared freely. Thank you to all of them. Playback: mpv, FFmpeg, libplacebo, libass, LuaJIT and VLC (libVLC, LibVLCSharp). Discs: libdvdcss, libdvdread, libdvdnav, libbluray and libudfread (VideoLAN). Ripping: x264, x265, FLAC, and for QTGMC VapourSynth, havsfunc (QTGMC by -Vit-), mvsfunc, MVTools, znedi3, EEDI3, FFT3DFilter, FFTW, fmtconv, RemoveGrain, MiscFilters and BestSource. Links and torrents: yt-dlp, QuickJS-NG and librqbit. Interface: .NET, Avalonia, SkiaSharp, CommunityToolkit.Mvvm, the Inter font, the theme fonts (Black Ops One, Anton, Rye, Audiowide, Creepster; SIL Open Font License) and Material Design Icons (Pictogrammers). Disc information from MusicBrainz, the Cover Art Archive and AccurateRip. Developed with the help of Claude Code (Anthropic). CREDITS.md next to the app names every one of them with its authors and licence, and LICENSE holds the app's own. CHANGELOG.txt lists what changed in each version." />
             <TextBlock Classes="note" Text="github.com/raulblideran/atlas-player" />
           </StackPanel>
         </ScrollViewer>

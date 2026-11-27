@@ -640,14 +640,39 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             string? album = null;
             try { album = CueSheet.Read(value).Title; }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
-            _player!.Open(CueSheet.PlayableUrl(value) ?? value,
-                string.IsNullOrWhiteSpace(album) ? Path.GetFileNameWithoutExtension(value) : album);
+            var dir = Path.GetDirectoryName(Path.GetFullPath(value)) ?? ".";
+            // A sheet naming none of the files beside it (one for the disc's image, beside a rip's
+            // track files): mpv would find nothing to play in it, so the folder's music plays.
+            if (CueSheet.PlayableUrl(value) is not { } url) OpenFolderPlaylist(dir);
+            else _player!.Open(url, string.IsNullOrWhiteSpace(album) ? Path.GetFileNameWithoutExtension(value) : album,
+                coverArt: FolderMedia.Cover(dir, album ?? Path.GetFileNameWithoutExtension(value)));
+        }
+        else if (kind == InputKind.Folder)
+        {
+            UseEngine(_mpvPlayer!);
+            OpenFolderPlaylist(value);
         }
         else
         {
             UseEngine(_mpvPlayer!);
             _player!.Open(value, streaming: InputClassifier.IsStreaming(kind));
         }
+    }
+
+    /// <summary>
+    /// A folder plays its audio and video files, in order, and nothing else: a CD rip's log, cue
+    /// sheet and scans don't reach mpv (FolderMedia). Its music shows the folder's cover.
+    /// </summary>
+    private void OpenFolderPlaylist(string dir)
+    {
+        var files = FolderMedia.Playlist(dir);
+        if (files.Count == 0)
+        {
+            ShowStatus("Nothing in this folder can be played: no audio or video files.");
+            return;
+        }
+        _player!.Open(files[0]);
+        foreach (var file in files.Skip(1)) _player.Append(file);
     }
 
     /// <summary>What was opened last (a DVD shows as "DVD" rather than by its codec, an Audio CD as "CD", an SACD as "SACD").</summary>
@@ -1019,6 +1044,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
         var media = paths.Where(p => !IsSubtitle(p)).ToList();
+        // A whole CD rip folder's files dropped at once: its music plays, in track order, and its
+        // log, scans, notes and cue sheet (whose tracks are those same files) don't.
+        if (media.Count > 1 && media.Any(FolderMedia.IsPlayable))
+        {
+            media.RemoveAll(p => IsRipSidecar(p) || (File.Exists(p) && Path.GetExtension(p).Equals(".cue", StringComparison.OrdinalIgnoreCase)));
+            if (media.All(File.Exists) && media.Select(Path.GetDirectoryName).Distinct().Count() == 1)
+                media = [.. media.Order(FolderMedia.NaturalComparer.Instance)];
+        }
         var subtitles = paths.Where(IsSubtitle).ToList();
         if (paths.Count == 0)
         {
@@ -1036,10 +1069,28 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         await OpenInputAsync(media[0]);
         // Discs play on their own engine, which has no queue; files and folders go after the first.
         foreach (var more in media.Skip(1))
-            if (!IsDiscMode && _player is not null && InputClassifier.Classify(more) is (InputKind.File or InputKind.Folder, var value)
-                && !value.EndsWith(".cue", StringComparison.OrdinalIgnoreCase))
-                _player.Append(value);
+        {
+            if (IsDiscMode || _player is null) break;
+            switch (InputClassifier.Classify(more))
+            {
+                case (InputKind.Folder, var folder):
+                    foreach (var file in FolderMedia.Playlist(folder)) _player.Append(file);
+                    break;
+                case (InputKind.File, var value) when !value.EndsWith(".cue", StringComparison.OrdinalIgnoreCase):
+                    _player.Append(value);
+                    break;
+            }
+        }
     }
+
+    private static readonly HashSet<string> SidecarExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".log", ".txt", ".nfo", ".sfk", ".accurip", ".md5", ".ffp", ".sfv", ".pdf", ".psd", ".tmp", ".ini", ".db",
+    };
+
+    /// <summary>What rippers and scanners leave beside the music: logs, checksums, notes, pictures.</summary>
+    private static bool IsRipSidecar(string path) =>
+        File.Exists(path) && (SidecarExtensions.Contains(Path.GetExtension(path)) || FolderMedia.ImageExtensions.Contains(Path.GetExtension(path)));
 
     private void AddDroppedSubtitles()
     {

@@ -84,7 +84,7 @@ public static class PlaybackLog
         sb.AppendLine($"  Rendering: {s.RenderQuality} (using {input.Profile?.ToString() ?? "?"}); frame timing: " +
                       (s.SyncToDisplay ? $"synced to the display at {(s.DisplayFps == 0 ? "its own rate" : $"{s.DisplayFps:0.###} Hz")}" : "audio clock"));
         sb.AppendLine($"  HDR: {s.HdrMode}, curve {s.ToneMapping}, scene-adaptive {(s.HdrDynamicPeak ? "on" : "off")}, highlight recovery {s.HdrContrastRecovery:0.00}");
-        sb.AppendLine($"  Audio: downmix to stereo {(s.DownmixToStereo ? "on" : "off")}, normalize {(s.NormalizeAudio ? "on" : "off")}, passthrough {(s.AudioPassthrough ? "on" : "off")}");
+        sb.AppendLine($"  Audio: downmix to stereo {(s.DownmixToStereo ? "on" : "off")}, normalize {(s.NormalizeAudio ? $"on ({s.NormalizeTargetDb.ToString("0.#", CultureInfo.InvariantCulture)} dB)" : "off")}, passthrough {(s.AudioPassthrough ? "on" : "off")}");
         sb.AppendLine();
 
         AppendTable(sb, input.Samples);

@@ -297,11 +297,11 @@ public sealed partial class VlcDiscPlayer : IPlayer
         OperatingSystem.IsWindows() ? "/" + root.Replace('\\', '/') : root;
 
     /// <summary>Files, streams and links play through mpv; this engine is for discs only.</summary>
-    public void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false) =>
+    public void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false, string? coverArt = null) =>
         throw new NotSupportedException("VlcDiscPlayer plays discs only; use OpenDisc");
 
     /// <summary>A disc has no queue: files play through mpv.</summary>
-    public void Append(string path) => throw new NotSupportedException("VlcDiscPlayer plays discs only");
+    public void Append(string path, string? coverArt = null) => throw new NotSupportedException("VlcDiscPlayer plays discs only");
 
     /// <summary>SACD images play through mpv (Sacd.SacdProtocol).</summary>
     public void OpenSacd(string image) => throw new NotSupportedException("SACD images play through mpv");

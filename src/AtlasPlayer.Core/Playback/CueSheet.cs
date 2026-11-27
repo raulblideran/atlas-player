@@ -25,14 +25,29 @@ public static class CueSheet
 
     public static Sheet Read(string path) => Parse(ReadLines(path));
 
-    /// <summary>Cue sheets are UTF-8 or, from older rippers, the Windows code page; Latin-1 reads the latter's names.</summary>
-    private static IEnumerable<string> ReadLines(string path)
+    /// <summary>
+    /// Cue sheets are UTF-8 or, from older rippers, the Windows code page (Latin-1 reads the
+    /// latter's names); EAC and foobar2000 can write UTF-16, with or without its byte-order mark.
+    /// </summary>
+    private static IEnumerable<string> ReadLines(string path) => Decode(File.ReadAllBytes(path))
+        .TrimStart('\ufeff').Split('\n').Select(l => l.TrimEnd('\r'));
+
+    internal static string Decode(byte[] bytes)
     {
-        var bytes = File.ReadAllBytes(path);
-        string text;
-        try { text = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes); }
-        catch (DecoderFallbackException) { text = Encoding.Latin1.GetString(bytes); }
-        return text.TrimStart('﻿').Split('\n').Select(l => l.TrimEnd('\r'));
+        if (bytes is [0xFF, 0xFE, ..]) return Encoding.Unicode.GetString(bytes, 2, bytes.Length - 2);
+        if (bytes is [0xFE, 0xFF, ..]) return Encoding.BigEndianUnicode.GetString(bytes, 2, bytes.Length - 2);
+        // No mark: ASCII text in UTF-16 has a zero byte beside every letter.
+        if (bytes.Length >= 4 && bytes.Length % 2 == 0)
+        {
+            var sample = Math.Min(bytes.Length, 512) & ~1;
+            int zerosOdd = 0, zerosEven = 0;
+            for (var i = 0; i < sample; i++)
+                if (bytes[i] == 0) { if (i % 2 == 1) zerosOdd++; else zerosEven++; }
+            if (zerosOdd > sample / 4 && zerosEven == 0) return Encoding.Unicode.GetString(bytes);
+            if (zerosEven > sample / 4 && zerosOdd == 0) return Encoding.BigEndianUnicode.GetString(bytes);
+        }
+        try { return new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes); }
+        catch (DecoderFallbackException) { return Encoding.Latin1.GetString(bytes); }
     }
 
     public static Sheet Parse(IEnumerable<string> lines)
@@ -138,8 +153,10 @@ public static class CueSheet
     }
 
     /// <summary>
-    /// What to play for a cue sheet: an edl:// address with its tracks, in the files really there;
-    /// null where a track's file can't be found, so mpv makes what it can of the sheet itself.
+    /// What to play for a cue sheet: an edl:// address with its tracks, in the files really there
+    /// (a track whose file is missing is left out). Null where none of them can be found (a sheet
+    /// for one image file beside a rip's track files): the cue itself must never go to mpv, whose
+    /// own reader then finds nothing to play ("no audio or video data played"); play the folder.
     /// </summary>
     public static string? PlayableUrl(string cuePath)
     {
@@ -147,20 +164,21 @@ public static class CueSheet
         try { sheet = Read(cuePath); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return null; }
         var dir = Path.GetDirectoryName(Path.GetFullPath(cuePath)) ?? ".";
-        if (sheet.Tracks.Count == 0) return null;
-        var files = sheet.Tracks.Select(t => Resolve(dir, t.File)).ToList();
-        if (files.Any(f => f is null)) return null;
+        var all = sheet.Tracks.Select(t => (Track: t, File: Resolve(dir, t.File))).ToList();
+        // A track runs to the next one in the same file (as the sheet has them), or to the end of its file.
+        var lengths = all.Select((t, i) => i + 1 < all.Count && all[i + 1].Track.File == t.Track.File
+            ? all[i + 1].Track.Start - t.Track.Start
+            : (double?)null).ToList();
+        var found = all.Select((t, i) => (t.Track, t.File, Length: lengths[i], Number: i + 1)).Where(t => t.File is not null).ToList();
+        if (found.Count == 0) return null;
 
         var entries = new List<string>();
-        for (var i = 0; i < sheet.Tracks.Count; i++)
+        foreach (var (t, file, length, number) in found)
         {
-            var t = sheet.Tracks[i];
-            var entry = new StringBuilder(Escape(files[i]!));
-            // A track runs to the next one in the same file, or to the end of its file.
-            var next = i + 1 < sheet.Tracks.Count && sheet.Tracks[i + 1].File == t.File ? sheet.Tracks[i + 1] : null;
-            if (t.Start > 0 || next is not null) entry.Append(",start=").Append(Seconds(t.Start));
-            if (next is not null) entry.Append(",length=").Append(Seconds(next.Start - t.Start));
-            entry.Append(",title=").Append(Escape(string.IsNullOrWhiteSpace(t.Title) ? $"Track {i + 1}" : t.Title));
+            var entry = new StringBuilder(Escape(file!));
+            if (t.Start > 0 || length is not null) entry.Append(",start=").Append(Seconds(t.Start));
+            if (length is { } l) entry.Append(",length=").Append(Seconds(l));
+            entry.Append(",title=").Append(Escape(string.IsNullOrWhiteSpace(t.Title) ? $"Track {number}" : t.Title));
             entries.Add(entry.ToString());
         }
         return "edl://" + string.Join(';', entries);

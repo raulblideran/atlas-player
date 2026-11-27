@@ -410,6 +410,16 @@ modules:
       # znedi3 looks for its weights next to itself.
       - install -Dm644 nnedi3_weights.bin -t /app/lib/vapoursynth/plugins/
       - python3 -c "import sys; sys.path.insert(0, '/app/lib/vapoursynth/python'); import vapoursynth as vs; print(vs.core.version())"
+      # The licence texts of what's prebuilt here (flatpak-builder collects only the ones in a
+      # built module's own source folder). CREDITS.md names them all.
+      - |
+        L=/app/share/licenses/io.github.raulblideran.AtlasPlayer
+        install -Dm644 /app/lib/vapoursynth/python/vapoursynth-*.dist-info/licenses/* -t $L/vapoursynth/
+        install -Dm644 /app/lib/vapoursynth/python/vapoursynth_mvtools-*.dist-info/licenses/* -t $L/mvtools/
+        install -Dm644 fmtconv/COPYING -t $L/fmtconv/
+        install -Dm644 misc/LICENSE -t $L/miscfilters/
+        install -Dm644 eedi3m/LICENSE -t $L/eedi3m/
+        install -Dm644 fft3dfilter/LICENSE -t $L/fft3dfilter/
     sources:
       - type: file
         url: https://files.pythonhosted.org/packages/3c/30/55b464fe29960af3e8e8254eb236f5e3164c28a6ce66f9706f5d5567ddd4/vapoursynth-82-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
@@ -544,6 +554,7 @@ modules:
         -t /app/share/applications/
       - install -Dm644 packaging/io.github.raulblideran.AtlasPlayer.metainfo.xml
         -t /app/share/metainfo/
+      - install -Dm644 CREDITS.md -t /app/share/licenses/io.github.raulblideran.AtlasPlayer/atlas-player/
     sources:
       - type: file
         url: https://github.com/yt-dlp/yt-dlp/releases/download/2026.11.23/yt-dlp_linux

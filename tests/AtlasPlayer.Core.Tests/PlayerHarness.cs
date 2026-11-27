@@ -16,7 +16,9 @@ public sealed class PlayerHarness : IDisposable
         Paths = new PortablePaths(TestEnvironment.TempDir());
         var options = new List<KeyValuePair<string, string>> { new("vo", "null"), new("ao", "null"), new("hwdec", "no") };
         options.AddRange(extra.Select(e => new KeyValuePair<string, string>(e.Item1, e.Item2)));
-        Player = new PlayerService(settings ?? new PlayerSettings(), Paths, null, options);
+        // The fixtures last a couple of seconds, less than the normalizer's window (dynaudnorm's
+        // 15 × 250 ms): with it on, their audio would only come out at the end.
+        Player = new PlayerService(settings ?? new PlayerSettings { NormalizeAudio = false }, Paths, null, options);
         Player.FileLoaded += () => _loaded.Release();
         Player.Mpv.PlaybackRestart += () => _restart.Release();
     }

@@ -152,9 +152,13 @@ public class InputTests
         var file = Path.Combine(dir, "01 - HIStory.flac");
         Assert.Equal($"edl://%{System.Text.Encoding.UTF8.GetByteCount(file)}%{file},title=%7%A, B; C", url);
 
-        // A track missing: left to mpv as it is.
+        // A track missing: the others still play (never the raw sheet, in which mpv finds nothing).
         File.AppendAllText(Path.Combine(dir, "rip.cue"), "FILE \"02 - Missing.wav\" WAVE\n  TRACK 02 AUDIO\n    INDEX 01 00:00:00\n");
-        Assert.Null(CueSheet.PlayableUrl(Path.Combine(dir, "rip.cue")));
+        Assert.Equal($"edl://%{System.Text.Encoding.UTF8.GetByteCount(file)}%{file},title=%7%A, B; C", CueSheet.PlayableUrl(Path.Combine(dir, "rip.cue")));
+
+        // None of its files there: nothing to make of it.
+        File.WriteAllText(Path.Combine(dir, "image.cue"), "FILE \"Album.flac\" WAVE\n  TRACK 01 AUDIO\n    INDEX 01 00:00:00\n");
+        Assert.Null(CueSheet.PlayableUrl(Path.Combine(dir, "image.cue")));
     }
 
     [Fact]

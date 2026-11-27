@@ -123,30 +123,30 @@ public static class InputClassifier
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return null; }
     }
 
-    private static readonly HashSet<string> VideoExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".mkv", ".mp4", ".m4v", ".avi", ".mov", ".wmv", ".ts", ".m2ts", ".mts", ".webm", ".vob", ".mpg", ".mpeg",
-    };
-
     /// <summary>
     /// A CD rip's cue sheet in a folder of music (not one with videos): the one naming files that
     /// are there, else one whose files are there under another audio extension (EAC names the
-    /// .wav it ripped to), else the first. Null if there's none.
+    /// .wav it ripped to), else the one naming the most of them. Null if there's none, or none
+    /// names a file that's there.
     /// </summary>
     internal static string? CueSheet(string dir)
     {
         try
         {
             var files = Directory.EnumerateFiles(dir).ToList();
-            if (files.Any(f => VideoExtensions.Contains(Path.GetExtension(f)))) return null;
+            if (files.Any(Playback.FolderMedia.IsVideo)) return null;
             var cues = files.Where(f => Path.GetExtension(f).Equals(".cue", StringComparison.OrdinalIgnoreCase))
                 .Order(StringComparer.OrdinalIgnoreCase)
                 .Select(c => (Path: c, Tracks: Playback.CueSheet.Read(c).Tracks))
                 .ToList();
-            return (cues.FirstOrDefault(c => c.Tracks.Count > 0 && c.Tracks.All(t => File.Exists(Path.Combine(dir, Playback.CueSheet.FileName(t.File)))))
+            return cues.FirstOrDefault(c => c.Tracks.Count > 0 && c.Tracks.All(t => File.Exists(Path.Combine(dir, Playback.CueSheet.FileName(t.File)))))
                     .Path
-                ?? cues.FirstOrDefault(c => c.Tracks.Count > 0 && c.Tracks.All(t => Playback.CueSheet.Resolve(dir, t.File) is not null)).Path)
-                ?? cues.FirstOrDefault().Path;
+                ?? cues.FirstOrDefault(c => c.Tracks.Count > 0 && c.Tracks.All(t => Playback.CueSheet.Resolve(dir, t.File) is not null)).Path
+                // One naming some of the files there (a track missing), the most of them first.
+                ?? cues.Select(c => (c.Path, Found: c.Tracks.Count(t => Playback.CueSheet.Resolve(dir, t.File) is not null)))
+                    .Where(c => c.Found > 0).OrderByDescending(c => c.Found).FirstOrDefault().Path;
+            // A cue naming none of them (one for the whole disc's image, beside a rip's track
+            // files) is no use: the folder plays as a folder of its music.
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return null; }
     }

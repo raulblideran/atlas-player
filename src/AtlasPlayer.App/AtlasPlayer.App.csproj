@@ -58,6 +58,9 @@
     <None Include="..\..\libs\$(AtlasNativeRid)\**\*" CopyToOutputDirectory="PreserveNewest"
           CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true"
           Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Who made what the app is built on, and its own licence, beside the program (About points there). -->
+    <None Include="..\..\CREDITS.md;..\..\LICENSE" CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" Link="%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

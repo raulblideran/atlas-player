@@ -3,6 +3,29 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## Unreleased
+
+- **Volume normalization is on by default, at -3 dB.** Loud and quiet parts are evened out,
+  with the peaks brought to 3 dB below full scale. Settings → Audio has the level (-12 to 0 dB)
+  under **Even out loud and quiet parts**; switch it off there (or in the audio menu) for the
+  original dynamics. Updating switches it on once, as it was off by default before.
+- **CD rip folders play,** even with their log, cue sheet, pictures and other files beside the
+  music. A folder whose cue sheet named files that aren't there (one for the whole disc's image,
+  next to a file per track, as in some rips) said "Can't play this: no audio or video data
+  played". Now only the audio and video files in a folder play, in track order ("2" before
+  "10"), and a cue sheet's tracks play as long as some of its files are there. A two-disc album's
+  CD1 and CD2 folders play one after the other. Dropping all of a rip's files at once works the
+  same way.
+- **The album's cover shows while its music plays:** the folder's cover.jpg or front.jpg (or
+  folder.jpg, a Front.jpg in a Covers or Scans folder, or the folder's only picture). It is shown
+  instead of the small cover inside the files, and also for a cue sheet's tracks.
+- UTF-16 cue sheets, as some EAC and foobar2000 setups write them, are read.
+- **Credits for everyone whose work Atlas Player is built on.** The new CREDITS.md names every
+  library, tool, font, icon set, service and Rust crate the app uses, with what it does, who made
+  it and its licence. It ships next to the app, beside the app's own LICENSE, and the Flatpak also
+  carries each project's licence text. Settings → About says the same in short, and that Atlas
+  Player is a free, non-commercial project: no ads, no tracking, no accounts, no paid features.
+
 ## 2.0.0-beta.12 — 2026-11-27
 
 A **beta** of 2.0.0. Mostly a fix for QTGMC, which beta.11 shipped broken: it now runs a

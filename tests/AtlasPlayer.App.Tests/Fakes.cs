@@ -50,9 +50,9 @@ public sealed class FakePlayer(PlayerSettings settings) : IPlayer
 
     private void Log(string call) => Calls.Add(call);
 
-    public void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false) =>
-        Log($"Open {pathOrUrl} {displayTitle}".TrimEnd() + (streaming ? " [stream]" : ""));
-    public void Append(string path) => Log($"Append {path}");
+    public void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false, string? coverArt = null) =>
+        Log($"Open {pathOrUrl} {displayTitle}".TrimEnd() + (streaming ? " [stream]" : "") + (coverArt is null ? "" : $" [cover {coverArt}]"));
+    public void Append(string path, string? coverArt = null) => Log($"Append {path}" + (coverArt is null ? "" : $" [cover {coverArt}]"));
     public void OpenDisc(string root, bool bluray) => Log($"OpenDisc {(bluray ? "bd" : "dvd")} {root}");
     public void OpenAudioCd(string device) => Log($"OpenAudioCd {device}");
     public void OpenSacd(string image) => Log($"OpenSacd {image}");

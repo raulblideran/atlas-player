@@ -119,9 +119,9 @@ public class PlayerIntegrationTests
     }
 
     [MpvFact]
-    public void No_normalisation_or_audio_filters_are_active_during_playback()
+    public void With_normalization_off_no_audio_filters_are_active_during_playback()
     {
-        using var h = new PlayerHarness(new PlayerSettings { DownmixToStereo = true });
+        using var h = new PlayerHarness(new PlayerSettings { DownmixToStereo = true, NormalizeAudio = false });
         h.OpenAndWait(TestEnvironment.Media("audio_51.mkv"));
         Assert.Equal("", h.Player.Mpv.GetString("af"));
         Assert.False(h.Player.Mpv.GetFlag("audio-normalize-downmix"));

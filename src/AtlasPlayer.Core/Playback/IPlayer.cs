@@ -40,9 +40,10 @@ public interface IPlayer : IDisposable
     event Action? FileLoaded;
     event Action<EndFileReason, string?>? EndFile;
 
-    void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false);
+    /// <param name="coverArt">The picture shown while music plays (a CD rip folder's cover.jpg); null: a local audio file's own folder's, if any.</param>
+    void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false, string? coverArt = null);
     /// <summary>Queues a file to play after the current one (and those queued before it), as a folder's do.</summary>
-    void Append(string path);
+    void Append(string path, string? coverArt = null);
     void OpenDisc(string root, bool bluray);
     /// <summary>An Audio CD from its drive, or a CD image's cue sheet; its tracks are the chapters.</summary>
     void OpenAudioCd(string device);

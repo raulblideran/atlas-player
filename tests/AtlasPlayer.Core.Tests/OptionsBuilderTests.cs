@@ -15,9 +15,9 @@ public class OptionsBuilderTests
     }
 
     [Fact]
-    public void Audio_is_never_normalised()
+    public void Audio_plays_as_recorded_with_normalization_off()
     {
-        var o = Build(new PlayerSettings());
+        var o = Build(new PlayerSettings { NormalizeAudio = false });
         Assert.Equal("no", o["audio-normalize-downmix"]);
         Assert.Equal("no", o["replaygain"]);
         Assert.Equal("", o["af"]);
@@ -129,7 +129,7 @@ public class OptionsBuilderTests
     [InlineData(StereoChannel.Left, 6, false, false, "")]   // stereo sources only
     [InlineData(StereoChannel.Left, 1, false, false, "")]
     [InlineData(StereoChannel.Left, null, false, false, "")]
-    [InlineData(StereoChannel.Right, 2, true, false, "lavfi=[pan=stereo|c0=c1|c1=c1]," + MpvOptionsBuilder.NormalizeFilter)]
+    [InlineData(StereoChannel.Right, 2, true, false, "lavfi=[pan=stereo|c0=c1|c1=c1],lavfi=[dynaudnorm=f=250:g=15:p=0.708]")]
     [InlineData(StereoChannel.Left, 2, true, true, "")]     // a bitstream can't be filtered
     public void One_channel_of_a_stereo_source_plays_on_both_speakers(StereoChannel channel, int? source, bool normalize,
         bool passthrough, string expected) =>
@@ -167,9 +167,10 @@ public class OptionsBuilderTests
     }
 
     [Fact]
-    public void Normalization_is_off_by_default_and_never_on_a_bitstream()
+    public void Normalization_is_on_at_minus_3_dB_by_default_and_never_on_a_bitstream()
     {
-        Assert.Equal("", Build(new PlayerSettings())["af"]);
+        Assert.Equal("lavfi=[dynaudnorm=f=250:g=15:p=0.708]", Build(new PlayerSettings())["af"]);
+        Assert.Equal("", Build(new PlayerSettings { NormalizeAudio = false })["af"]);
         Assert.Contains("dynaudnorm", Build(new PlayerSettings { NormalizeAudio = true })["af"]);
         Assert.Equal("", Build(new PlayerSettings { NormalizeAudio = true, AudioPassthrough = true })["af"]);
     }

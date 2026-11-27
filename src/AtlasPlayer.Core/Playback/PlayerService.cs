@@ -279,7 +279,8 @@ public sealed class PlayerService : IPlayer
     // ---- Commands -------------------------------------------------------------------------
 
     /// <param name="streaming">Torrent, MEGA or web stream: buffer in bigger chunks before playing.</param>
-    public void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false)
+    /// <param name="coverArt">The picture shown while music plays (a CD rip's cover.jpg); null finds a local audio file's own (<see cref="CoverFor"/>).</param>
+    public void Open(string pathOrUrl, string? displayTitle = null, bool streaming = false, string? coverArt = null)
     {
         _streaming = streaming;
         _stalls = 0;
@@ -292,11 +293,45 @@ public sealed class PlayerService : IPlayer
         _streamOpening = streaming;
         SetStartingStream(streaming);
         if (streaming) LoadWithOptions(pathOrUrl, MpvOptionsBuilder.StreamingFileOptions);
-        else _mpv.Command("loadfile", pathOrUrl, "replace");
+        else Load(pathOrUrl, "replace", CoverOption(coverArt ?? CoverFor(pathOrUrl)));
         _mpv.SetProperty("pause", false);
     }
 
-    public void Append(string path) => _mpv.Command("loadfile", path, "append");
+    public void Append(string path, string? coverArt = null) => Load(path, "append", CoverOption(coverArt ?? CoverFor(path)));
+
+    /// <summary>
+    /// A local music file's cover: its folder's cover.jpg, front.jpg… (<see cref="FolderMedia.Cover"/>).
+    /// mpv's own search (cover-art-auto) is off, so a folder's cover isn't added twice, and it
+    /// knows neither the covers in a Covers folder nor the music in a cue sheet's edl://.
+    /// </summary>
+    public static string? CoverFor(string path)
+    {
+        if (path.Contains("://", StringComparison.Ordinal) || !FolderMedia.IsAudio(path)) return null;
+        try { return Path.GetDirectoryName(Path.GetFullPath(path)) is { } dir ? FolderMedia.Cover(dir) : null; }
+        catch (Exception e) when (e is ArgumentException or IOException or NotSupportedException) { return null; }
+    }
+
+    /// <summary>The per-file option adding a cover; its path in mpv's length-prefixed quoting, which allows any character.</summary>
+    internal static string? CoverOption(string? cover) =>
+        cover is null ? null : $"cover-art-files-append=%{System.Text.Encoding.UTF8.GetByteCount(cover)}%{cover}";
+
+    /// <summary>loadfile, with per-file options if any (mpv 0.38+ takes an index before them, 0.37 not).</summary>
+    private void Load(string url, string flag, string? options)
+    {
+        if (options is null)
+        {
+            _mpv.Command("loadfile", url, flag);
+            return;
+        }
+        try { _mpv.Command("loadfile", url, flag, "-1", options); }
+        catch (MpvException e) when (e.Code == MpvException.InvalidParameter)
+        {
+            // A libmpv that takes no option it doesn't know (an old distro one) still plays the file, without the cover.
+            try { _mpv.Command("loadfile", url, flag, options); }
+            catch (MpvException) { _mpv.Command("loadfile", url, flag); }
+        }
+        catch (MpvException) { _mpv.Command("loadfile", url, flag); }
+    }
 
     /// <summary>A stream was asked for and its file hasn't started yet.</summary>
     private volatile bool _streamOpening;
@@ -836,9 +871,22 @@ public sealed class PlayerService : IPlayer
         lock (_deinterlaceLock) SetHwdec(_deinterlaceFilter is not null);
         PublishHardwareDecoding();
         var tracks = ReadTracks();
+        PickFolderCover(tracks);
         var aid = PickStereoAudio(tracks);
         SetSampleRate(tracks, aid);
         StartInterlaceProbe(video);
+    }
+
+    /// <summary>
+    /// Music with its folder's cover (cover.jpg, front.jpg) and one inside the file: the folder's
+    /// shows, usually the bigger scan. File-local, as mpv's own pick is for the next file.
+    /// </summary>
+    private void PickFolderCover(IReadOnlyList<TrackInfo> tracks)
+    {
+        var video = tracks.Where(t => t.Type == TrackType.Video).ToList();
+        if (video.Count < 2 || !video.All(t => t.AlbumArt)) return;
+        if (video.FirstOrDefault(t => t.External) is { } folder)
+            _mpv.TrySetProperty("file-local-options/vid", folder.Id.ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>

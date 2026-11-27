@@ -115,6 +115,23 @@ if [ ! -f "$OUT/cd_rip/rip.cue" ]; then
     'FILE "02 - SECOND song.wav" WAVE' '    INDEX 01 00:00:00' > "$OUT/cd_rip/rip.cue"
 fi
 
+# A CD rip folder as people keep them (prompt 13): track files, the ripper's log, a cue sheet
+# naming the disc's one image file (not there), cover.jpg, a Covers folder of scans and an
+# editor's leftover. Opening the folder plays the two tracks, with cover.jpg as their picture.
+if [ ! -f "$OUT/cd_rip_folder/cover.jpg" ]; then
+  mkdir -p "$OUT/cd_rip_folder/Covers"
+  ff -f lavfi -i sine=frequency=440:duration=2 -ac 2 -ar 44100 -c:a flac "$OUT/cd_rip_folder/01. Opening.flac"
+  ff -f lavfi -i sine=frequency=660:duration=2 -ac 2 -ar 44100 -c:a flac "$OUT/cd_rip_folder/10. Closing.flac"
+  ff -f lavfi -i sine=frequency=550:duration=2 -ac 2 -ar 44100 -c:a flac "$OUT/cd_rip_folder/2. Middle.flac"
+  printf '%s\r\n' 'TITLE "Folder Album"' 'FILE "Folder Album (image).flac" WAVE' '  TRACK 01 AUDIO' '    INDEX 01 00:00:00' \
+    '  TRACK 02 AUDIO' '    INDEX 01 00:02:00' > "$OUT/cd_rip_folder/Folder Album.cue"
+  printf 'Exact Audio Copy V1.6 from 23. October 2020\r\n' > "$OUT/cd_rip_folder/Folder Album.log"
+  printf 'peak data' > "$OUT/cd_rip_folder/01. Opening.flac.sfk"
+  ff -f lavfi -i color=c=red:size=300x300 -frames:v 1 "$OUT/cd_rip_folder/cover.jpg"
+  ff -f lavfi -i color=c=blue:size=300x300 -frames:v 1 "$OUT/cd_rip_folder/Covers/Front.jpg"
+  ff -f lavfi -i color=c=green:size=300x300 -frames:v 1 "$OUT/cd_rip_folder/Covers/Back.jpg"
+fi
+
 # Music: on its own, and with its album's cover art (a picture track mpv shows, but no video)
 [ -f "$OUT/music.flac" ] || ff -f lavfi -i sine=frequency=550:duration=2 -ac 2 -c:a flac "$OUT/music.flac"
 [ -f "$OUT/music_cover.flac" ] || ff -f lavfi -i sine=frequency=550:duration=2 -f lavfi -i testsrc=size=200x200:duration=1 \

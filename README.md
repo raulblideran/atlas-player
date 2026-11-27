@@ -25,7 +25,8 @@ menus, and ripping discs properly.
 
 ## Features
 
-- **Plays local files, folders and disc images**: drop them on the window. Subtitles next to a video load by themselves.
+- **Plays local files, folders and disc images**: drop them on the window. Subtitles next to a video load by themselves. A CD rip's folder plays its tracks (by its cue sheet, as chapters, where it has one) with its cover.jpg or front.jpg on screen.
+- **Evens out the volume** by default (peaks to -3 dB, adjustable in Settings → Audio), or plays it exactly as recorded.
 - **Streams magnet links and torrent files** while they download, with seeking. Nothing is kept afterwards.
 - **Plays links**: YouTube and about 1,800 other sites (through yt-dlp), MEGA file links, and direct video URLs. Paste one with Ctrl+V.
 - **Downloads videos** from those sites at the quality you pick, or just the audio.
@@ -156,23 +157,23 @@ the codec, the GPU and what mpv decided to do.
 
 ## Credits
 
-Atlas Player stands on a lot of other people's work: [mpv](https://mpv.io),
-[FFmpeg](https://ffmpeg.org), [libplacebo](https://code.videolan.org/videolan/libplacebo),
-[libVLC](https://www.videolan.org/vlc/libvlc.html), [librqbit](https://github.com/ikatson/rqbit),
-[Avalonia](https://avaloniaui.net), [yt-dlp](https://github.com/yt-dlp/yt-dlp),
-[QuickJS-NG](https://github.com/quickjs-ng/quickjs),
-[libdvdread and libdvdcss](https://www.videolan.org/developers/libdvdcss.html),
-[x264](https://www.videolan.org/developers/x264.html), [x265](https://www.x265.org),
-[FLAC](https://xiph.org/flac/), and for QTGMC [VapourSynth](https://www.vapoursynth.com),
-[havsfunc](https://github.com/HomeOfVapourSynthEvolution/havsfunc),
-[MVTools](https://github.com/dubhater/vapoursynth-mvtools), [znedi3](https://github.com/sekrit-twc/znedi3),
-[fmtconv](https://gitlab.com/EleonoreMizo/fmtconv), [EEDI3](https://github.com/HomeOfVapourSynthEvolution/VapourSynth-EEDI3),
-[FFT3DFilter](https://github.com/myrsloik/VapourSynth-FFT3DFilter), [FFTW](https://www.fftw.org),
-VapourSynth's RemoveGrain and MiscFilters, and [BestSource](https://github.com/vapoursynth/bestsource). Rips are checked against
-[AccurateRip](http://www.accuraterip.com) and tagged from [MusicBrainz](https://musicbrainz.org).
-Icons are from [Material Design Icons](https://pictogrammers.com).
+Atlas Player is a free, non-commercial hobby project: no ads, no tracking, no accounts and no
+paid features. It stands almost entirely on other people's work, shared freely:
+[mpv](https://mpv.io), [FFmpeg](https://ffmpeg.org), [libplacebo](https://code.videolan.org/videolan/libplacebo),
+[VLC/libVLC](https://www.videolan.org/vlc/libvlc.html) and VideoLAN's disc libraries
+(libdvdcss, libdvdread, libdvdnav, libbluray, libudfread), [x264](https://www.videolan.org/developers/x264.html),
+[x265](https://www.x265.org), [FLAC](https://xiph.org/flac/), [VapourSynth](https://www.vapoursynth.com)
+with QTGMC and its plugins, [yt-dlp](https://github.com/yt-dlp/yt-dlp),
+[QuickJS-NG](https://github.com/quickjs-ng/quickjs), [librqbit](https://github.com/ikatson/rqbit),
+[Avalonia](https://avaloniaui.net), [.NET](https://dotnet.microsoft.com), the
+[Inter](https://rsms.me/inter/) font and [Material Design Icons](https://pictogrammers.com), with
+disc information from [MusicBrainz](https://musicbrainz.org), the
+[Cover Art Archive](https://coverartarchive.org) and [AccurateRip](http://www.accuraterip.com).
 
-The screenshots show [Big Buck Bunny](https://peach.blender.org), © Blender Foundation, CC BY 3.0.
+**[CREDITS.md](CREDITS.md)** lists every one of them, and every library and Rust crate they
+bring, with its authors and licence. It ships next to the app too. Atlas Player was developed with
+the help of [Claude Code](https://claude.com/claude-code) (Anthropic). The screenshots show
+[Big Buck Bunny](https://peach.blender.org), © Blender Foundation, CC BY 3.0.
 
 ## License
 

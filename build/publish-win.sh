@@ -47,6 +47,7 @@ fi
 
 cp "$ROOT/README.md" "$STAGE/README.txt" 2>/dev/null || true
 cp "$ROOT/CHANGELOG.md" "$STAGE/CHANGELOG.txt"
+# CREDITS.md and LICENSE come with the publish output (AtlasPlayer.App.csproj).
 cd "$ROOT/dist"
 rm -f "$ZIP"
 7z a -tzip -mx=7 "$ZIP" "Atlas Player" >/dev/null
