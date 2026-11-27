@@ -14,6 +14,7 @@ using AtlasPlayer.Core.Settings;
 namespace AtlasPlayer.App.Tests;
 
 /// <summary>2.0.0-beta.7: More's download item, the interface font, audio codec badges, fullscreen's way back.</summary>
+[Collection(ThemeCollection.Name)]
 public class Beta7Tests
 {
     private static void Dispatch() => Dispatcher.UIThread.RunJobs();

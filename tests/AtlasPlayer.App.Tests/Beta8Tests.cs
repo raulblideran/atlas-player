@@ -12,6 +12,7 @@ using AtlasPlayer.Core.Settings;
 namespace AtlasPlayer.App.Tests;
 
 /// <summary>2.0.0-beta.8: solid bars, Play's own colours, and the MPC-HC theme's bar layout.</summary>
+[Collection(ThemeCollection.Name)]
 public class Beta8Tests
 {
     private static bool IsClassic(PlayerSettings s) => BarItems.Classic.SameAs(s.BarLeft, s.BarCentre, s.BarRight);

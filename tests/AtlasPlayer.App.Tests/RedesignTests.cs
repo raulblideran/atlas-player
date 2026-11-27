@@ -16,6 +16,7 @@ namespace AtlasPlayer.App.Tests;
 /// The 2.0.0 controls bar: Simple by default, with a More menu holding whatever the bar leaves
 /// off, so no action is ever out of reach.
 /// </summary>
+[Collection(ThemeCollection.Name)]
 public class RedesignTests
 {
     private static void Playing(Rig r, bool video = true, bool chapters = false)

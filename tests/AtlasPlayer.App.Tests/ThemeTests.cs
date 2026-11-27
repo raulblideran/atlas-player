@@ -14,6 +14,7 @@ using AtlasPlayer.Core.Settings;
 namespace AtlasPlayer.App.Tests;
 
 /// <summary>Themes (2.0.0): each complete, readable, switched live, and kept with the settings.</summary>
+[Collection(ThemeCollection.Name)]
 public class ThemeTests
 {
     private static void Dispatch() => Dispatcher.UIThread.RunJobs();
