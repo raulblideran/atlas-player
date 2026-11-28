@@ -61,15 +61,14 @@ public partial class App : Application
             window.Closed += (_, _) => vm.Dispose();
             desktop.MainWindow = window;
 
-            // One window: files opened while it runs join its queue (Program hands them over).
-            if (SingleInstance.Address() is { } address && SingleInstance.Listen(address, args => Dispatcher.UIThread.Post(() =>
-                {
-                    vm.Forget(vm.QueueArgumentsAsync(args));
-                    BringForward(window);
-                })) is { } listener)
-                desktop.Exit += (_, _) => listener.Dispose();
+            // One window: files opened while it runs join its queue (Program listens for them).
+            HandOvers.Attach(args => Dispatcher.UIThread.Post(() =>
+            {
+                vm.Forget(vm.QueueArgumentsAsync(args));
+                BringForward(window);
+            }));
 
-            if (desktop.Args is { Length: > 0 } launch) vm.Forget(vm.OpenArgumentsAsync(LaunchArgs.Normalize(launch)));
+            if (desktop.Args is { Length: > 0 } launch) vm.Forget(vm.LaunchAsync(LaunchArgs.Normalize(launch)));
         }
         base.OnFrameworkInitializationCompleted();
     }

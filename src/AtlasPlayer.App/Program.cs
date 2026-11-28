@@ -15,9 +15,15 @@ internal static class Program
             Tell(NoDisplay);
             return 1;
         }
-        // Already running: the files go to its window (and it comes forward), and this one goes.
-        if (SingleInstance.Address() is { } address && SingleInstance.TrySend(address, LaunchArgs.Normalize(args)))
-            return 0;
+        // One window: if a copy runs (or is starting this very moment), the files go to its window,
+        // which comes forward, and this copy goes. Claimed before the window loads, so copies
+        // started together (one per file, from Explorer) can't each open their own.
+        SingleInstance? listener = null;
+        if (SingleInstance.Address() is { } address)
+        {
+            listener = SingleInstance.Claim(address, LaunchArgs.Normalize(args), HandOvers.Receive, out var alone);
+            if (listener is null && !alone) return 0;
+        }
         try
         {
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -27,6 +33,10 @@ internal static class Program
             var log = WriteCrash(e);
             Tell($"Atlas Player couldn't start: {e.Message}" + (log is null ? "" : $"\nDetails: {log}"));
             return 1;
+        }
+        finally
+        {
+            listener?.Dispose();
         }
     }
 

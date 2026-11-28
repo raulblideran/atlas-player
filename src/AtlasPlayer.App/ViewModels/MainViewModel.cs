@@ -197,11 +197,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _recorder.Reset();
             AddDroppedSubtitles();
             OfferResume();
+            _launchLoaded?.TrySetResult();
         });
         player.RenderProfileChanged += p => Post(() => RenderProfileText = DescribeProfile(p));
         player.EndFile += (reason, error) => Post(() =>
         {
             if (reason != EndFileReason.Error) return;
+            _launchLoaded?.TrySetResult(); // it won't load: what's handed over plays instead
             ShowStatus($"Can't play this: {error}");
             _droppedSubtitles.Clear(); // they were for this file
         });
@@ -1160,6 +1162,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private Task _launch = Task.CompletedTask;
+    /// <summary>Set once what the app was started with has loaded (or failed to).</summary>
+    private TaskCompletionSource? _launchLoaded;
+
+    /// <summary>At startup: opens what Atlas Player was started with; files handed over meanwhile wait for it.</summary>
+    public Task LaunchAsync(IReadOnlyList<string> args)
+    {
+        _launchLoaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        return _launch = OpenArgumentsAsync(args);
+    }
+
     /// <summary>
     /// What Atlas Player was started with (<see cref="LaunchArgs.Normalize"/>d): every file and
     /// folder plays, the first first, as if they were dropped together; with none, the first link.
@@ -1180,6 +1193,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public async Task QueueArgumentsAsync(IReadOnlyList<string> args)
     {
         if (args.Count == 0) return; // started again with nothing: the window just comes forward
+        // Copies started together (Explorer starts one per file): the first copy's own file is
+        // still opening, and the others' join its queue rather than take its place.
+        if (_launchLoaded is { Task.IsCompleted: false } loading)
+        {
+            await _launch;
+            await Task.WhenAny(loading.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        }
         var local = args.Where(LaunchArgs.IsLocal).ToList();
         if (local.Count == 0 || IsIdle || _player is null || IsDiscMode || IsTorrent)
         {

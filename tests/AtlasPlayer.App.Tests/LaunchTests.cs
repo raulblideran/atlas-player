@@ -58,6 +58,20 @@ public class LaunchTests
     }
 
     [Fact]
+    public async Task Files_handed_over_while_the_first_still_opens_go_after_it()
+    {
+        // Explorer started three copies at once: this one opens its own file, the others' arrive meanwhile.
+        using var r = new Rig();
+        var (a, b, c) = (r.MediaFile("a.mkv"), r.MediaFile("b.mkv"), r.MediaFile("c.mkv"));
+        await r.Vm.LaunchAsync([a]);
+        var handedOver = r.Vm.QueueArgumentsAsync([b, c]);
+        Assert.False(handedOver.IsCompleted); // waits for a.mkv
+        ResumeTests.Playing(r, a, 0); // it has loaded
+        await handedOver;
+        Assert.Equal([$"Open {a}", $"Append {b}", $"Append {c}"], r.Player.Calls.Where(x => x.StartsWith("Open") || x.StartsWith("Append")));
+    }
+
+    [Fact]
     public async Task With_nothing_playing_they_simply_play()
     {
         using var r = new Rig();
@@ -71,9 +85,7 @@ public class LaunchTests
     [Fact]
     public async Task A_second_start_hands_its_files_to_the_first()
     {
-        var address = OperatingSystem.IsWindows()
-            ? $"AtlasPlayerTest-{Guid.NewGuid():N}"
-            : Path.Combine(Path.GetTempPath(), $"atlas-si-{Guid.NewGuid():N}"[..20] + ".sock");
+        var address = NewAddress();
         Assert.False(SingleInstance.TrySend(address, ["nothing listens"]));
 
         var got = new TaskCompletionSource<IReadOnlyList<string>>();
@@ -82,9 +94,69 @@ public class LaunchTests
             Assert.NotNull(first);
             Assert.True(SingleInstance.TrySend(address, ["/music/01 One.flac", "magnet:?xt=urn:btih:abc"]));
             Assert.Equal(["/music/01 One.flac", "magnet:?xt=urn:btih:abc"], await got.Task.WaitAsync(TimeSpan.FromSeconds(5)));
-            if (!OperatingSystem.IsWindows()) Assert.Null(SingleInstance.Listen(address, _ => { })); // one listener
+            Assert.Null(SingleInstance.Listen(address, _ => { })); // one listener
+            Assert.True(SingleInstance.TrySend(address, ["a second hand-over"])); // the pipe is there again at once
         }
         Assert.False(SingleInstance.TrySend(address, ["gone"]));
+    }
+
+    private static string NewAddress() => OperatingSystem.IsWindows()
+        ? $"AtlasPlayerTest-{Guid.NewGuid():N}"
+        : Path.Combine(Path.GetTempPath(), $"atlas-si-{Guid.NewGuid():N}"[..20] + ".sock");
+
+    [Fact]
+    public async Task Copies_started_together_end_up_in_one_window()
+    {
+        // Explorer starts a copy per file opened, all at once: one listens, the rest hand over.
+        var address = NewAddress();
+        var received = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        using var start = new Barrier(5);
+        var copies = Enumerable.Range(1, 5).Select(i => Task.Run(() =>
+        {
+            start.SignalAndWait();
+            var listener = SingleInstance.Claim(address, [$"file{i}.mkv"], args => received.Enqueue(args[0]), out var alone);
+            Assert.False(alone);
+            return (Listener: listener, File: $"file{i}.mkv");
+        })).ToArray();
+        var results = await Task.WhenAll(copies);
+        var winners = results.Where(r => r.Listener is not null).ToList();
+        try
+        {
+            Assert.Single(winners);
+            for (var i = 0; i < 100 && received.Count < 4; i++) await Task.Delay(20);
+            Assert.Equal(results.Where(r => r.Listener is null).Select(r => r.File).Order(), received.Order());
+        }
+        finally
+        {
+            foreach (var w in winners) w.Listener!.Dispose();
+        }
+    }
+
+    [Fact]
+    public void A_copy_with_nobody_to_hand_over_to_runs_alone_after_waiting()
+    {
+        if (OperatingSystem.IsWindows()) return;
+        var address = Path.Combine(Path.GetTempPath(), "no-such-folder-" + Guid.NewGuid().ToString("N"), "x.sock");
+        Assert.Null(SingleInstance.Claim(address, ["a"], _ => { }, out var alone, TimeSpan.FromMilliseconds(300)));
+        Assert.True(alone);
+    }
+
+    [Fact]
+    public void Files_handed_over_before_the_window_is_ready_are_held()
+    {
+        try
+        {
+            HandOvers.Detach();
+            HandOvers.Receive(["early.mkv"]);
+            var got = new List<string>();
+            HandOvers.Attach(args => got.AddRange(args));
+            HandOvers.Receive(["later.mkv"]);
+            Assert.Equal(["early.mkv", "later.mkv"], got);
+        }
+        finally
+        {
+            HandOvers.Detach();
+        }
     }
 
     [Fact]

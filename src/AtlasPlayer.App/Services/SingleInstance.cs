@@ -71,6 +71,31 @@ public sealed class SingleInstance : IDisposable
     }
 
     /// <summary>
+    /// Becomes the copy that listens at <paramref name="address"/>, or hands <paramref name="args"/>
+    /// to the one that is. A copy started at the same moment as the first (Explorer starts one per
+    /// file opened) may find it not listening yet: it tries again for a few seconds. Returns the
+    /// listener, or null once the arguments were handed over (this copy then exits). Where neither
+    /// works (no runtime folder, say) this copy runs on its own: <paramref name="alone"/> is true.
+    /// </summary>
+    public static SingleInstance? Claim(string address, IReadOnlyList<string> args, Action<IReadOnlyList<string>> received,
+        out bool alone, TimeSpan? patience = null)
+    {
+        var until = DateTime.UtcNow + (patience ?? TimeSpan.FromSeconds(3));
+        alone = false;
+        while (true)
+        {
+            if (TrySend(address, args)) return null;
+            if (Listen(address, received) is { } listener) return listener;
+            if (DateTime.UtcNow >= until)
+            {
+                alone = true;
+                return null;
+            }
+            Thread.Sleep(100);
+        }
+    }
+
+    /// <summary>
     /// Listens at <paramref name="address"/>; each hand-over's arguments go to
     /// <paramref name="received"/> (on a background thread). Null if another copy already listens.
     /// </summary>
@@ -79,8 +104,13 @@ public sealed class SingleInstance : IDisposable
         SingleInstance instance;
         if (OperatingSystem.IsWindows())
         {
+            // Made here, at once, and only if no copy has it (FirstPipeInstance): copies started
+            // together (Explorer starts one per file opened) can't all think they're the first.
+            NamedPipeServerStream first;
+            try { first = NewPipe(address, PipeOptions.FirstPipeInstance); }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException) { return null; }
             instance = new SingleInstance(null, null);
-            _ = Task.Run(() => instance.ServePipeAsync(address, received));
+            _ = Task.Run(() => instance.ServePipeAsync(first, address, received));
             return instance;
         }
         var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
@@ -128,21 +158,34 @@ public sealed class SingleInstance : IDisposable
         }
     }
 
-    private async Task ServePipeAsync(string name, Action<IReadOnlyList<string>> received)
+    private static NamedPipeServerStream NewPipe(string name, PipeOptions extra = PipeOptions.None) =>
+        new(name, PipeDirection.In, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly | extra);
+
+    /// <summary>
+    /// One hand-over per pipe instance. The next instance is made as soon as one connects, so
+    /// the pipe never goes missing between two hand-overs (a copy would then think it's the first).
+    /// </summary>
+    private async Task ServePipeAsync(NamedPipeServerStream first, string name, Action<IReadOnlyList<string>> received)
     {
-        while (!_stop.IsCancellationRequested)
+        var pipe = first;
+        try
         {
-            try
+            while (!_stop.IsCancellationRequested)
             {
-                await using var pipe = new NamedPipeServerStream(name, PipeDirection.In, 1, PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
                 await pipe.WaitForConnectionAsync(_stop.Token);
-                Deliver(await ReadAllAsync(pipe), received);
+                var connected = pipe;
+                pipe = NewPipe(name);
+                await using (connected)
+                {
+                    try { Deliver(await ReadAllAsync(connected), received); }
+                    catch (IOException) { } // that hand-over broke: the next may not
+                }
             }
-            catch (OperationCanceledException) { return; }
-            catch (IOException) { await Task.Delay(200); } // another copy has the name, or that hand-over broke
-            catch (UnauthorizedAccessException) { return; }
         }
+        catch (OperationCanceledException) { }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+        finally { await pipe.DisposeAsync(); }
     }
 
     private async Task<byte[]> ReadAllAsync(Stream stream)
