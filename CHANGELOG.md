@@ -3,6 +3,17 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.15 — 2026-11-28
+
+A **beta** of 2.0.0: beta.14's "one window" fixed, on Windows above all. Please try it there.
+
+- **One window on Windows.** In beta.14 a file opened from Explorer while Atlas Player ran still
+  started a second window: the new copy couldn't find the first one's connection. It now hands
+  its files over and closes.
+- **Several files opened at once stay together.** Explorer starts a copy of the app for each
+  file; they could each open a window, or one file could take the place of another. Now the
+  first copy keeps the window and plays its own file, and the others' files join its queue.
+
 ## 2.0.0-beta.14 — 2026-11-28
 
 A **beta** of 2.0.0, of fixes. Tried on Linux, not yet on Windows: please try resuming and

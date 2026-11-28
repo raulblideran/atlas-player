@@ -83,6 +83,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0-beta.15" date="2026-11-28" type="development">
+      <description>
+        <p>One window on Windows too, files opened together queue behind the first</p>
+      </description>
+    </release>
     <release version="2.0.0-beta.14" date="2026-11-28" type="development">
       <description>
         <p>Resume where you left off, one window for every file opened, errors said and logged, no torrent freezes</p>

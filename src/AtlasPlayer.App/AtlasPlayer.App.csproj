@@ -12,7 +12,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>2.0.0-beta.14</Version>
+    <Version>2.0.0-beta.15</Version>
     <Product>Atlas Player</Product>
     <Description>Modern portable video player with HDR tonemapping and magnet streaming</Description>
     <Company>Raul Blideran</Company>
