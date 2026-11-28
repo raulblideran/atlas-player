@@ -6,8 +6,8 @@
         x:DataType="vm:MainViewModel"
         Title="Atlas Player message" SizeToContent="WidthAndHeight">
   <!-- A message over the video, in the theme's colours: the volume as an icon, a level and the
-       percentage; anything else as a line of text. -->
-  <Border x:Name="Card" Classes="toast" IsHitTestVisible="False">
+       percentage; anything else as a line of text, with a button when it offers something. -->
+  <Border x:Name="Card" Classes="toast" IsHitTestVisible="{Binding ToastHasAction}">
     <Panel>
       <StackPanel x:Name="VolumeToast" Orientation="Horizontal" Spacing="12" IsVisible="{Binding ToastIsVolume}">
         <Panel VerticalAlignment="Center">
@@ -18,7 +18,12 @@
                     Mark="{x:Static vm:MainViewModel.ToastUnityLevel}" IsVisible="{Binding !ToastIsMuted}" />
         <TextBlock x:Name="VolumeText" Classes="toast-value" Text="{Binding ToastText}" />
       </StackPanel>
-      <TextBlock x:Name="MessageText" Classes="toast-text" Text="{Binding ToastText}" IsVisible="{Binding !ToastIsVolume}" />
+      <StackPanel Orientation="Horizontal" Spacing="14" IsVisible="{Binding !ToastIsVolume}">
+        <TextBlock x:Name="MessageText" Classes="toast-text" Text="{Binding ToastText}" VerticalAlignment="Center" IsVisible="{Binding !ToastIsVolume}" />
+        <!-- An offer (Resume from 12:34): the toast takes the mouse only while it has one. -->
+        <Button x:Name="ToastAction" Classes="accent" Content="{Binding ToastActionText}" Command="{Binding RunToastActionCommand}"
+                IsVisible="{Binding ToastHasAction}" VerticalAlignment="Center" />
+      </StackPanel>
     </Panel>
   </Border>
 </Window>

@@ -192,8 +192,12 @@ public sealed class FakeTorrents : ITorrentService
             : Task.FromException<MegaInfo>(new TorrentException("the link doesn't serve byte ranges"));
     }
 
+    /// <summary>Holds SelectFile until set (as the engine does while a torrent is still starting).</summary>
+    public ManualResetEventSlim? SelectGate { get; set; }
+
     public string SelectFile(int torrentId, int fileIndex)
     {
+        SelectGate?.Wait(TimeSpan.FromSeconds(10));
         Calls.Add($"Select {torrentId} {fileIndex}");
         return $"http://127.0.0.1:9/stream/{torrentId}/{fileIndex}";
     }

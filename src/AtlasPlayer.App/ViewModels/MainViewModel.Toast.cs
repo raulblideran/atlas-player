@@ -27,9 +27,43 @@ public sealed partial class MainViewModel
     /// <summary>Shows <paramref name="text"/> over the video for a moment.</summary>
     public void Toast(string text, TimeSpan? duration = null)
     {
+        ClearToastAction();
         ToastIsVolume = false;
         ToastText = text;
         ShowToast(duration ?? ToastDuration);
+    }
+
+    /// <summary>The toast's button ("Resume from 12:34"), or null for a toast without one (the toast then ignores the mouse).</summary>
+    [ObservableProperty] private string? _toastActionText;
+    private Action? _toastAction;
+
+    public bool ToastHasAction => ToastActionText is not null;
+    partial void OnToastActionTextChanged(string? value) => OnPropertyChanged(nameof(ToastHasAction));
+
+    /// <summary>A message with a button that does <paramref name="action"/>, for as long as it lasts.</summary>
+    public void ToastWithAction(string text, string actionText, Action action, TimeSpan duration)
+    {
+        ToastIsVolume = false;
+        ToastText = text;
+        _toastAction = action;
+        ToastActionText = actionText;
+        ShowToast(duration);
+    }
+
+    /// <summary>The toast's button: its action, once, and the toast goes.</summary>
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    private void RunToastAction()
+    {
+        var action = _toastAction;
+        ClearToastAction();
+        ToastVisible = false;
+        action?.Invoke();
+    }
+
+    private void ClearToastAction()
+    {
+        _toastAction = null;
+        ToastActionText = null;
     }
 
     /// <summary>The volume (or that it's muted), with a level bar.</summary>
@@ -39,6 +73,7 @@ public sealed partial class MainViewModel
         ToastIsMuted = _player?.Settings.Muted ?? IsMuted;
         ToastLevel = Math.Clamp(volume / 150, 0, 1);
         ToastText = ToastIsMuted ? "Muted" : $"{volume:0}%";
+        ClearToastAction();
         ToastIsVolume = true;
         ShowToast(ToastDuration);
     }
@@ -52,6 +87,10 @@ public sealed partial class MainViewModel
     /// <summary>From the view's tick: the toast goes when its time is up.</summary>
     private void TickToast(DateTime utcNow)
     {
-        if (ToastVisible && utcNow >= _toastUntil) ToastVisible = false;
+        if (ToastVisible && utcNow >= _toastUntil)
+        {
+            ToastVisible = false;
+            ClearToastAction(); // an offer lasts as long as its toast
+        }
     }
 }

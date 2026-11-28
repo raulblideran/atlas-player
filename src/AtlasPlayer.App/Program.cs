@@ -15,6 +15,9 @@ internal static class Program
             Tell(NoDisplay);
             return 1;
         }
+        // Already running: the files go to its window (and it comes forward), and this one goes.
+        if (SingleInstance.Address() is { } address && SingleInstance.TrySend(address, LaunchArgs.Normalize(args)))
+            return 0;
         try
         {
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
@@ -57,16 +60,8 @@ internal static class Program
     internal static string? WriteCrash(Exception? e)
     {
         if (e is null) return null;
-        try
-        {
-            var paths = PortablePaths.ForApp();
-            Directory.CreateDirectory(paths.Logs);
-            var file = Path.Combine(paths.Logs, "crash.log");
-            File.AppendAllText(file, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {AppInfo.Name} {AppInfo.Display} on "
-                                     + $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription}\n{e}\n\n");
-            return file;
-        }
-        catch (Exception) { return null; } // nowhere to write: stderr has it
+        try { return CrashLog.Write(PortablePaths.ForApp().Logs, e); }
+        catch (Exception) { return null; } // no paths (an unwritable folder): stderr has it
     }
 
     /// <summary>Says it on stderr, and as a desktop notification where there's notify-send (no window can open).</summary>

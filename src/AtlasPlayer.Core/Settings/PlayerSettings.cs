@@ -37,7 +37,7 @@ public enum RenderQuality
 public sealed class PlayerSettings
 {
     /// <summary>Bumped when a default changes for existing users too (see <see cref="Normalize"/>).</summary>
-    public const int CurrentVersion = 7;
+    public const int CurrentVersion = 8;
 
     /// <summary>The settings.json format; 0 for files written before versioning.</summary>
     public int SettingsVersion { get; set; }
@@ -217,7 +217,8 @@ public sealed class PlayerSettings
     // Playback
     public int SeekSeconds { get; set; } = 5;
     public int LongSeekSeconds { get; set; } = 60;
-    public bool ResumePlayback { get; set; }
+    /// <summary>Reopening a local file offers to carry on where it was left (a toast with a Resume button).</summary>
+    public bool ResumePlayback { get; set; } = true;
 
     // Torrents
     public int TorrentMetadataTimeoutSeconds { get; set; } = 90;
@@ -274,6 +275,8 @@ public sealed class PlayerSettings
         if (SettingsVersion < 4 && DisplayFps == 60) DisplayFps = 0;
         // 2.0.0-beta.5 made the bar's pieces movable: the old show-or-hide list becomes the bar's groups.
         if (SettingsVersion < 7 && HiddenControls is { } hidden) MigrateHiddenControls(hidden);
+        // 2.0.0-beta.14: resume works now; it was an unused switch, off, until then.
+        if (SettingsVersion < 8) ResumePlayback = true;
         HiddenControls = null;
         SettingsVersion = CurrentVersion;
         if (!ToneMappingCurves.Contains(ToneMapping)) ToneMapping = "mobius";

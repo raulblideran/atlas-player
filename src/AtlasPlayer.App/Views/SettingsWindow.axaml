@@ -85,6 +85,16 @@
           <StackPanel Margin="28,24,28,28" MaxWidth="720" HorizontalAlignment="Left">
             <TextBlock Classes="page" Text="Playback" />
 
+            <TextBlock Classes="group" Text="Resuming" />
+            <Border Classes="rows">
+              <StackPanel>
+                <c:SettingRow Title="Offer to resume where you left off"
+                              Description="Reopening a video or music file on this computer plays it from the start and offers, for a few seconds, to go back to where you stopped. Positions are kept for the last 200 files.">
+                  <ToggleSwitch x:Name="ResumePlaybackSwitch" IsChecked="{Binding ResumePlayback}" />
+                </c:SettingRow>
+              </StackPanel>
+            </Border>
+
             <TextBlock Classes="group" Text="Seeking" />
             <Border Classes="rows">
               <StackPanel>
@@ -291,7 +301,8 @@
             </Border>
 
             <TextBlock Classes="group" Text="Look" />
-            <Border Classes="rows">
+            <Border x:Name="SubtitleLook" Classes="rows"
+                    IsEnabled="{Binding EngineHasMpvFeatures}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="{Binding DiscLimitTip}">
               <StackPanel>
                 <Border Padding="22,16,22,12">
                   <c:SubtitlePreview x:Name="SubtitlePreview" Height="96"
@@ -442,7 +453,8 @@
                   </StackPanel>
                 </c:SettingRow>
                 <c:SettingRow Title="Statistics over the video" Description="Live numbers: dropped frames, decoder, bit rate.">
-                  <Button Classes="ghost" Content="Statistics overlay (I)" Command="{Binding ToggleStatsCommand}" />
+                  <Button Classes="ghost" Content="Statistics overlay (I)" Command="{Binding ToggleStatsCommand}"
+                          IsEnabled="{Binding EngineHasMpvFeatures}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="{Binding DiscLimitTip}" />
                 </c:SettingRow>
                 <c:SettingRow Title="Diagnostics" Description="While the problem video plays: copies the machine, the video and why it's struggling.">
                   <Button Classes="ghost" Content="Copy diagnostics (Ctrl+I)" Command="{Binding CopyDiagnosticsCommand}" />

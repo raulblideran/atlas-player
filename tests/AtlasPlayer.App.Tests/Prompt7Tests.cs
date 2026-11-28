@@ -38,6 +38,7 @@ public class PlaylistTests
         await r.Vm.OpenInputAsync(Magnet);
         r.Vm.NextFileCommand.Execute(null);
         Assert.Equal("02 Second.flac", r.Vm.SelectedTorrentFile!.Name);
+        await r.Vm.PendingTorrentWork; // the switch runs off the window's thread
         Assert.Contains("Open http://127.0.0.1:9/stream/1/1 02 Second.flac [stream]", r.Player.Calls);
 
         // At its end mpv keeps it open (keep-open); the next one plays.

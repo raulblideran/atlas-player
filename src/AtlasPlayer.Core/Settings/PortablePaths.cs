@@ -95,6 +95,8 @@ public sealed partial class PortablePaths
     /// <summary>Holds settings.json and mpv's config dir.</summary>
     public string Root { get; }
     public string SettingsFile => Path.Combine(Root, "settings.json");
+    /// <summary>Where local files were left (ResumePositions), beside the settings.</summary>
+    public string ResumeFile => Path.Combine(Root, "positions.json");
     public string Screenshots { get; }
     public string TorrentCache { get; }
     /// <summary>mpv's own config dir (mpv.conf, input.conf, shaders) — optional power-user hook.</summary>

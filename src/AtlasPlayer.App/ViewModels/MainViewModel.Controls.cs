@@ -329,6 +329,17 @@ public sealed partial class MainViewModel
     public bool ShowChapterMenuButton => HasChapterMenu;
     public bool ShowVideoButton => !IsAudioOnly;
 
+    // ---- What the disc engine (libVLC, a disc with its menus) can't do --------------------------
+
+    public const string NotOnDiscs = "Not available while a disc plays with its menus";
+
+    /// <summary>mpv plays: previous frame, the statistics overlay and the subtitles' look work (greyed out on discs).</summary>
+    public bool EngineHasMpvFeatures => !IsDiscMode;
+    /// <summary>Why those are greyed out, for their tooltip; null while mpv plays.</summary>
+    public string? DiscLimitTip => IsDiscMode ? NotOnDiscs : null;
+    public string SubtitleSizeTip => IsDiscMode ? NotOnDiscs : SubtitleSizeText;
+    public string FrameBackTip => IsDiscMode ? "Previous frame: " + NotOnDiscs.ToLowerInvariant() : "Previous frame ( , )";
+
     // ---- Readouts -------------------------------------------------------------------------------
 
     /// <summary>Something with a length plays: the time left and the length mean something.</summary>
@@ -384,7 +395,8 @@ public sealed partial class MainViewModel
     {
         [nameof(HasTorrentFiles)] = [nameof(HasPlaylist)],
         [nameof(IsIdle)] = [nameof(HasPlaylist)],
-        [nameof(IsDiscMode)] = [nameof(HasPlaylist)],
+        [nameof(IsDiscMode)] = [nameof(HasPlaylist), nameof(EngineHasMpvFeatures), nameof(DiscLimitTip), nameof(FrameBackTip), nameof(SubtitleSizeTip)],
+        [nameof(SubtitleSizeText)] = [nameof(SubtitleSizeTip)],
         [nameof(IsTorrent)] = [nameof(PreviousFileTip), nameof(NextFileTip)],
         [nameof(HasPlaylist)] = [nameof(ShowFileButtons), nameof(PrevFileInMore), nameof(NextFileInMore), nameof(HasPlaybackInMore)],
         [nameof(IsAudioOnly)] = [nameof(ShowFrameButtons), nameof(ShowVideoButton), nameof(PrevFrameInMore), nameof(NextFrameInMore),

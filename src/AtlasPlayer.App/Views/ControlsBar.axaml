@@ -84,7 +84,7 @@
           <PathIcon Data="{StaticResource IconChapterPrev}" />
         </Button>
         <Button c:BarRow.Item="prevframe" x:Name="FrameBackButton" Classes="icon" Command="{Binding FrameBackStepCommand}" IsVisible="{Binding ShowFrameButtons}"
-                ToolTip.Tip="Previous frame ( , )">
+                IsEnabled="{Binding EngineHasMpvFeatures}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="{Binding FrameBackTip}">
           <PathIcon Data="{StaticResource IconFramePrev}" />
         </Button>
         <Button c:BarRow.Item="play" x:Name="PlayButton" Classes="icon play" c:BarRow.CentreOn="True" Command="{Binding TogglePauseCommand}" ToolTip.Tip="{Binding PlayButtonTip}">
@@ -173,7 +173,7 @@
                 <Button Classes="ghost" Content="Load subtitle file…" Command="{Binding LoadSubtitleCommand}" Margin="0,6,0,0" />
                 <TextBlock Classes="section" Text="{Binding SubtitleSizeText}" />
                 <Slider Minimum="0.5" Maximum="2.5" Value="{Binding SubtitleScale}" SmallChange="0.05" LargeChange="0.25"
-                        ToolTip.Tip="{Binding SubtitleSizeText}" />
+                        IsEnabled="{Binding EngineHasMpvFeatures}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="{Binding SubtitleSizeTip}" />
                 <TextBlock Classes="note" Text="J goes to the next track, V shows or hides them, Z and X move them 0.1 s earlier or later. Their look is in Settings, Subtitles." />
               </StackPanel>
             </Flyout>
@@ -292,7 +292,8 @@
               <MenuItem Header="Stop" InputGesture="Ctrl+S" Command="{Binding StopCommand}" IsVisible="{Binding StopInMore}">
                 <MenuItem.Icon><PathIcon Data="{StaticResource IconStop}" /></MenuItem.Icon>
               </MenuItem>
-              <MenuItem Header="Previous frame" InputGesture="," Command="{Binding FrameBackStepCommand}" IsVisible="{Binding PrevFrameInMore}">
+              <MenuItem Header="Previous frame" InputGesture="," Command="{Binding FrameBackStepCommand}" IsVisible="{Binding PrevFrameInMore}"
+                        IsEnabled="{Binding EngineHasMpvFeatures}" ToolTip.ShowOnDisabled="True" ToolTip.Tip="{Binding DiscLimitTip}">
                 <MenuItem.Icon><PathIcon Data="{StaticResource IconFramePrev}" /></MenuItem.Icon>
               </MenuItem>
               <MenuItem Header="Next frame" InputGesture="." Command="{Binding FrameStepCommand}" IsVisible="{Binding NextFrameInMore}">

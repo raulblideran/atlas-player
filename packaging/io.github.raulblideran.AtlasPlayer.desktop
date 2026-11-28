@@ -10,6 +10,6 @@ Icon=io.github.raulblideran.AtlasPlayer
 Terminal=false
 Categories=AudioVideo;Video;Player;
 Keywords=video;movie;player;hdr;hevc;torrent;magnet;subtitles;mpv;
-MimeType=video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/mpeg;video/mp2t;video/x-flv;video/x-ms-wmv;video/3gpp;video/ogg;video/x-m4v;video/vnd.avi;audio/x-matroska;x-scheme-handler/magnet;
+MimeType=video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/mpeg;video/mp2t;video/x-flv;video/x-ms-wmv;video/3gpp;video/ogg;video/x-m4v;video/vnd.avi;audio/x-matroska;audio/flac;audio/x-flac;audio/mpeg;audio/ogg;audio/x-vorbis+ogg;audio/x-opus+ogg;audio/x-flac+ogg;audio/vnd.wave;audio/x-wav;audio/aac;audio/mp4;audio/x-m4a;audio/x-wavpack;audio/x-ape;audio/x-dsf;audio/x-dff;audio/ac3;audio/vnd.dts;audio/x-aiff;audio/x-ms-wma;x-scheme-handler/magnet;
 StartupNotify=true
 StartupWMClass=io.github.raulblideran.AtlasPlayer

@@ -211,7 +211,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         DvdFolder = main.Paths.Videos;
         // Null asks this ffmpeg which encoders it has (tests say).
         if (encoders is not null) UseEncoders(encoders);
-        else if (Ffmpeg is { } ff) _ = FindEncodersAsync(ff);
+        else if (Ffmpeg is { } ff) Main.Forget(FindEncodersAsync(ff));
         if (qtgmc is { } q)
         {
             Qtgmc = q.Runtime;
@@ -221,7 +221,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         else if (Core.Ripping.Dvd.Qtgmc.Find() is { } runtime)
         {
             Qtgmc = runtime;
-            _ = CheckQtgmcAsync(runtime);
+            Main.Forget(CheckQtgmcAsync(runtime));
         }
         main.PropertyChanged += OnMainChanged;
         SelectedDrive = drives.FirstOrDefault(d => drive is not null && d.Root == drive) ?? drives.FirstOrDefault(d => d.HasDisc);
@@ -800,7 +800,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
     {
         if (value is null) return;
         if (!value.HasDisc) { Reset(RipDiscKind.None, "No disc in this drive."); return; }
-        if (value.DiscLabel == "Audio CD") _ = LoadCdAsync(value);
+        if (value.DiscLabel == "Audio CD") Main.Forget(LoadCdAsync(value));
         else LoadDvd(value.Root, RipSource(value));
     }
 
@@ -909,19 +909,41 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(TracksSummary));
         StartCommand.NotifyCanExecuteChanged();
         NextCommand.NotifyCanExecuteChanged();
-        _ = LoadCoverAsync(tags);
+        Main.Forget(LoadCoverAsync(tags));
     }
 
     private int _coverRequest;
 
-    private async Task LoadCoverAsync(AlbumTags tags)
+    /// <summary>What the cover's square says when there's no picture: why there's none.</summary>
+    [ObservableProperty] private string _coverNote = NoCover;
+
+    internal const string NoCover = "No cover";
+
+    /// <param name="http">The Cover Art Archive's client (tests give their own; then it's asked even offline).</param>
+    internal async Task LoadCoverAsync(AlbumTags tags, HttpClient? http = null)
     {
         var request = ++_coverRequest;
         Cover = null;
         CoverImage = null;
-        if (tags.ReleaseId is null) return;
-        var image = _online ? await CdMetadata.CoverAsync(MainViewModel.RipHttp, tags) : null;
+        CoverNote = NoCover;
+        if (tags.ReleaseId is null || (!_online && http is null)) return;
+        CoverNote = "Finding the cover…";
+        byte[]? image = null;
+        string note;
+        try
+        {
+            image = await CdMetadata.CoverAsync(http ?? MainViewModel.RipHttp, tags);
+            note = image is null ? "No cover found" : NoCover;
+        }
+        catch (TaskCanceledException) { note = "No cover found (timed out)"; } // the client's 30 s
+        catch (IOException) { note = "No cover found (no connection)"; } // the archive's own failures are tried past
+        catch (Exception e)
+        {
+            Main.ReportUnexpected(e);
+            note = "No cover found";
+        }
         if (request != _coverRequest) return; // another release was picked meanwhile
+        CoverNote = note;
         Cover = image;
         try { CoverImage = image is null ? null : new Avalonia.Media.Imaging.Bitmap(new MemoryStream(image)); }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException or NotSupportedException) { CoverImage = null; }
@@ -1008,7 +1030,7 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
         if (Kind == RipDiscKind.Cd && _drive is { } drive && _disc is { } disc)
         {
             _drive = null; // the rip has it now, and closes it
-            _ = Main.StartCdRipAsync(drive, disc, new CdRipOptions
+            Main.Forget(Main.StartCdRipAsync(drive, disc, new CdRipOptions
             {
                 Tags = EditedTags(),
                 Cover = Cover,
@@ -1019,11 +1041,11 @@ public sealed partial class RipDialogViewModel : ObservableObject, IDisposable
                 Flac = Flac,
                 Tracks = CheckedTracks,
                 WriteCue = WriteCue,
-            });
+            }));
         }
         else if (Kind == RipDiscKind.Dvd && _dvd is { } dvd && DvdJobs() is { Count: > 0 } jobs)
         {
-            _ = Main.StartDvdRipAsync(dvd, jobs);
+            Main.Forget(Main.StartDvdRipAsync(dvd, jobs));
         }
         StartCommand.NotifyCanExecuteChanged();
     }

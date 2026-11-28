@@ -134,6 +134,14 @@ public sealed partial class MainViewModel
             RipResult = $"Rip failed: {e.Message}";
             ShowStatus(RipResult);
         }
+        catch (Exception e)
+        {
+            // Unforeseen (flac or ffmpeg that won't start, a reply that isn't JSON…): still said,
+            // never a rip that just stops. Its stack goes to crash.log for a report.
+            var log = CrashLog.Write(_paths.Logs, e);
+            RipResult = $"Rip failed: {e.Message}";
+            ShowStatus(RipResult + (log is null ? "" : CrashLogHint));
+        }
         finally
         {
             IsRipping = false;

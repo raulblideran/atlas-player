@@ -136,5 +136,5 @@ public sealed partial class DownloadDialogViewModel : ObservableObject
     /// <summary>Starts the download; progress shows here and at the top of the player.</summary>
     [RelayCommand(CanExecute = nameof(CanStart))]
     private void Start() =>
-        _ = Main.StartDownloadAsync(Url.Trim(), SelectedQuality!.Height, SelectedQuality.AudioOnly);
+        Main.Forget(Main.StartDownloadAsync(Url.Trim(), SelectedQuality!.Height, SelectedQuality.AudioOnly));
 }

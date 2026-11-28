@@ -136,7 +136,8 @@
             </Grid>
             <Border Grid.Column="1" Width="132" Height="132" Background="{DynamicResource ThemeRaised}" CornerRadius="{DynamicResource ThemeRadiusControl}" ClipToBounds="True">
               <Panel>
-                <TextBlock Text="No cover" Classes="muted" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock x:Name="CoverNote" Text="{Binding CoverNote}" Classes="muted" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"
+                           Margin="8" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 <Image Source="{Binding CoverImage}" Stretch="UniformToFill" />
               </Panel>
             </Border>

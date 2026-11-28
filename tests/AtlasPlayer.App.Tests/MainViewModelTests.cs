@@ -519,6 +519,7 @@ public class TorrentTests
         using var r = new Rig();
         await r.Vm.OpenInputAsync(Magnet);
         r.Vm.SelectedTorrentFile = r.Vm.TorrentFiles.Single(f => f.Index == 2);
+        await r.Vm.PendingTorrentWork; // off the window's thread
         Assert.Contains("Select 1 2", r.Torrents.Calls);
         Assert.Contains("Open http://127.0.0.1:9/stream/1/2 Trailer.mkv [stream]", r.Player.Calls);
     }
@@ -549,7 +550,7 @@ public class TorrentTests
         using var r = new Rig();
         await r.Vm.OpenInputAsync(Magnet);
         r.Vm.RefreshTorrentStats();
-        Assert.Equal("↓ 3.5 MiB/s · 7 peers · 50% buffered", r.Vm.TorrentStatus);
+        Assert.Equal("↓ 3.5 MiB/s · 7 peers · 50% downloaded", r.Vm.TorrentStatus); // nothing playing yet: no "s ahead"
     }
 
     [Fact]
@@ -558,6 +559,7 @@ public class TorrentTests
         using var r = new Rig();
         await r.Vm.OpenInputAsync(Magnet);
         await r.Vm.OpenInputAsync(r.MediaFile());
+        await r.Vm.PendingTorrentWork;
         Assert.Contains("Remove 1 True", r.Torrents.Calls);
         Assert.False(r.Vm.IsTorrent);
         Assert.Empty(r.Vm.TorrentFiles);
@@ -570,6 +572,7 @@ public class TorrentTests
         using var r = new Rig();
         await r.Vm.OpenInputAsync(Magnet);
         r.Vm.HandleKey("Ctrl+s");
+        await r.Vm.PendingTorrentWork;
         Assert.Contains("Remove 1 True", r.Torrents.Calls);
         Assert.Contains("Stop", r.Player.Calls);
         Assert.Null(typeof(PlayerSettings).GetProperty("ClearTorrentCacheOnExit"));

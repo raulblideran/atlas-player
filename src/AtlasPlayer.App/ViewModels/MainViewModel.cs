@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AtlasPlayer.App.Services;
@@ -195,6 +196,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             _health.Reset();
             _recorder.Reset();
             AddDroppedSubtitles();
+            OfferResume();
         });
         player.RenderProfileChanged += p => Post(() => RenderProfileText = DescribeProfile(p));
         player.EndFile += (reason, error) => Post(() =>
@@ -298,6 +300,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (_player is null) return;
         var s = _player.State;
+        TrackResume(name, s);
         switch (name)
         {
             case "time-pos" or "demuxer-cache-time": ShowPosition(); break;
@@ -685,7 +688,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             IsResolving = true;
             ShowStatus("Finding peers and fetching torrent info…", sticky: true);
-            EnsureEngine();
+            await EnsureEngineAsync();
+            await OnEngineAsync(() => 0); // a torrent closed just before is gone first (it may be this one)
             var info = await _torrents.AddAsync(magnet, TimeSpan.FromSeconds(Settings.TorrentMetadataTimeoutSeconds));
             if (_torrent is { } previous && previous.Id != info.Id) CloseTorrent();
             _torrent = info;
@@ -701,7 +705,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             // The engine starts at the main video (the largest); an album starts at its first track.
             var (streamUrl, fileIdx) = (info.StreamUrl, info.SelectedFile);
             if (!info.Files.Any(f => f.IsVideo) && TorrentFiles.FirstOrDefault() is { } first && first.Index != fileIdx)
-                (streamUrl, fileIdx) = (_torrents.SelectFile(info.Id, first.Index), first.Index);
+                (streamUrl, fileIdx) = (await OnEngineAsync(() => _torrents.SelectFile(info.Id, first.Index)), first.Index);
             _selectingTorrentFile = true;
             SelectedTorrentFile = TorrentFiles.FirstOrDefault(f => f.Index == fileIdx);
             _selectingTorrentFile = false;
@@ -721,24 +725,54 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             ShowStatus($"Torrent failed: {e.Message}");
         }
+        catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException)
+        {
+            ShowStatus(NoTorrentEngine(e));
+        }
         finally
         {
             IsResolving = false;
         }
     }
 
-    /// <summary>The engine serves both torrents and MEGA; it starts on first use.</summary>
-    private void EnsureEngine()
+    internal static string NoTorrentEngine(Exception e) =>
+        $"Torrent and MEGA streaming isn't available: its library didn't load ({e.Message})";
+
+    /// <summary>The engine serves both torrents and MEGA; it starts on first use, off the window's thread.</summary>
+    private async Task EnsureEngineAsync()
     {
         if (_torrents.IsStarted) return;
-        // Leftovers from a crash or a killed process would otherwise pile up.
-        ClearTorrentCache();
-        _torrents.Start(new TorrentEngineConfig
+        var config = new TorrentEngineConfig
         {
             CacheDir = _paths.TorrentCache,
             ListenPort = Settings.TorrentListenPort,
             EnableUpnp = Settings.TorrentUpnp,
+        };
+        await OnEngineAsync(() =>
+        {
+            if (_torrents.IsStarted) return 0;
+            // Leftovers from a crash or a killed process would otherwise pile up.
+            ClearTorrentCache();
+            _torrents.Start(config);
+            return 0;
         });
+    }
+
+    /// <summary>
+    /// Calls into the engine that can take a while (switching file waits for a torrent still
+    /// starting; removing one deletes what it fetched), one at a time and off the window's
+    /// thread, so the window never freezes on them.
+    /// </summary>
+    private readonly SemaphoreSlim _engineGate = new(1, 1);
+
+    /// <summary>The latest switch or close in the engine (tests wait for it).</summary>
+    internal Task PendingTorrentWork { get; private set; } = Task.CompletedTask;
+
+    private async Task<T> OnEngineAsync<T>(Func<T> call)
+    {
+        await _engineGate.WaitAsync().ConfigureAwait(false);
+        try { return await Task.Run(call).ConfigureAwait(false); }
+        finally { _engineGate.Release(); }
     }
 
     private async Task OpenMegaAsync(string link)
@@ -748,7 +782,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             IsResolving = true;
             ShowStatus("Fetching the file from MEGA…", sticky: true);
-            EnsureEngine();
+            await EnsureEngineAsync();
             var info = await _torrents.AddMegaAsync(link, TimeSpan.FromSeconds(30));
             CloseTorrent();
             SetSource(MediaSource.Mega);
@@ -759,6 +793,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         catch (TorrentException e)
         {
             ShowStatus($"MEGA: {e.Message}");
+        }
+        catch (Exception e) when (e is DllNotFoundException or EntryPointNotFoundException)
+        {
+            ShowStatus(NoTorrentEngine(e));
         }
         finally
         {
@@ -780,11 +818,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             IsResolving = true;
             ShowStatus("Opening the MEGA app's stream…", sticky: true);
-            EnsureEngine();
+            await EnsureEngineAsync();
             var info = await _torrents.AddReadAheadAsync(link, TimeSpan.FromSeconds(15));
             (url, name) = (info.StreamUrl, info.Name);
         }
-        catch (TorrentException)
+        catch (Exception e) when (e is TorrentException or DllNotFoundException or EntryPointNotFoundException)
         {
             // Played directly, as before 1.12.
         }
@@ -822,24 +860,44 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedTorrentFileChanged(TorrentFileItem? value)
     {
-        if (_selectingTorrentFile || value is null || _torrent is null || _player is null) return;
-        try
+        if (_selectingTorrentFile || value is null || _torrent is not { } torrent || _player is null) return;
+        ShowStatus($"Switching to {value.Name}…", sticky: true);
+        PendingTorrentWork = SwitchAsync();
+        Forget(PendingTorrentWork);
+
+        async Task SwitchAsync()
         {
-            var url = _torrents.SelectFile(_torrent.Id, value.Index);
-            _player.Open(url, value.Name, streaming: true);
-        }
-        catch (TorrentException e)
-        {
-            ShowStatus($"Torrent failed: {e.Message}");
+            try
+            {
+                var url = await OnEngineAsync(() => _torrents.SelectFile(torrent.Id, value.Index));
+                // Another file picked, or the torrent closed, meanwhile: that one wins.
+                if (_torrent != torrent || SelectedTorrentFile != value || _player is null)
+                {
+                    if (StatusMessage == $"Switching to {value.Name}…") StatusMessage = "";
+                    return;
+                }
+                _player.Open(url, value.Name, streaming: true);
+                ShowStatus($"Streaming {value.Name}");
+            }
+            catch (TorrentException e)
+            {
+                ShowStatus($"Torrent failed: {e.Message}");
+            }
         }
     }
 
     private void CloseTorrent()
     {
         if (_torrent is null) return;
-        // Torrents are played, never kept: what was fetched goes with them.
-        try { _torrents.Remove(_torrent.Id, deleteFiles: true); }
-        catch (TorrentException) { }
+        // Torrents are played, never kept: what was fetched goes with them (in the background).
+        var id = _torrent.Id;
+        PendingTorrentWork = OnEngineAsync(() =>
+        {
+            try { _torrents.Remove(id, deleteFiles: true); }
+            catch (TorrentException) { } // the next engine start clears the cache anyway
+            return 0;
+        });
+        Forget(PendingTorrentWork);
         _torrent = null;
         IsTorrent = false;
         TorrentStatus = "";
@@ -859,9 +917,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             var pct = len > 0 ? 100.0 * file / len : 0;
             TorrentStatus = s.Error is { } err
                 ? $"Torrent error: {err}"
-                : $"↓ {s.DownloadMiBps:0.0} MiB/s · {s.PeersLive} peers · {pct:0}% buffered";
+                : DescribeTorrent(s.DownloadMiBps, s.PeersLive, IsIdle ? null : _health.Latest?.CachedSeconds, pct);
         }
         catch (TorrentException) { }
+    }
+
+    /// <summary>
+    /// "↓ 4.2 MiB/s · 31 peers · 45 s ahead · 18% downloaded": how much mpv holds past the
+    /// playhead, and how much of the file has come in (not the same thing: seeking skips ahead).
+    /// </summary>
+    internal static string DescribeTorrent(double mibps, int peers, double? secondsAhead, double percentDownloaded)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var ahead = secondsAhead is { } a and >= 0 ? string.Create(inv, $" · {a:0} s ahead") : "";
+        return string.Create(inv, $"↓ {mibps:0.0} MiB/s · {peers} peers{ahead} · {percentDownloaded:0}% downloaded");
     }
 
     private string? _webUrl;
@@ -939,13 +1008,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand] private void TogglePause() => Execute(PlayerAction.TogglePause);
     [RelayCommand] private void Stop() => Execute(PlayerAction.Stop);
     [RelayCommand] private void FrameStep() => _player?.FrameStep();
-    [RelayCommand] private void FrameBackStep() => _player?.FrameBackStep();
+    [RelayCommand] private void FrameBackStep() { if (!SaidNotOnDiscs()) _player?.FrameBackStep(); }
     [RelayCommand] private void ToggleMute() => _player?.ToggleMute();
     [RelayCommand] private void NextChapter() => _player?.StepChapter(1);
     [RelayCommand] private void PreviousChapter() => _player?.StepChapter(-1);
     [RelayCommand] private void GoToChapter(ChapterItem item) => _player?.GoToChapter(item.Id);
     [RelayCommand] private void SelectDiscTitle(ChapterItem item) => _player?.SelectTitle(item.Id);
-    [RelayCommand] private void ToggleStats() => _player?.ToggleStats();
+    [RelayCommand] private void ToggleStats() { if (!SaidNotOnDiscs()) _player?.ToggleStats(); }
+
+    /// <summary>On a disc with its menus (libVLC), says that what was asked for isn't there; true if it did.</summary>
+    private bool SaidNotOnDiscs()
+    {
+        if (!IsDiscMode) return false;
+        Toast(NotOnDiscs);
+        return true;
+    }
     [RelayCommand] private void ToggleFullscreen() => FullscreenRequested?.Invoke(null);
 
     [RelayCommand]
@@ -1081,6 +1158,51 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// What Atlas Player was started with (<see cref="LaunchArgs.Normalize"/>d): every file and
+    /// folder plays, the first first, as if they were dropped together; with none, the first link.
+    /// </summary>
+    public async Task OpenArgumentsAsync(IReadOnlyList<string> args)
+    {
+        var local = args.Where(LaunchArgs.IsLocal).ToList();
+        if (local.Count > 0) await DropAsync(local, null);
+        else if (args.FirstOrDefault() is { } link) await OpenInputAsync(link);
+    }
+
+    /// <summary>
+    /// Files opened while the app runs (from the file manager; <see cref="SingleInstance"/>): they
+    /// join the queue, after what plays and what's queued. Nothing playing, a disc (its engine has
+    /// no queue) or a torrent (its own list of files): they play instead. A link can't wait in the
+    /// queue, so it plays straight away.
+    /// </summary>
+    public async Task QueueArgumentsAsync(IReadOnlyList<string> args)
+    {
+        if (args.Count == 0) return; // started again with nothing: the window just comes forward
+        var local = args.Where(LaunchArgs.IsLocal).ToList();
+        if (local.Count == 0 || IsIdle || _player is null || IsDiscMode || IsTorrent)
+        {
+            await OpenArgumentsAsync(args);
+            return;
+        }
+        var added = 0;
+        foreach (var path in local)
+        {
+            if (IsSubtitle(path)) { AddSubtitleFile(path); continue; }
+            switch (InputClassifier.Classify(path))
+            {
+                case (InputKind.Folder, var folder):
+                    foreach (var file in FolderMedia.Playlist(folder)) { _player.Append(file); added++; }
+                    break;
+                case (InputKind.File, var file) when !IsRipSidecar(file) && !file.EndsWith(".cue", StringComparison.OrdinalIgnoreCase):
+                    _player.Append(file);
+                    added++;
+                    break;
+            }
+        }
+        if (added > 0) ShowStatus(added == 1 ? "Added to the queue: it plays after this" : $"Added {added} files to the queue");
+        else if (local.Count > 0 && !local.All(IsSubtitle)) ShowStatus("Nothing there can join the queue (a disc or a cue sheet plays on its own)");
     }
 
     private static readonly HashSet<string> SidecarExtensions = new(StringComparer.OrdinalIgnoreCase)
@@ -1290,7 +1412,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             case PlayerAction.SeekForwardLong: p?.SeekRelative(Settings.LongSeekSeconds); break;
             case PlayerAction.SeekBackwardLong: p?.SeekRelative(-Settings.LongSeekSeconds); break;
             case PlayerAction.FrameStep: p?.FrameStep(); break;
-            case PlayerAction.FrameBackStep: p?.FrameBackStep(); break;
+            case PlayerAction.FrameBackStep: if (!SaidNotOnDiscs()) p?.FrameBackStep(); break;
             case PlayerAction.NextChapter: p?.StepChapter(1); break;
             case PlayerAction.PreviousChapter: p?.StepChapter(-1); break;
             case PlayerAction.VolumeUp: p?.ChangeVolume(5); ToastVolume(); break;
@@ -1301,7 +1423,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             case PlayerAction.Screenshot: Screenshot(false); break;
             case PlayerAction.ScreenshotWithSubtitles: Screenshot(true); break;
             case PlayerAction.ToggleDeinterlace: ToggleDeinterlacing(); break;
-            case PlayerAction.ToggleStats: p?.ToggleStats(); break;
+            case PlayerAction.ToggleStats: if (!SaidNotOnDiscs()) p?.ToggleStats(); break;
             case PlayerAction.ToggleHdrMode:
                 HdrPassthrough = !HdrPassthrough;
                 Osd(HdrPassthrough ? "HDR passthrough" : $"HDR → SDR tonemapping ({ToneMapping})");
@@ -1552,6 +1674,27 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }, TaskScheduler.Default);
     }
 
+    /// <summary>
+    /// An error nothing else caught (App's last-resort handlers, a rip's unforeseen failure):
+    /// written to crash.log and said on screen, rather than lost or closing the app.
+    /// </summary>
+    public void ReportUnexpected(Exception e)
+    {
+        var log = CrashLog.Write(_paths.Logs, e);
+        Toast($"Something went wrong: {e.Message}", TimeSpan.FromSeconds(6));
+        ShowStatus($"Something went wrong: {e.Message}" + (log is null ? "" : CrashLogHint));
+    }
+
+    /// <summary>
+    /// For a task nothing waits for (started from a click or a constructor): a failure in it is
+    /// reported (<see cref="ReportUnexpected"/>) instead of vanishing with the task.
+    /// </summary>
+    public void Forget(Task task) => task.ContinueWith(
+        t => _ui.Post(() => ReportUnexpected(t.Exception!.GetBaseException())),
+        CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
+
+    internal const string CrashLogHint =" (details in crash.log: Settings → Backup and logs → Open logs folder)";
+
     // ---- Shutdown -------------------------------------------------------------------------
 
     public void SaveSettings()
@@ -1563,6 +1706,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        RememberWhereLeft(); // the file playing as the app closes
         SaveSettings();
         // Stop yt-dlp rather than leave it running without us; cancelling kills it.
         _downloadCts?.Cancel();
@@ -1575,6 +1719,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _mpvPlayer?.Dispose();
         _discPlayer?.Dispose();
         _player = null;
+        _engineGate.Wait(TimeSpan.FromSeconds(5)); // a removal under way finishes first
         _torrents.Dispose();
         ClearTorrentCache();
     }

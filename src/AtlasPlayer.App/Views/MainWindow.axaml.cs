@@ -124,7 +124,7 @@ public partial class MainWindow : Window
                 () => Vm.NotifyPointerMoved("the mouse's movement"));
         Vm.ClicksFromSystem = _clicks is not null;
         // A graphics driver the Flatpak can't use (NVIDIA without its extension): said once the window is up.
-        Dispatcher.UIThread.Post(() => _ = Vm.CheckGraphicsAsync(), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => Vm.Forget(Vm.CheckGraphicsAsync()), DispatcherPriority.Background);
     }
 
     /// <summary>
@@ -230,7 +230,8 @@ public partial class MainWindow : Window
     {
         if (_bottom is null || _top is null || DataContext is not MainViewModel vm) return;
         var fullscreen = WindowState == WindowState.FullScreen;
-        var appActive = IsActive || _top.IsActive || _bottom.IsActive;
+        // The toast too: pressing its button activates it, and it mustn't hide mid-click.
+        var appActive = IsActive || _top.IsActive || _bottom.IsActive || _toast?.IsActive == true;
         var visible = vm.ControlsVisible && !vm.IsIdle && WindowState != WindowState.Minimized && IsVisible
                       && ActiveVideo.Bounds.Width > 100
                       && (!OverlayPlacement.HideWhileInactive || appActive || vm.IsPointerOverControls || vm.IsMenuOpen);
@@ -326,7 +327,9 @@ public partial class MainWindow : Window
             else if (_toast.IsVisible) _toast.Hide();
             return;
         }
-        var at = OverlayPlacement.ToastAt(area, barsShown ? TopBar.BarHeight : 0, RenderScaling);
+        // One with a button (Resume from…) stays where it is: going for it shows the bars, which
+        // would otherwise move it down from under the pointer.
+        var at = OverlayPlacement.ToastAt(area, barsShown || vm.ToastHasAction ? TopBar.BarHeight : 0, RenderScaling);
         if (_toast.Position != at) _toast.Position = at;
         if (!_toast.IsVisible) _toast.Show(this);
     }
