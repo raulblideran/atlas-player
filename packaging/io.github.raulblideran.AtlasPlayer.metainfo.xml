@@ -83,6 +83,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="2.0.0-beta.14" date="2026-11-28" type="development">
+      <description>
+        <p>Resume where you left off, one window for every file opened, errors said and logged, no torrent freezes</p>
+      </description>
+    </release>
     <release version="2.0.0-beta.13" date="2026-11-27" type="development">
       <description>
         <p>CD rip folders play with their cover, normalization starts at -3 dB, credits for everything Atlas Player is built on</p>

@@ -3,6 +3,32 @@
 Versions follow `MAJOR.MINOR.PATCH`. The in-app version (welcome screen, Settings → About)
 also shows the git commit a build came from, e.g. `1.1.0 (50919f7)`.
 
+## 2.0.0-beta.14 — 2026-11-28
+
+A **beta** of 2.0.0, of fixes. Tried on Linux, not yet on Windows: please try resuming and
+opening files from Explorer there.
+
+- **Resume where you left off.** Reopening a video or music file on your computer plays it from
+  the start, and a message offers **Resume from 12:34** for a few seconds. It's on for
+  everyone; Settings → Playback has the switch. Positions are kept for the last 200 files, in
+  `positions.json` beside the settings. Links, torrents and discs aren't remembered.
+- **One window.** Selecting several files and opening them with Atlas Player plays them all, one
+  after the other (before, only the first played). Opening files while it runs no longer starts
+  another window: they join the queue of the one open. Two portable copies stay separate.
+- **The torrent line says what it means:** `↓ 4.2 MiB/s · 31 peers · 45 s ahead · 18%
+  downloaded`. The "% buffered" it showed before was how much of the file had downloaded.
+- **Errors are said, not lost.** A rip that failed in an unexpected way (FFmpeg or flac that
+  won't start, say) used to just stop; now it says "Rip failed: …". The cover square says why
+  there's no cover ("No cover found (timed out)"). Anything else unexpected shows a message and
+  goes to `crash.log` in the logs folder (Settings → Backup and logs → Open logs folder), and the
+  app carries on instead of closing.
+- **No freezes with torrents:** starting the torrent engine, switching to another file of a
+  torrent and closing one happen in the background.
+- **Discs played with their menus** grey out what doesn't work there (previous frame, the
+  statistics overlay, the subtitle look), with a tooltip saying so; their keys say it too.
+- Linux: the software centre's description is up to date, and file managers offer Atlas Player
+  for FLAC, MP3, Opus, WAV and other audio files.
+
 ## 2.0.0-beta.13 — 2026-11-27
 
 A **beta** of 2.0.0. CD rip folders play however much else is in them, with the album's cover
