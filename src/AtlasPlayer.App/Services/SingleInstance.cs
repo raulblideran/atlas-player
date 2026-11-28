@@ -50,9 +50,10 @@ public sealed class SingleInstance : IDisposable
         {
             if (OperatingSystem.IsWindows())
             {
-                if (!File.Exists($@"\\.\pipe\{address}")) return false; // none: no waiting for the timeout at every start
+                // A short wait: the first copy keeps a pipe instance waiting at all times, and with
+                // none there this is how long every first start takes. (File.Exists can't see pipes.)
                 using var pipe = new NamedPipeClientStream(".", address, PipeDirection.Out, PipeOptions.CurrentUserOnly);
-                pipe.Connect(300);
+                pipe.Connect(50);
                 pipe.Write(message);
                 pipe.Flush();
                 return true;
